@@ -94,16 +94,19 @@ class AddQuestionRequest(BaseModel):
 @app.get("/api/dashboard/{user_id}")
 async def get_dashboard(user_id: int):
     try:
-        level = await get_user_level(user_id)
+        from database.db import get_pool
+        pool = await get_pool()
+        async with pool.acquire() as db:
+            user = await db.fetchrow(
+                "SELECT level, xp, streak, is_admin FROM users WHERE user_id = $1", user_id
+            )
         lessons = await get_all_lessons()
-
-        is_admin = user_id in ADMIN_IDS or await check_is_admin(user_id)
-
+        is_admin = user_id in ADMIN_IDS or bool(user and user["is_admin"])
         return {
             "user": {
-                "level": level,
-                "xp": 0,           # можно доработать позже
-                "streak": 0,
+                "level": user["level"] if user else "A1",
+                "xp": user["xp"] if user else 0,
+                "streak": user["streak"] if user else 0,
                 "is_admin": is_admin
             },
             "total_lessons": len(lessons),
@@ -118,20 +121,41 @@ async def get_dashboard(user_id: int):
 @app.get("/api/profile/{user_id}")
 async def get_profile(user_id: int):
     try:
-        # Пока упрощённая версия. Можно доработать.
-        level = await get_user_level(user_id)
-        is_admin = user_id in ADMIN_IDS or await check_is_admin(user_id)
+        from database.db import get_pool
+        pool = await get_pool()
+        async with pool.acquire() as db:
+            user = await db.fetchrow("""
+                SELECT level, xp, streak, is_premium, is_admin, name, username
+                FROM users WHERE user_id = $1
+            """, user_id)
+            if not user:
+                return {"level": "A1", "xp": 0, "streak": 0, "is_premium": False,
+                        "is_admin": False, "name": "", "username": "",
+                        "lessons_done": 0, "tasks_done": 0}
 
+            row = await db.fetchrow("""
+                SELECT COUNT(*) as cnt FROM user_progress
+                WHERE user_id = $1 AND content_type IN ('lesson', 'grammar')
+            """, user_id)
+            lessons_done = row["cnt"]
+
+            row = await db.fetchrow("""
+                SELECT COUNT(*) as cnt FROM user_progress
+                WHERE user_id = $1 AND content_type IN ('practice', 'speaking', 'question')
+            """, user_id)
+            tasks_done = row["cnt"]
+
+        is_admin = user_id in ADMIN_IDS or bool(user["is_admin"])
         return {
-            "name": "",
-            "username": "",
-            "level": level,
-            "xp": 0,
-            "streak": 0,
-            "is_premium": False,
+            "name": user["name"] or "",
+            "username": user["username"] or "",
+            "level": user["level"],
+            "xp": user["xp"],
+            "streak": user["streak"],
+            "is_premium": bool(user["is_premium"]),
             "is_admin": is_admin,
-            "lessons_done": 0,
-            "tasks_done": 0,
+            "lessons_done": lessons_done,
+            "tasks_done": tasks_done,
         }
     except Exception as e:
         traceback.print_exc()
@@ -161,17 +185,22 @@ async def get_lessons_by_level(level: str, user_id: Optional[int] = Query(None))
 @app.get("/api/lesson/{lesson_id}")
 async def get_lesson(lesson_id: int):
     try:
-        lessons = await get_all_lessons()
-        lesson = next((l for l in lessons if l["id"] == lesson_id), None)
+        from database.db import get_pool
+        pool = await get_pool()
+        async with pool.acquire() as db:
+            row = await db.fetchrow("""
+                SELECT id, title, lesson_text, content_type
+                FROM lessons WHERE id = $1 AND is_active = TRUE
+            """, lesson_id)
 
-        if not lesson:
+        if not row:
             raise HTTPException(404, "Урок не найден")
 
         return {
-            "id": lesson["id"],
-            "title": lesson["title"],
-            "lesson_text": lesson.get("lesson_text", ""),
-            "type": lesson["content_type"]
+            "id": row["id"],
+            "title": row["title"],
+            "lesson_text": row["lesson_text"] or "",
+            "type": row["content_type"]
         }
     except HTTPException:
         raise
