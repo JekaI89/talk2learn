@@ -32,6 +32,7 @@ async def close_pool():
 async def init_db():
     pool = await get_pool()
     async with pool.acquire() as db:
+        # 1. Создаем таблицы (это безопасно, IF NOT EXISTS не трогает данные)
         await db.execute("""
             CREATE TABLE IF NOT EXISTS users (
                 user_id BIGINT PRIMARY KEY,
@@ -50,71 +51,38 @@ async def init_db():
         await db.execute("""
             CREATE TABLE IF NOT EXISTS lessons (
                 id SERIAL PRIMARY KEY,
-                level TEXT NOT NULL,
-                title TEXT NOT NULL,
+                level TEXT,
+                title TEXT,
                 lesson_text TEXT,
-                content_type TEXT DEFAULT 'lesson',
-                order_num INTEGER DEFAULT 0,
+                content_type TEXT,
+                order_num INTEGER,
                 is_active BOOLEAN DEFAULT TRUE,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """)
 
-        await db.execute("""
-            CREATE TABLE IF NOT EXISTS questions (
-                id SERIAL PRIMARY KEY,
-                lesson_id INTEGER REFERENCES lessons(id),
-                level TEXT NOT NULL,
-                task_type TEXT NOT NULL,
-                question_text TEXT NOT NULL,
-                option_1 TEXT,
-                option_2 TEXT,
-                option_3 TEXT,
-                correct_option INTEGER,
-                correct_answer TEXT,
-                media_url TEXT,
-                commentary TEXT,
-                order_num INTEGER DEFAULT 0
-            )
-        """)
+        # !!! СТРОКУ С "TRUNCATE TABLE lessons CASCADE;" МЫ ПОЛНОСТЬЮ УДАЛИЛИ !!!
 
-        await db.execute("""
-            CREATE TABLE IF NOT EXISTS user_progress (
-                id SERIAL PRIMARY KEY,
-                user_id BIGINT REFERENCES users(user_id),
-                content_type TEXT,
-                content_id INTEGER,
-                completed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                xp_earned INTEGER DEFAULT 10
-            )
-        """)
-
-        await db.execute("""
-            CREATE TABLE IF NOT EXISTS user_queue (
-                id SERIAL PRIMARY KEY,
-                user_id BIGINT,
-                content_type TEXT,
-                content_id INTEGER,
-                queue_order INTEGER,
-                status TEXT DEFAULT 'pending'
-            )
-        """)
-
-        # Индексы
-        await db.execute("""
-            CREATE INDEX IF NOT EXISTS idx_user_progress_user
-            ON user_progress(user_id, content_type)
-        """)
-        await db.execute("""
-            CREATE INDEX IF NOT EXISTS idx_lessons_level
-            ON lessons(level, is_active)
-        """)
-        await db.execute("""
-            CREATE INDEX IF NOT EXISTS idx_questions_level
-            ON questions(level, task_type)
-        """)
-
-    print("✅ PostgreSQL: база данных инициализирована")
+        # 2. Проверяем, пуста ли таблица lessons перед заполнением дефолтными данными
+        lessons_count = await db.fetchval("SELECT COUNT(*) FROM lessons")
+        
+        if lessons_count == 0:
+            print("База данных пуста. Наполняем базовыми уроками...")
+            # Вставляем дефолтные уроки только ОДИН раз при самом первом запуске
+            await db.execute("""
+                INSERT INTO lessons (level, title, lesson_text, content_type, order_num, is_active)
+                VALUES 
+                ('A1', 'Приветствие и знакомство', 'Hello! My name is Anna. Nice to meet you!', 'lesson', 1, TRUE),
+                ('A1', 'Моя семья', 'This is my mother. This is my father.', 'lesson', 2, TRUE),
+                ('A2', 'Мой день', 'I wake up at 7 o''clock.', 'lesson', 3, TRUE),
+                ('A2', 'Хобби и свободное время', 'In my free time I like to read books.', 'lesson', 4, TRUE),
+                ('A1', 'Глагол to be (am / is / are)', 'I am, You are, He/She/It is...', 'grammar', 1, TRUE),
+                ('A1', 'Present Simple', 'I live in Moscow. You work in a bank.', 'grammar', 2, TRUE),
+                ('A2', 'There is / There are', 'There is a book on the table.', 'grammar', 3, TRUE);
+            """)
+            print("Базовые уроки успешно добавлены.")
+        else:
+            print(f"База уже содержит {lessons_count} уроков. Пропускаем автозаполнение.")
 
 
 # ==================== ПОЛЬЗОВАТЕЛИ ====================
