@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Talk2Learn - Академия</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body class="bg-[#F8FAFC] text-zinc-900 min-h-screen p-4 flex flex-col justify-between">
+
+    <div class="max-w-lg mx-auto bg-white min-h-screen shadow-xl rounded-3xl p-4 w-full flex flex-col justify-between">
+        
+        <div>
+            <div class="p-4 flex items-center justify-between border-b border-zinc-100 bg-white rounded-t-2xl">
+                <div class="flex items-center gap-3">
+                    <div onclick="openProfile()" class="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-lg cursor-pointer active:scale-95 transition">TL</div>
+                    <div>
+                        <div class="font-bold text-zinc-800" id="user-name">Загрузка...</div>
+                        <div class="text-xs text-zinc-400 flex items-center gap-1">
+                            <span>🔥 <span id="user-streak">0</span> дней</span> • 
+                            <span>✨ <span id="user-xp">0</span> XP</span>
+                        </div>
+                    </div>
+                </div>
+                <button id="admin-badge" onclick="window.location.href='/admin'" class="hidden px-3 py-1 bg-red-50 text-red-600 rounded-full text-xs font-bold border border-red-100 active:scale-95 transition">⚙️ Админка</button>
+            </div>
+
+            <div id="screen-main" class="mt-6 space-y-6">
+                <h2 class="text-xl font-extrabold text-gray-900">📚 Занятия</h2>
+                <div class="grid grid-cols-2 gap-4">
+                    <button onclick="chooseCategory('lessons')" class="p-5 bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 rounded-2xl text-left active:scale-95 transition">
+                        <span class="text-2xl block mb-2">📖</span>
+                        <span class="font-bold text-gray-800 block">Уроки</span>
+                        <span class="text-xs text-gray-400">Теория курса</span>
+                    </button>
+                    <button onclick="chooseCategory('grammar')" class="p-5 bg-gradient-to-br from-purple-50 to-pink-50 border border-purple-100 rounded-2xl text-left active:scale-95 transition">
+                        <span class="text-2xl block mb-2">✍️</span>
+                        <span class="font-bold text-gray-800 block">Грамматика</span>
+                        <span class="text-xs text-gray-400">Правила и разборы</span>
+                    </button>
+                    <button onclick="chooseCategory('vocabulary')" class="p-5 bg-gradient-to-br from-green-50 to-emerald-50 border border-green-100 rounded-2xl text-left active:scale-95 transition">
+                        <span class="text-2xl block mb-2">🧠</span>
+                        <span class="font-bold text-gray-800 block">Словарь</span>
+                        <span class="text-xs text-gray-400">Лексика по темам</span>
+                    </button>
+                    <button onclick="chooseCategory('practice')" class="p-5 bg-gradient-to-br from-orange-50 to-amber-50 border border-orange-100 rounded-2xl text-left active:scale-95 transition">
+                        <span class="text-2xl block mb-2">🎯</span>
+                        <span class="font-bold text-gray-800 block">Практика</span>
+                        <span class="text-xs text-gray-400">Теория и тесты</span>
+                    </button>
+                </div>
+
+                <h2 class="text-xl font-extrabold text-gray-900 pt-2">💬 Интерактив</h2>
+                <div class="space-y-3">
+                    <button onclick="showScreen('screen-situations')" class="w-full p-4 bg-gray-50 border border-gray-100 rounded-xl text-left font-bold flex justify-between items-center active:scale-[0.99] transition">
+                        <span>🗺️ Ситуации (В магазине, Аэропорт...)</span>
+                        <span class="text-gray-400">→</span>
+                    </button>
+                    <button onclick="showScreen('screen-club')" class="w-full p-4 bg-zinc-900 text-white rounded-xl text-left font-bold flex justify-between items-center active:scale-[0.99] transition shadow-md">
+                        <span>🎙️ Разговорный клуб с ИИ</span>
+                        <span class="bg-blue-600 text-xs px-2 py-1 rounded-md">AI</span>
+                    </button>
+                </div>
+            </div>
+
+            <div id="screen-levels" class="hidden mt-6 space-y-4">
+                <button onclick="showScreen('screen-main')" class="text-blue-600 font-bold flex items-center gap-1 mb-2">← Главное меню</button>
+                <h2 class="text-xl font-extrabold text-gray-900">Выберите уровень:</h2>
+                <div class="grid grid-cols-2 gap-3" id="levels-grid"></div>
+            </div>
+
+            <div id="screen-list" class="hidden mt-6 space-y-4">
+                <button onclick="showScreen('screen-levels')" class="text-blue-600 font-bold flex items-center gap-1">← К уровням</button>
+                <h2 id="list-title" class="text-xl font-extrabold text-gray-900">Доступные материалы</h2>
+                <div id="lessons-list" class="space-y-3">Загрузка...</div>
+            </div>
+
+            <div id="screen-lesson" class="hidden mt-6 space-y-4">
+                <button onclick="showScreen('screen-list')" class="text-blue-600 font-bold flex items-center gap-1">← К списку</button>
+                <div id="lesson-data" class="space-y-4"></div>
+            </div>
+
+            <div id="screen-practice-task" class="hidden mt-6 space-y-4">
+                <button onclick="showScreen('screen-main')" class="text-blue-600 font-bold flex items-center gap-1">← Выйти</button>
+                <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm space-y-4">
+                    <h3 class="text-xs font-bold text-blue-600 tracking-wider uppercase">Вопрос практики</h3>
+                    <p id="practice-question-text" class="text-lg font-bold text-gray-800"></p>
+                    <div id="practice-options" class="space-y-2"></div>
+                    <div id="practice-feedback" class="hidden p-4 rounded-xl text-center font-bold"></div>
+                </div>
+            </div>
+
+            <div id="screen-situations" class="hidden mt-6 space-y-4">
+                <button onclick="showScreen('screen-main')" class="text-blue-600 font-bold flex items-center gap-1">← Главное меню</button>
+                <h2 class="text-xl font-extrabold text-gray-900">🗺️ Тематические диалоги:</h2>
+                <div class="space-y-2">
+                    <button onclick="alert('Диалог запущен в Telegram чате бота!')" class="w-full p-4 bg-white border border-gray-200 rounded-xl text-left font-medium">🛒 В магазине (In the Shop)</button>
+                    <button onclick="alert('Диалог запущен в Telegram чате бота!')" class="w-full p-4 bg-white border border-gray-200 rounded-xl text-left font-medium">🍽️ В ресторане (At the Restaurant)</button>
+                    <button onclick="alert('Диалог запущен в Telegram чате бота!')" class="w-full p-4 bg-white border border-gray-200 rounded-xl text-left font-medium">✈️ Аэропорт и путешествия (Airport)</button>
+                    <button onclick="alert('Диалог запущен в Telegram чате бота!')" class="w-full p-4 bg-white border border-gray-200 rounded-xl text-left font-medium">🚨 Экстренные случаи (Emergency)</button>
+                </div>
+            </div>
+
+            <div id="screen-club" class="hidden mt-6 flex flex-col h-[calc(100vh-120px)] justify-between">
+                <div>
+                    <button onclick="showScreen('screen-main')" class="text-blue-600 font-bold flex items-center gap-1 mb-2">← Главное меню</button>
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-xl font-extrabold text-gray-900">🎙️ Chat with AI Tutor</h2>
+                        <span id="club-level-badge" class="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-bold rounded-md uppercase">A1</span>
+                    </div>
+                    
+                    <div id="chat-box" class="space-y-3 max-h-[380px] overflow-y-auto p-2 bg-gray-50 rounded-2xl border border-gray-100 min-h-[250px]">
+                        <div class="bg-blue-600 text-white p-3 rounded-2xl rounded-tl-none max-w-[85%] text-sm shadow-sm">
+                            🤖 <b>AI Tutor:</b> Hello! Welcome to our Speaking Club. How are you doing today? Feel free to type or hold the microphone to talk!
+                        </div>
+                    </div>
+                </div>
+
+                <div class="border-t border-gray-100 pt-3 bg-white mt-4">
+                    <div class="flex items-center gap-2">
+                        <input id="chat-input" type="text" placeholder="Type a message..." class="flex-1 p-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-blue-500">
+                        
+                        <button onclick="sendTextMessage()" class="p-3 bg-blue-600 text-white rounded-xl active:scale-95 transition">
+                            🕊️
+                        </button>
+                        
+                        <button id="mic-btn" 
+                                onmousedown="startRecording(event)" 
+                                onmouseup="stopRecording(event)" 
+                                ontouchstart="startRecording(event)" 
+                                ontouchend="stopRecording(event)" 
+                                class="p-3 bg-zinc-900 text-white rounded-xl active:scale-95 transition font-bold select-none touch-none">
+                            🎤 Hold
+                        </button>
+                    </div>
+                    <p class="text-[10px] text-gray-400 text-center mt-1">Зажми кнопку "🎤 Hold" для записи голоса, отпусти для отправки</p>
+                </div>
+            </div>
+
+
+            <div id="screen-profile" class="hidden mt-6 space-y-4">
+                <button onclick="showScreen('screen-main')" class="text-blue-600 font-bold flex items-center gap-1">← Главное меню</button>
+                <h2 class="text-xl font-extrabold text-gray-900">👤 Мой профиль</h2>
+                <div id="profile-content" class="space-y-3">
+                    <p class="text-gray-400 text-center py-6">Загрузка...</p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.ready();
+        tg.expand();
+
+        let userId = tg.initDataUnsafe?.user?.id || 123456789; 
+        let currentCategory = "lessons";
+        let currentLevel = "A1";
+        let correctPracticeOption = null;
+        let currentPracticeQuestionId = null; 
+        
+        let mediaRecorder = null;
+        let audioChunks = [];
+        let streamRef = null;
+
+        function showScreen(screenId) {
+            const screens = ['screen-main', 'screen-levels', 'screen-list', 'screen-lesson', 'screen-practice-task', 'screen-situations', 'screen-club', 'screen-profile'];
+            screens.forEach(s => document.getElementById(s).classList.add('hidden'));
+            document.getElementById(screenId).classList.remove('hidden');
+        }
+
+        async function loadProfile() {
+            try {
+                const tgUser = tg.initDataUnsafe?.user;
+                document.getElementById('user-name').textContent = tgUser?.first_name || "Ученик";
+
+                // Регистрируем пользователя при каждом открытии (INSERT OR IGNORE — безопасно)
+                await fetch('/api/register_user', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        user_id: userId,
+                        name: tgUser?.first_name || "",
+                        username: tgUser?.username || ""
+                    })
+                });
+
+                const res = await fetch(`/api/dashboard/${userId}`);
+                const data = await res.json();
+                
+                const profile = data.user ? data.user : data;
+                
+                if (profile) {
+                    document.getElementById('user-streak').textContent = profile.streak !== undefined ? profile.streak : 0;
+                    document.getElementById('user-xp').textContent = profile.xp !== undefined ? profile.xp : 0;
+                    
+                    if (profile.is_admin || data.is_admin) {
+                        document.getElementById('admin-badge').classList.remove('hidden');
+                    }
+                }
+            } catch (e) { 
+                console.error("Ошибка дашборда:", e); 
+            }
+        }
+
+        function chooseCategory(category) {
+            currentCategory = category;
+            const levels = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
+            const colors = { 'A1': 'from-green-500 to-teal-600', 'A2': 'from-blue-500 to-indigo-600', 'B1': 'from-orange-500 to-amber-600', 'B2': 'from-pink-500 to-rose-600', 'C1': 'from-red-500 to-purple-600', 'C2': 'from-zinc-700 to-gray-900' };
+            
+            document.getElementById('levels-grid').innerHTML = levels.map(lvl => `
+                <button onclick="selectLevel('${lvl}')" class="w-full p-5 bg-gradient-to-r ${colors[lvl] || 'from-blue-500 to-indigo-600'} text-white rounded-2xl text-left font-bold text-lg shadow-sm active:scale-95 transition">
+                    Уровень ${lvl}
+                </button>
+            `).join('');
+
+            showScreen('screen-levels');
+        }
+
+        function selectLevel(level) {
+            currentLevel = level;
+            const badge = document.getElementById('club-level-badge');
+            if (badge) badge.innerText = level;
+
+            if (currentCategory === 'practice') {
+                loadPracticeTask();
+            } else {
+                loadLessonsList();
+            }
+        }
+
+        async function loadLessonsList() {
+            showScreen('screen-list');
+            const listDiv = document.getElementById('lessons-list');
+            const titleEl = document.getElementById('list-title');
+
+            // Меняем заголовок в зависимости от категории
+            if (currentCategory === 'grammar') {
+                titleEl.textContent = 'Грамматика';
+            } else if (currentCategory === 'vocabulary') {
+                titleEl.textContent = 'Словарь';
+            } else {
+                titleEl.textContent = 'Доступные материалы';
+            }
+
+            listDiv.innerHTML = "<p class='text-gray-400'>Загрузка списка материалов...</p>";
+
+            try {
+                const res = await fetch(`/api/lessons/${currentLevel}?user_id=${userId}`);
+                let data = await res.json();
+
+                if (!data || data.length === 0) {
+                    listDiv.innerHTML = `<p class="text-gray-500 py-4">В категории для уровня ${currentLevel} пока нет созданных уроков.</p>`;
+                    return;
+                }
+
+                // Фильтрация по категории
+                if (currentCategory === 'grammar') {
+                    data = data.filter(l => l.type === 'grammar');
+                } else if (currentCategory === 'lessons') {
+                    data = data.filter(l => l.type === 'lesson');
+                } else if (currentCategory === 'vocabulary') {
+                    data = data.filter(l => l.type === 'vocabulary' || l.type === 'lesson'); // пока показываем и lesson
+                }
+                // practice обрабатывается отдельно в selectLevel
+
+                if (data.length === 0) {
+                    listDiv.innerHTML = `<p class="text-gray-500 py-4">В этой категории пока нет уроков.</p>`;
+                    return;
+                }
+
+                listDiv.innerHTML = data.map(l => `
+                    <button onclick="openLesson(${l.id})" class="w-full p-4 bg-gray-50 rounded-xl text-left border border-gray-100 hover:border-blue-500 transition font-medium flex justify-between items-center">
+                        <div>
+                            <span class="block text-gray-800 font-bold text-base">${l.title}</span>
+                            <span class="text-xs text-gray-400 uppercase tracking-wider">${l.type || 'Теория'}</span>
+                        </div>
+                        <span class="text-blue-500 font-bold">→</span>
+                    </button>
+                `).join('');
+            } catch (e) {
+                listDiv.innerHTML = "<p class='text-red-500'>Ошибка загрузки контента.</p>";
+            }
+        }
+
+        async function openLesson(id) {
+            showScreen('screen-lesson');
+            const dataDiv = document.getElementById('lesson-data');
+            dataDiv.innerHTML = "<p class='text-gray-500 text-center py-6'>Загрузка контента...</p>";
+
+            try {
+                const res = await fetch(`/api/lesson/${id}`);
+                const lesson = await res.json();
+
+                dataDiv.innerHTML = `
+                    <h2 class="text-2xl font-black text-gray-900">${lesson.title}</h2>
+                    <div class="bg-gray-50 p-5 rounded-2xl border border-gray-100 text-gray-700 leading-relaxed">
+                        ${lesson.lesson_text ? lesson.lesson_text.replace(/\n/g, '<br>') : 'Текст урока пуст.'}
+                    </div>
+                    <button id="complete-lesson-btn" onclick="submitProgress('${lesson.type || 'lesson'}', ${lesson.id})" class="w-full mt-4 bg-green-600 hover:bg-green-500 text-white font-bold py-4 rounded-2xl shadow-md active:scale-95 transition">
+                        ✅ Просмотрено (+5 XP)
+                    </button>
+                `;
+            } catch (e) {
+                dataDiv.innerHTML = "<p class='text-red-500'>Не удалось открыть урок.</p>";
+            }
+        }
+
+        async function submitProgress(contentType, contentId) {
+            // Блокируем кнопку чтобы не отправить дважды
+            const btn = document.getElementById('complete-lesson-btn');
+            if (btn) { btn.disabled = true; btn.textContent = '⏳ Сохранение...'; }
+
+            try {
+                const res = await fetch('/api/progress/complete', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        user_id: parseInt(userId),
+                        content_type: contentType,
+                        content_id: parseInt(contentId)
+                    })
+                });
+
+                if (!res.ok) {
+                    const err = await res.text();
+                    console.error('progress/complete error:', res.status, err);
+                    showToast('Ошибка сервера: ' + res.status, 'gray');
+                    if (btn) { btn.disabled = false; btn.textContent = '✅ Просмотрено (+5 XP)'; }
+                    return;
+                }
+
+                const data = await res.json();
+                console.log('progress result:', data);
+
+                if (data.xp_earned > 0) {
+                    showToast(`🎉 +${data.xp_earned} XP начислено!`);
+                } else {
+                    showToast('Вы уже изучали этот материал.', 'gray');
+                }
+
+                await loadProfile();
+
+                if (contentType === 'lesson' || contentType === 'theory' || contentType === 'grammar') {
+                    showScreen('screen-list');
+                }
+            } catch (e) {
+                console.error("Ошибка начисления баллов:", e);
+                showToast('Ошибка соединения с сервером.', 'gray');
+                if (btn) { btn.disabled = false; btn.textContent = '✅ Просмотрено (+5 XP)'; }
+            }
+        }
+
+        async function loadPracticeTask() {
+            showScreen('screen-practice-task');
+            document.getElementById('practice-feedback').classList.add('hidden');
+            
+            try {
+                const res = await fetch(`/api/random_question?user_id=${userId}&type=multiple_choice&level=${currentLevel}`);
+                const task = await res.json();
+
+                if (task.error) {
+                    document.getElementById('practice-question-text').textContent = "Задания этого уровня закончены!";
+                    document.getElementById('practice-options').innerHTML = "";
+                    return;
+                }
+
+                document.getElementById('practice-question-text').textContent = task.question;
+                correctPracticeOption = parseInt(task.correct_option);
+                currentPracticeQuestionId = task.question_id; 
+
+                document.getElementById('practice-options').innerHTML = task.options.map((opt, i) => `
+                    <button onclick="checkPracticeAnswer(${i+1}, this)" class="w-full text-left p-4 bg-gray-50 border border-gray-200 rounded-xl font-medium transition active:scale-[0.99]">
+                        ${opt}
+                    </button>
+                `).join('');
+            } catch (e) { console.error(e); }
+        }
+
+        async function checkPracticeAnswer(selected, btnElement) {
+            const buttons = document.querySelectorAll('#practice-options button');
+            buttons.forEach(b => b.disabled = true);
+
+            const feedback = document.getElementById('practice-feedback');
+            feedback.classList.remove('hidden');
+
+            if (selected === correctPracticeOption) {
+                btnElement.classList.add('border-green-500', 'bg-green-50', 'text-green-700');
+                feedback.className = "p-4 rounded-xl text-center font-bold bg-green-50 text-green-700 border border-green-200";
+                feedback.innerHTML = "🎉 Абсолютно верно! +10 XP";
+                
+                await submitProgress('practice', currentPracticeQuestionId);
+                
+                try {
+                    await fetch('/api/check_answer', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({ user_id: userId, queue_item_id: currentPracticeQuestionId, is_correct: true })
+                    });
+                } catch(e) { console.error("Ошибка обновления очереди:", e); }
+                
+                await loadProfile();
+            } else {
+                btnElement.classList.add('border-red-500', 'bg-red-50', 'text-red-700');
+                feedback.className = "p-4 rounded-xl text-center font-bold bg-red-50 text-red-700 border border-red-200";
+                feedback.innerHTML = "❌ Ошибка! Это задание отправлено в конец вашей очереди.";
+                
+                try {
+                    await fetch('/api/check_answer', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({ user_id: userId, queue_item_id: currentPracticeQuestionId, is_correct: false })
+                    });
+                } catch(e) { console.error(e); }
+            }
+
+            setTimeout(loadPracticeTask, 2500);
+        }
+
+        function appendMessage(sender, text, isAi = false) {
+            const chatBox = document.getElementById('chat-box');
+            const msgDiv = document.createElement('div');
+            
+            if (isAi) {
+                msgDiv.className = "bg-blue-600 text-white p-3 rounded-2xl rounded-tl-none max-w-[85%] text-sm shadow-sm";
+                msgDiv.innerHTML = `🤖 <b>AI Tutor:</b> ${text}`;
+            } else {
+                msgDiv.className = "bg-gray-200 text-gray-800 p-3 rounded-2xl rounded-tr-none max-w-[85%] text-sm shadow-sm ml-auto";
+                msgDiv.innerHTML = `👤 <b>You:</b> ${text}`;
+            }
+            
+            chatBox.appendChild(msgDiv);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        async function sendTextMessage() {
+            const input = document.getElementById('chat-input');
+            const text = input.value.trim();
+            if (!text) return;
+
+            input.value = "";
+            appendMessage("You", text, false);
+
+            try {
+                const formData = new FormData();
+                formData.append("user_id", userId);
+                formData.append("text", text);
+                formData.append("level", currentLevel);
+
+                const res = await fetch('/api/web-club/text', { method: 'POST', body: formData });
+                const data = await res.json();
+
+                appendMessage("AI Tutor", data.ai_text, true);
+
+                if (data.audio_url) {
+                    const audio = new Audio(data.audio_url);
+                    audio.play().catch(e => console.log(e));
+                }
+            } catch (e) {
+                console.error(e);
+                appendMessage("AI Tutor", "Sorry, error connection to server.", true);
+            }
+        }
+
+        async function startRecording(e) {
+            if (e) e.preventDefault(); 
+            audioChunks = [];
+            const micBtn = document.getElementById('mic-btn');
+            micBtn.classList.replace('bg-zinc-900', 'bg-red-600');
+            micBtn.innerText = "🔴 REC";
+
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                streamRef = stream;
+
+                let options = {};
+                if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
+                    options = { mimeType: 'audio/webm;codecs=opus' };
+                } else if (MediaRecorder.isTypeSupported('audio/ogg;codecs=opus')) {
+                    options = { mimeType: 'audio/ogg;codecs=opus' };
+                } else if (MediaRecorder.isTypeSupported('audio/mp4')) {
+                    options = { mimeType: 'audio/mp4' }; 
+                }
+
+                mediaRecorder = new MediaRecorder(stream, options);
+                
+                mediaRecorder.ondataavailable = event => {
+                    if (event.data && event.data.size > 0) {
+                        audioChunks.push(event.data);
+                    }
+                };
+
+                mediaRecorder.onstop = async () => {
+                    const audioBlob = new Blob(audioChunks, { type: mediaRecorder.mimeType });
+                    appendMessage("You", "<i>Sending voice message... 🎙️</i>", false);
+
+                    const formData = new FormData();
+                    formData.append("user_id", userId);
+                    formData.append("file", audioBlob, "voice_msg");
+                    formData.append("level", currentLevel);
+
+                    try {
+                        const res = await fetch('/api/web-club/voice', { method: 'POST', body: formData });
+                        const data = await res.json();
+
+                        const chatBox = document.getElementById('chat-box');
+                        if (chatBox.lastChild) chatBox.removeChild(chatBox.lastChild);
+
+                        appendMessage("You", data.user_text || "🎤 [Voice Message]", false);
+                        appendMessage("AI Tutor", data.ai_text, true);
+
+                        if (data.audio_url) {
+                            const audio = new Audio(data.audio_url);
+                            audio.play().catch(e => console.log(e));
+                        }
+                    } catch (err) {
+                        console.error(err);
+                        const chatBox = document.getElementById('chat-box');
+                        if (chatBox.lastChild) chatBox.removeChild(chatBox.lastChild);
+                        appendMessage("AI Tutor", "Could not process voice. Try again!", true);
+                    }
+                };
+
+                mediaRecorder.start();
+            } catch (err) {
+                console.error("Ошибка микрофона:", err);
+                alert("Ошибка доступа к микрофону. Убедитесь, что у вас HTTPS и даны разрешения!");
+                micBtn.classList.replace('bg-red-600', 'bg-zinc-900');
+                micBtn.innerText = "🎤 Hold";
+            }
+        }
+
+        function stopRecording(e) {
+            if (e) e.preventDefault();
+            const micBtn = document.getElementById('mic-btn');
+            micBtn.classList.replace('bg-red-600', 'bg-zinc-900');
+            micBtn.innerText = "🎤 Hold";
+
+            if (mediaRecorder && mediaRecorder.state !== "inactive") {
+                mediaRecorder.stop();
+            }
+            if (streamRef) {
+                streamRef.getTracks().forEach(track => track.stop());
+                streamRef = null;
+            }
+        }
+
+        async function openProfile() {
+            showScreen('screen-profile');
+            const container = document.getElementById('profile-content');
+            container.innerHTML = "<p class='text-gray-400 text-center py-6'>Загрузка...</p>";
+            try {
+                const res = await fetch(`/api/profile/${userId}`);
+                const p = await res.json();
+                const premiumBadge = p.is_premium
+                    ? '<span class="px-2 py-1 bg-yellow-100 text-yellow-700 text-xs font-bold rounded-full">⭐ Premium</span>'
+                    : '<span class="px-2 py-1 bg-gray-100 text-gray-500 text-xs font-bold rounded-full">Free</span>';
+                const adminBadge = p.is_admin
+                    ? '<span class="px-2 py-1 bg-red-100 text-red-600 text-xs font-bold rounded-full ml-1">⚙️ Admin</span>'
+                    : '';
+                const xpToNext = 100 - (p.xp % 100);
+                const xpPct = Math.round((p.xp % 100));
+                container.innerHTML = `
+                    <div class="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl p-5 text-white text-center">
+                        <div class="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center text-3xl mx-auto mb-2">🎓</div>
+                        <div class="font-black text-xl">${p.name || 'Ученик'}</div>
+                        <div class="text-blue-200 text-sm">${p.username ? '@' + p.username : ''}</div>
+                        <div class="flex justify-center gap-2 mt-2">${premiumBadge}${adminBadge}</div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="bg-orange-50 border border-orange-100 rounded-2xl p-4 text-center">
+                            <div class="text-3xl font-black text-orange-500">${p.streak}</div>
+                            <div class="text-xs text-gray-500 mt-1">🔥 Дней подряд</div>
+                        </div>
+                        <div class="bg-purple-50 border border-purple-100 rounded-2xl p-4 text-center">
+                            <div class="text-3xl font-black text-purple-600">${p.xp}</div>
+                            <div class="text-xs text-gray-500 mt-1">✨ Всего XP</div>
+                        </div>
+                        <div class="bg-blue-50 border border-blue-100 rounded-2xl p-4 text-center">
+                            <div class="text-3xl font-black text-blue-600">${p.lessons_done}</div>
+                            <div class="text-xs text-gray-500 mt-1">📖 Уроков пройдено</div>
+                        </div>
+                        <div class="bg-green-50 border border-green-100 rounded-2xl p-4 text-center">
+                            <div class="text-3xl font-black text-green-600">${p.tasks_done}</div>
+                            <div class="text-xs text-gray-500 mt-1">🎯 Заданий выполнено</div>
+                        </div>
+                    </div>
+
+                    <div class="bg-gray-50 border border-gray-100 rounded-2xl p-4">
+                        <div class="flex justify-between text-sm font-bold text-gray-700 mb-2">
+                            <span>Уровень ${p.level}</span>
+                            <span>${p.xp} XP</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2.5">
+                            <div class="bg-blue-600 h-2.5 rounded-full transition-all" style="width: ${xpPct}%"></div>
+                        </div>
+                        <div class="text-xs text-gray-400 mt-1 text-right">+${xpToNext} XP до следующего уровня</div>
+                    </div>
+                `;
+            } catch(e) {
+                container.innerHTML = "<p class='text-red-500'>Ошибка загрузки профиля.</p>";
+            }
+        }
+
+        function showToast(msg, color = 'green') {
+            const toast = document.createElement('div');
+            const bg = color === 'green' ? 'bg-green-500' : 'bg-gray-700';
+            toast.className = `fixed bottom-6 left-1/2 -translate-x-1/2 ${bg} text-white px-5 py-3 rounded-2xl text-sm font-bold shadow-lg z-50 transition-all`;
+            toast.textContent = msg;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 2800);
+        }
+
+        window.onload = loadProfile;
+    </script>
+</body>
+</html>
