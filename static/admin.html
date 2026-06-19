@@ -4,17 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Админ Talk2Learn</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-zinc-950 text-white p-6">
     <div class="max-w-3xl mx-auto">
         <h1 class="text-3xl font-bold mb-8">⚙️ Admin Panel</h1>
 
-        <div class="flex gap-2 mb-6">
-            <button onclick="showTab('stats')" class="px-6 py-2 bg-zinc-800 rounded-2xl">Статистика</button>
-            <button onclick="showTab('users')" class="px-6 py-2 bg-zinc-800 rounded-2xl">Пользователи</button>
-            <button onclick="showTab('lessons')" class="px-6 py-2 bg-zinc-800 rounded-2xl">Уроки</button>
-            <button onclick="showTab('questions')" class="px-6 py-2 bg-zinc-800 rounded-2xl">Вопросы</button>
+        <div class="flex flex-wrap gap-2 mb-6">
+            <button onclick="showTab('stats')" class="px-6 py-2 bg-zinc-800 rounded-2xl text-sm font-medium hover:bg-zinc-700 transition-colors">Статистика</button>
+            <button onclick="showTab('users')" class="px-6 py-2 bg-zinc-800 rounded-2xl text-sm font-medium hover:bg-zinc-700 transition-colors">Пользователи</button>
+            <button onclick="showTab('lessons')" class="px-6 py-2 bg-zinc-800 rounded-2xl text-sm font-medium hover:bg-zinc-700 transition-colors">Уроки</button>
+            <button onclick="showTab('questions')" class="px-6 py-2 bg-zinc-800 rounded-2xl text-sm font-medium hover:bg-zinc-700 transition-colors">Вопросы</button>
+            <button onclick="closeAdmin()" class="px-6 py-2 bg-red-950/60 text-red-400 border border-red-900/50 rounded-2xl text-sm font-semibold hover:bg-red-900 hover:text-red-100 transition-colors ml-auto">
+                ◀ Назад в Академию
+            </button>
         </div>
 
         <div id="tab-stats" class="tab-content">
@@ -80,7 +84,6 @@
         <div id="tab-questions" class="tab-content hidden">
             <div class="bg-zinc-900 rounded-3xl p-6">
                 <h2 class="text-xl font-semibold mb-4">❓ Добавить вопрос (Multiple Choice)</h2>
-                <!-- Уровень подтягивается автоматически из выбранного урока -->
                 <select id="q-lesson" class="w-full bg-zinc-800 p-4 rounded-2xl mb-3" onchange="onLessonSelect()">
                     <option value="">-- Выбери урок --</option>
                 </select>
@@ -100,8 +103,13 @@
     </div>
 
     <script>
-        // Хранилище данных об уроках для вкладки вопросов
         let lessonsData = [];
+
+        // Инициализация Telegram WebApp API
+        if (window.Telegram && window.Telegram.WebApp) {
+            window.Telegram.WebApp.ready();
+            window.Telegram.WebApp.expand(); // Разворачиваем на весь экран для удобства админки
+        }
 
         function showTab(tab) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
@@ -110,14 +118,32 @@
             if (tab === 'lessons') loadAdminLessonsList();
         }
 
+        function closeAdmin() {
+            if (window.Telegram && window.Telegram.WebApp) {
+                window.Telegram.WebApp.close();
+            } else {
+                alert("Эта кнопка работает только внутри Telegram Mini App!");
+            }
+        }
+
         async function loadStats() {
             try {
                 const res = await fetch('/api/admin/stats');
                 const data = await res.json();
+                
+                let levelsHtml = '';
+                if (data.levels) {
+                    for (const [lvl, count] of Object.entries(data.levels)) {
+                        levelsHtml += `Уроков ${lvl}: <b>${count}</b><br>`;
+                    }
+                }
+
                 document.getElementById('stats-content').innerHTML = `
                     Пользователей: <b>${data.total_users || 0}</b><br>
                     Premium: <b>${data.premium_users || 0}</b><br>
-                    Уроков A1: <b>${data.levels?.A1 || 0}</b>
+                    Свободных: <b>${data.free_users || 0}</b><br>
+                    <hr class="border-zinc-800 my-3">
+                    ${levelsHtml}
                 `;
             } catch (err) {
                 console.error("Ошибка загрузки статистики:", err);
@@ -169,6 +195,7 @@
                 if (result.status === 'success') {
                     await loadAdminLessonsList();
                     await loadLessonsForSelect();
+                    await loadStats();
                 } else {
                     alert("Ошибка: " + result.message);
                 }
@@ -191,7 +218,6 @@
                     opt.textContent = `[${l.level}] ${l.title}`;
                     select.appendChild(opt);
                 });
-                // Сброс подсказки уровня
                 document.getElementById('q-level-hint').textContent = '';
             } catch (err) {
                 console.error("Ошибка загрузки уроков для вопросов:", err);
@@ -226,6 +252,7 @@
                 document.getElementById('lesson-text').value = '';
                 await loadAdminLessonsList();
                 await loadLessonsForSelect();
+                await loadStats();
             } catch (err) {
                 console.error("Ошибка добавления урока:", err);
                 alert("Не удалось добавить урок");
@@ -236,7 +263,6 @@
             const select = document.getElementById('q-lesson');
             const lesson_id = select.value;
             const selectedOpt = select.options[select.selectedIndex];
-            // Берём уровень из выбранного урока, а не хардкодим A1
             const level = selectedOpt.dataset.level || "A1";
 
             const question_text = document.getElementById('q-text').value.trim();
@@ -287,6 +313,7 @@
                     body: JSON.stringify({ tg_id: input, action })
                 });
                 alert("Выполнено!");
+                await loadStats();
             } catch (err) {
                 console.error("Ошибка управления пользователем:", err);
                 alert("Не удалось выполнить действие");
