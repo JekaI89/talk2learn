@@ -167,10 +167,10 @@
             <div id="screen-levels" class="hidden mt-6 space-y-4">
               <button onclick="showScreen('screen-main')" class="text-blue-600 font-bold flex items-center gap-1 mb-2">← Главное меню</button>
     
-              <button onclick="alert('Здесь будет личная тетрадка слов!')" class="w-full p-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold rounded-2xl flex items-center justify-between shadow-sm mb-2 active:scale-95 transition">
-                <span>📒 Мой личный блокнот слов</span>
-                <span>→</span>
-              </button>
+                <button onclick="showDictionary()" class="w-full p-4 bg-orange-500 hover:bg-orange-600 text-white rounded-2xl text-left font-bold flex justify-between items-center active:scale-[0.99] transition">
+                 <span>📓 Мой личный блокнот слов</span>
+                 <span class="text-white/70">→</span>
+                </button>
 
               <h2 class="text-xl font-extrabold text-gray-900">Выберите уровень:</h2>
               <div class="grid grid-cols-2 gap-3" id="levels-grid"></div>
@@ -264,7 +264,22 @@
                     <p class="text-gray-400 text-center py-6">Загрузка...</p>
                 </div>
             </div>
+            <!-- ==================== ЭКРАН СЛОВАРЯ ==================== -->
+            <div id="screen-dictionary" class="hidden mt-6 space-y-4">
+                <button onclick="showScreen('screen-main')" class="text-blue-600 font-bold flex items-center gap-1">← Главное меню</button>
+                
+                <div class="flex justify-between items-center">
+                    <h2 class="text-xl font-extrabold text-gray-900">📓 Мой словарь</h2>
+                    <button onclick="showAddWordModal()" 
+                            class="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-xl text-sm font-bold active:scale-95 transition">
+                        + Добавить слово
+                    </button>
+                </div>
 
+                <div id="dictionary-list" class="space-y-3">
+                    <!-- Здесь будут отображаться слова -->
+                </div>
+            </div>
         </div>
     </div>
 
@@ -806,7 +821,85 @@
                 listDiv.innerHTML = "<p class='text-red-500 text-center py-4'>Ошибка загрузки словаря.</p>";
             }
         }
+async function showDictionary() {
+    showScreen('screen-dictionary');
+    const container = document.getElementById('dictionary-list');
+    container.innerHTML = '<p class="text-gray-400 text-center py-4">Загрузка словаря...</p>';
 
+    try {
+        const res = await fetch(`/api/dictionary/${userId}`);
+        const words = await res.json();
+
+        if (!words || words.length === 0) {
+            container.innerHTML = `
+                <div class="text-center py-8 text-gray-500">
+                    <p>Ваш словарь пока пуст.</p>
+                    <button onclick="showAddWordModal()" class="mt-4 px-4 py-2 bg-orange-500 text-white rounded-xl text-sm">
+                        Добавить первое слово
+                    </button>
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = words.map(w => `
+            <div class="bg-white border border-gray-100 rounded-2xl p-4">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <div class="font-bold text-lg">${w.word}</div>
+                        <div class="text-gray-600">${w.translation}</div>
+                        ${w.transcription ? `<div class="text-sm text-gray-400">${w.transcription}</div>` : ''}
+                    </div>
+                    <span class="text-xs px-2 py-1 rounded-full bg-orange-100 text-orange-600 font-medium">${w.status}</span>
+                </div>
+                ${w.context_example ? `<div class="mt-2 text-sm text-gray-500 italic">"${w.context_example}"</div>` : ''}
+            </div>
+        `).join('');
+
+    } catch (e) {
+        container.innerHTML = '<p class="text-red-500">Ошибка загрузки словаря</p>';
+    }
+}
+
+function showAddWordModal() {
+    const word = prompt("Введите слово на английском:");
+    if (!word) return;
+
+    const translation = prompt("Введите перевод:");
+    if (!translation) return;
+
+    const transcription = prompt("Транскрипция (необязательно):") || "";
+    const context = prompt("Пример использования (необязательно):") || "";
+
+    addWordToDictionary(word, translation, transcription, context);
+}
+
+async function addWordToDictionary(word, translation, transcription = "", context = "") {
+    try {
+        const res = await fetch('/api/dictionary/add', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                user_id: userId,
+                word: word,
+                translation: translation,
+                transcription: transcription,
+                context_example: context
+            })
+        });
+
+        const data = await res.json();
+
+        if (data.status === 'success') {
+            alert('Слово успешно добавлено!');
+            showDictionary(); // обновляем список
+        } else {
+            alert(data.message || 'Ошибка при добавлении слова');
+        }
+    } catch (e) {
+        alert('Ошибка соединения с сервером');
+    }
+}
     </script>
 </body>
 </html>
