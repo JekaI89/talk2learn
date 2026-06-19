@@ -95,7 +95,31 @@ async def init_db():
                 xp_earned INTEGER DEFAULT 10
             )
         """)
+        # ==================== DICTIONARY ====================
+        await db.execute("""
+            CREATE TABLE IF NOT EXISTS dictionary (
+                id SERIAL PRIMARY KEY,
+                word TEXT UNIQUE NOT NULL,
+                translation TEXT NOT NULL,
+                transcription TEXT,
+                context_example TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
 
+        # ==================== USER_DICTIONARY ====================
+        await db.execute("""
+            CREATE TABLE IF NOT EXISTS user_dictionary (
+                id SERIAL PRIMARY KEY,
+                user_id BIGINT REFERENCES users(user_id) ON DELETE CASCADE,
+                word_id INTEGER REFERENCES dictionary(id) ON DELETE CASCADE,
+                status TEXT DEFAULT 'learning',
+                correct_answers_streak INTEGER DEFAULT 0,
+                next_review_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(user_id, word_id)
+            )
+        """)
         print("✅ PostgreSQL: База данных инициализирована")
 
 
@@ -341,3 +365,52 @@ async def handle_answer_result(user_id: int, queue_item_id: int, is_correct: boo
                 "UPDATE user_queue SET queue_order = $1 WHERE id = $2",
                 max_order + 1, queue_item_id
             )
+# ==================== СЛОВАРЬ ====================
+
+async def add_word_to_user_dict(
+    user_id: int, 
+    word: str, 
+    translation: str, 
+    transcription: str = "", 
+    context: str = ""
+) -> bool:
+    pool = await get_pool()
+    async with pool.acquire() as db:
+        try:
+            # Добавляем слово в глобальный словарь (или обновляем, если уже есть)
+            word_row = await db.fetchrow("""
+                INSERT INTO dictionary (word, translation, transcription, context_example)
+                VALUES (LOWER($1), $2, $3, $4)
+                ON CONFLICT (word) DO UPDATE 
+                    SET translation = EXCLUDED.translation,
+                        transcription = EXCLUDED.transcription,
+                        context_example = EXCLUDED.context_example
+                RETURNING id
+            """, word.strip(), translation.strip(), transcription.strip(), context.strip())
+
+            word_id = word_row["id"]
+
+            # Привязываем слово к пользователю
+            await db.execute("""
+                INSERT INTO user_dictionary (user_id, word_id)
+                VALUES ($1, $2)
+                ON CONFLICT (user_id, word_id) DO NOTHING
+            """, user_id, word_id)
+
+            return True
+        except Exception as e:
+            print(f"Ошибка добавления слова: {e}")
+            return False
+
+
+async def get_user_words(user_id: int):
+    pool = await get_pool()
+    async with pool.acquire() as db:
+        rows = await db.fetch("""
+            SELECT d.word, d.translation, d.transcription, d.context_example, ud.status
+            FROM user_dictionary ud
+            JOIN dictionary d ON ud.word_id = d.id
+            WHERE ud.user_id = $1
+            ORDER BY ud.created_at DESC
+        """, user_id)
+        return rows

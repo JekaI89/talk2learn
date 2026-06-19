@@ -22,7 +22,9 @@ from database.db import (
     update_user_streak,
     update_user_status,
     check_is_admin,
-    get_user_level
+    get_user_level,
+    add_word_to_user_dict,
+    get_user_words
 )
 
 from utils.ai_service import transcribe_voice, get_ai_response, generate_voice
@@ -89,6 +91,12 @@ class AddQuestionRequest(BaseModel):
     option_3: str = ""
     correct_option: int = 1
 
+class AddWordRequest(BaseModel):
+    user_id: int
+    word: str
+    translation: str
+    transcription: str = ""
+    context_example: str = ""
 
 # ====================== ДАШБОРД ======================
 @app.get("/api/dashboard/{user_id}")
@@ -379,6 +387,43 @@ async def web_club_voice(user_id: int = Form(...), file: UploadFile = File(...),
         traceback.print_exc()
         raise HTTPException(500, str(e))
 
+# ====================== СЛОВАРЬ ======================
+
+@app.get("/api/dictionary/{user_id}")
+async def get_dictionary(user_id: int):
+    try:
+        words = await get_user_words(user_id)
+        return [
+            {
+                "word": w["word"],
+                "translation": w["translation"],
+                "transcription": w["transcription"] or "",
+                "context_example": w["context_example"] or "",
+                "status": w["status"]
+            }
+            for w in words
+        ]
+    except Exception as e:
+        traceback.print_exc()
+        raise HTTPException(500, "Ошибка получения словаря")
+
+
+@app.post("/api/dictionary/add")
+async def add_word(data: AddWordRequest):
+    try:
+        success = await add_word_to_user_dict(
+            user_id=data.user_id,
+            word=data.word,
+            translation=data.translation,
+            transcription=data.transcription,
+            context=data.context_example
+        )
+        if success:
+            return {"status": "success", "message": "Слово добавлено в словарь"}
+        return {"status": "error", "message": "Не удалось добавить слово"}
+    except Exception as e:
+        traceback.print_exc()
+        raise HTTPException(500, str(e))
 
 # ====================== СТАТИКА ======================
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
