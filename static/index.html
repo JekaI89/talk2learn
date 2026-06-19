@@ -165,16 +165,15 @@
             </div>
 
             <div id="screen-levels" class="hidden mt-6 space-y-4">
-                <button onclick="showScreen('screen-main')" class="text-blue-600 font-bold flex items-center gap-1 mb-2">← Главное меню</button>
-                
-                <!-- Кнопка Личного Словаря -->
-                <button onclick="openPersonalDictionary()" class="w-full p-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold rounded-2xl flex items-center justify-between shadow-md active:scale-[0.99] transition mb-4">
-                    <span>📒 Открыть мой личный словарь</span>
-                    <span>→</span>
-                </button>
+              <button onclick="showScreen('screen-main')" class="text-blue-600 font-bold flex items-center gap-1 mb-2">← Главное меню</button>
+    
+              <button onclick="alert('Здесь будет личная тетрадка слов!')" class="w-full p-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold rounded-2xl flex items-center justify-between shadow-sm mb-2 active:scale-95 transition">
+                <span>📒 Мой личный блокнот слов</span>
+                <span>→</span>
+              </button>
 
-                <h2 class="text-xl font-extrabold text-gray-900">Выберите уровень:</h2>
-                <div class="grid grid-cols-2 gap-3" id="levels-grid"></div>
+              <h2 class="text-xl font-extrabold text-gray-900">Выберите уровень:</h2>
+              <div class="grid grid-cols-2 gap-3" id="levels-grid"></div>
             </div>
 
             <!-- ЭКРАН: ЛИЧНЫЙ СЛОВАРЬ -->
@@ -359,9 +358,9 @@
             if (currentCategory === 'grammar') {
                 titleEl.textContent = 'Грамматика';
             } else if (currentCategory === 'vocabulary') {
-                titleEl.textContent = 'Словарь';
+                titleEl.textContent = 'Словарь (Темы)';
             } else {
-                titleEl.textContent = 'Доступные материалы';
+                titleEl.textContent = 'Доступные уроки';
             }
 
             listDiv.innerHTML = "<p class='text-gray-400'>Загрузка списка материалов...</p>";
@@ -371,36 +370,60 @@
                 let data = await res.json();
 
                 if (!data || data.length === 0) {
-                    listDiv.innerHTML = `<p class="text-gray-500 py-4">В категории для уровня ${currentLevel} пока нет созданных уроков.</p>`;
+                    listDiv.innerHTML = `<p class="text-gray-500 py-4">В категории для уровня ${currentLevel} пока нет материалов.</p>`;
                     return;
                 }
 
-                // Фильтрация по категории
+                // СТРОГАЯ ФИЛЬТРАЦИЯ: разделяем контент по вкладкам
                 if (currentCategory === 'grammar') {
                     data = data.filter(l => l.type === 'grammar');
                 } else if (currentCategory === 'lessons') {
                     data = data.filter(l => l.type === 'lesson');
                 } else if (currentCategory === 'vocabulary') {
-                    data = data.filter(l => l.type === 'vocabulary' || l.type === 'lesson'); // пока показываем и lesson
+                    data = data.filter(l => l.type === 'vocabulary'); // Показываем ТОЛЬКО словари!
                 }
-                // practice обрабатывается отдельно в selectLevel
 
                 if (data.length === 0) {
-                    listDiv.innerHTML = `<p class="text-gray-500 py-4">В этой категории пока нет уроков.</p>`;
+                    listDiv.innerHTML = `<p class="text-gray-500 py-4">В этой категории для уровня ${currentLevel} еще нет материалов.</p>`;
                     return;
                 }
 
-                listDiv.innerHTML = data.map(l => `
-                    <button onclick="openLesson(${l.id})" class="w-full p-4 bg-gray-50 rounded-xl text-left border border-gray-100 hover:border-blue-500 transition font-medium flex justify-between items-center">
-                        <div>
-                            <span class="block text-gray-800 font-bold text-base">${l.title}</span>
-                            <span class="text-xs text-gray-400 uppercase tracking-wider">${l.type || 'Теория'}</span>
+                listDiv.innerHTML = '';
+                data.forEach(l => {
+                    // Настраиваем иконку и цвет кнопки в зависимости от типа
+                    let icon = '📖';
+                    let btnText = 'Читать урок';
+                    let badgeColor = 'bg-blue-50 text-blue-700';
+                    
+                    if (l.type === 'grammar') {
+                        icon = '✍️';
+                        badgeColor = 'bg-purple-50 text-purple-700';
+                    } else if (l.type === 'vocabulary') {
+                        icon = '🧠';
+                        btnText = 'Учить слова';
+                        badgeColor = 'bg-green-50 text-green-700';
+                    }
+
+                    listDiv.innerHTML += `
+                        <div class="p-4 bg-white border border-gray-100 rounded-2xl shadow-sm flex flex-col justify-between items-start gap-3">
+                            <div class="flex items-start gap-2.5">
+                                <span class="text-xl">${icon}</span>
+                                <div>
+                                    <h3 class="font-bold text-gray-900 text-sm leading-tight">${l.title}</h3>
+                                    <span class="inline-block text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md mt-1 ${badgeColor}">
+                                        ${l.type}
+                                    </span>
+                                </div>
+                            </div>
+                            <button onclick="openLesson(${l.id})" class="w-full text-center py-2 bg-gray-50 hover:bg-gray-100 text-gray-800 text-xs font-bold rounded-xl active:scale-[0.98] transition">
+                                ${btnText} →
+                            </button>
                         </div>
-                        <span class="text-blue-500 font-bold">→</span>
-                    </button>
-                `).join('');
+                    `;
+                });
             } catch (e) {
-                listDiv.innerHTML = "<p class='text-red-500'>Ошибка загрузки контента.</p>";
+                console.error(e);
+                listDiv.innerHTML = "<p class='text-red-500 py-4'>Ошибка загрузки списка.</p>";
             }
         }
 
