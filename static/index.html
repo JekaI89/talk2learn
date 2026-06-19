@@ -4,8 +4,108 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Talk2Learn - Академия</title>
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4">        async function openPersonalDictionary() {
+            showScreen('screen-personal-dict');
+            const listDiv = document.getElementById('personal-dict-list');
+            const countSpan = document.getElementById('dict-count');
+            
+            listDiv.innerHTML = "<p class='text-gray-400 text-center py-4'>Загрузка личного словаря...</p>";
+            
+            try {
+                const res = await fetch(`/api/dictionary/${userId}`);
+                const words = await res.json();
+                
+                countSpan.textContent = `${words.length} слов`;
+                
+                if (!words || words.length === 0) {
+                    listDiv.innerHTML = `
+                        <div class="text-center py-8 bg-gray-50 rounded-2xl border border-dashed border-gray-200 p-4">
+                            <p class="text-gray-400 text-sm">Ваш личный словарь пока пуст.</p>
+                            <p class="text-gray-400 text-xs mt-1">Добавляйте незнакомые слова во время уроков!</p>
+                        </div>`;
+                    return;
+                }
+                
+                listDiv.innerHTML = '';
+                words.forEach(w => {
+                    const statusClass = w.status === 'learned' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700';
+                    const statusText = w.status === 'learned' ? 'Выучено' : 'Изучаю';
+                    const transcriptionText = w.transcription ? `<span class="text-xs text-gray-400 font-normal">[${w.transcription}]</span>` : '';
+                    
+                    listDiv.innerHTML += `
+                        <div class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex justify-between items-center active:bg-gray-50 transition">
+                            <div class="space-y-1">
+                                <div class="font-extrabold text-gray-900 text-base">
+                                    ${w.word} ${transcriptionText}
+                                </div>
+                                <div class="text-sm text-gray-600 font-medium">
+                                    ${w.translation}
+                                </div>
+                            </div>
+                            <span class="text-xs font-bold px-2.5 py-1 rounded-full ${statusClass}">
+                                ${statusText}
+                            </span>
+                        </div>
+                    `;
+                });
+            } catch (e) {
+                console.error(e);
+                listDiv.innerHTML = "<p class='text-red-500 text-center py-4'>Ошибка загрузки словаря.</p>";
+            }
+        }
+
+    </script>
+    <script src="https://telegram.org/js/telegram-web-app.js">        async function openPersonalDictionary() {
+            showScreen('screen-personal-dict');
+            const listDiv = document.getElementById('personal-dict-list');
+            const countSpan = document.getElementById('dict-count');
+            
+            listDiv.innerHTML = "<p class='text-gray-400 text-center py-4'>Загрузка личного словаря...</p>";
+            
+            try {
+                const res = await fetch(`/api/dictionary/${userId}`);
+                const words = await res.json();
+                
+                countSpan.textContent = `${words.length} слов`;
+                
+                if (!words || words.length === 0) {
+                    listDiv.innerHTML = `
+                        <div class="text-center py-8 bg-gray-50 rounded-2xl border border-dashed border-gray-200 p-4">
+                            <p class="text-gray-400 text-sm">Ваш личный словарь пока пуст.</p>
+                            <p class="text-gray-400 text-xs mt-1">Добавляйте незнакомые слова во время уроков!</p>
+                        </div>`;
+                    return;
+                }
+                
+                listDiv.innerHTML = '';
+                words.forEach(w => {
+                    const statusClass = w.status === 'learned' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700';
+                    const statusText = w.status === 'learned' ? 'Выучено' : 'Изучаю';
+                    const transcriptionText = w.transcription ? `<span class="text-xs text-gray-400 font-normal">[${w.transcription}]</span>` : '';
+                    
+                    listDiv.innerHTML += `
+                        <div class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex justify-between items-center active:bg-gray-50 transition">
+                            <div class="space-y-1">
+                                <div class="font-extrabold text-gray-900 text-base">
+                                    ${w.word} ${transcriptionText}
+                                </div>
+                                <div class="text-sm text-gray-600 font-medium">
+                                    ${w.translation}
+                                </div>
+                            </div>
+                            <span class="text-xs font-bold px-2.5 py-1 rounded-full ${statusClass}">
+                                ${statusText}
+                            </span>
+                        </div>
+                    `;
+                });
+            } catch (e) {
+                console.error(e);
+                listDiv.innerHTML = "<p class='text-red-500 text-center py-4'>Ошибка загрузки словаря.</p>";
+            }
+        }
+
+    </script>
 </head>
 <body class="bg-[#F8FAFC] text-zinc-900 min-h-screen p-4 flex flex-col justify-between">
 
@@ -66,8 +166,27 @@
 
             <div id="screen-levels" class="hidden mt-6 space-y-4">
                 <button onclick="showScreen('screen-main')" class="text-blue-600 font-bold flex items-center gap-1 mb-2">← Главное меню</button>
+                
+                <!-- Кнопка Личного Словаря -->
+                <button onclick="openPersonalDictionary()" class="w-full p-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold rounded-2xl flex items-center justify-between shadow-md active:scale-[0.99] transition mb-4">
+                    <span>📒 Открыть мой личный словарь</span>
+                    <span>→</span>
+                </button>
+
                 <h2 class="text-xl font-extrabold text-gray-900">Выберите уровень:</h2>
                 <div class="grid grid-cols-2 gap-3" id="levels-grid"></div>
+            </div>
+
+            <!-- ЭКРАН: ЛИЧНЫЙ СЛОВАРЬ -->
+            <div id="screen-personal-dict" class="hidden mt-6 space-y-4">
+                <button onclick="showScreen('screen-levels')" class="text-blue-600 font-bold flex items-center gap-1">← Назад</button>
+                <div class="flex items-center justify-between">
+                    <h2 class="text-xl font-extrabold text-gray-900">📒 Мой словарь</h2>
+                    <span id="dict-count" class="text-xs bg-zinc-100 text-zinc-600 px-2.5 py-1 rounded-full font-bold">0 слов</span>
+                </div>
+                <div id="personal-dict-list" class="space-y-3 max-h-[60vh] overflow-y-auto pr-1">
+                    <!-- Сюда подгружаются слова -->
+                </div>
             </div>
 
             <div id="screen-list" class="hidden mt-6 space-y-4">
@@ -166,7 +285,7 @@
         let streamRef = null;
 
         function showScreen(screenId) {
-            const screens = ['screen-main', 'screen-levels', 'screen-list', 'screen-lesson', 'screen-practice-task', 'screen-situations', 'screen-club', 'screen-profile'];
+            const screens = ['screen-main', 'screen-levels', 'screen-list', 'screen-lesson', 'screen-practice-task', 'screen-situations', 'screen-club', 'screen-profile', 'screen-personal-dict'];
             screens.forEach(s => document.getElementById(s).classList.add('hidden'));
             document.getElementById(screenId).classList.remove('hidden');
         }
@@ -615,6 +734,56 @@
         }
 
         window.onload = loadProfile;
+            async function openPersonalDictionary() {
+            showScreen('screen-personal-dict');
+            const listDiv = document.getElementById('personal-dict-list');
+            const countSpan = document.getElementById('dict-count');
+            
+            listDiv.innerHTML = "<p class='text-gray-400 text-center py-4'>Загрузка личного словаря...</p>";
+            
+            try {
+                const res = await fetch(`/api/dictionary/${userId}`);
+                const words = await res.json();
+                
+                countSpan.textContent = `${words.length} слов`;
+                
+                if (!words || words.length === 0) {
+                    listDiv.innerHTML = `
+                        <div class="text-center py-8 bg-gray-50 rounded-2xl border border-dashed border-gray-200 p-4">
+                            <p class="text-gray-400 text-sm">Ваш личный словарь пока пуст.</p>
+                            <p class="text-gray-400 text-xs mt-1">Добавляйте незнакомые слова во время уроков!</p>
+                        </div>`;
+                    return;
+                }
+                
+                listDiv.innerHTML = '';
+                words.forEach(w => {
+                    const statusClass = w.status === 'learned' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700';
+                    const statusText = w.status === 'learned' ? 'Выучено' : 'Изучаю';
+                    const transcriptionText = w.transcription ? `<span class="text-xs text-gray-400 font-normal">[${w.transcription}]</span>` : '';
+                    
+                    listDiv.innerHTML += `
+                        <div class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex justify-between items-center active:bg-gray-50 transition">
+                            <div class="space-y-1">
+                                <div class="font-extrabold text-gray-900 text-base">
+                                    ${w.word} ${transcriptionText}
+                                </div>
+                                <div class="text-sm text-gray-600 font-medium">
+                                    ${w.translation}
+                                </div>
+                            </div>
+                            <span class="text-xs font-bold px-2.5 py-1 rounded-full ${statusClass}">
+                                ${statusText}
+                            </span>
+                        </div>
+                    `;
+                });
+            } catch (e) {
+                console.error(e);
+                listDiv.innerHTML = "<p class='text-red-500 text-center py-4'>Ошибка загрузки словаря.</p>";
+            }
+        }
+
     </script>
 </body>
 </html>
