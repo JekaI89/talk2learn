@@ -7,7 +7,7 @@ from database.db import check_is_admin
 router = Router()
 
 # Переменная в начале файла menu.py
-WEBAPP_URL = "https://showroom-quit-exchange.ngrok-free.dev"
+WEBAPP_URL = "https://talk2learn-4gmx.onrender.com"
 # Главные администраторы (всегда имеют права)
 ADMIN_IDS = [377424247, 696767499]
 
