@@ -1,0 +1,46 @@
+# База данных
+bot_database.db
+bot_database_*.db
+*.db
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Виртуальное окружение
+venv/
+env/
+ENV/
+.venv/
+
+# Логи и временные файлы
+temp/
+*.log
+*.tmp
+
+# Ngrok
+ngrok.exe
+ngrok.yml
+ngrok
+
+# Секреты (никогда не коммить!)
+.env
+.env.local

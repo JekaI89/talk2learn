@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Админ Talk2Learn</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-zinc-950 text-white p-6">
+    <div class="max-w-3xl mx-auto">
+        <h1 class="text-3xl font-bold mb-8">⚙️ Admin Panel</h1>
+
+        <div class="flex gap-2 mb-6">
+            <button onclick="showTab('stats')" class="px-6 py-2 bg-zinc-800 rounded-2xl">Статистика</button>
+            <button onclick="showTab('users')" class="px-6 py-2 bg-zinc-800 rounded-2xl">Пользователи</button>
+            <button onclick="showTab('lessons')" class="px-6 py-2 bg-zinc-800 rounded-2xl">Уроки</button>
+            <button onclick="showTab('questions')" class="px-6 py-2 bg-zinc-800 rounded-2xl">Вопросы</button>
+        </div>
+
+        <div id="tab-stats" class="tab-content">
+            <div class="bg-zinc-900 rounded-3xl p-6">
+                <h2 class="text-xl font-semibold mb-4">📊 Статистика</h2>
+                <div id="stats-content">Загрузка...</div>
+            </div>
+        </div>
+
+        <div id="tab-users" class="tab-content hidden">
+            <div class="bg-zinc-900 rounded-3xl p-6">
+                <h2 class="text-xl font-semibold mb-4">👤 Управление пользователями</h2>
+                <input id="user-input" placeholder="@username или Telegram ID" class="w-full bg-zinc-800 p-4 rounded-2xl mb-4">
+                <div class="grid grid-cols-2 gap-3">
+                    <button onclick="manageUser('grant_premium')" class="bg-emerald-600 py-4 rounded-2xl">Дать Premium</button>
+                    <button onclick="manageUser('revoke_premium')" class="bg-red-600 py-4 rounded-2xl">Снять Premium</button>
+                    <button onclick="manageUser('grant_admin')" class="bg-yellow-600 py-4 rounded-2xl">Сделать Админом</button>
+                    <button onclick="manageUser('revoke_admin')" class="bg-gray-600 py-4 rounded-2xl">Снять Админа</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-lessons" class="tab-content hidden">
+            <div class="bg-zinc-900 rounded-3xl p-6 mb-6">
+                <h2 class="text-xl font-semibold mb-4">➕ Добавить урок / Грамматику / Практику</h2>
+                
+                <input id="lesson-title" placeholder="Название урока" class="w-full bg-zinc-800 p-4 rounded-2xl mb-3">
+                
+                <div class="grid grid-cols-2 gap-3 mb-3">
+                    <div>
+                        <label class="block text-sm text-zinc-400 mb-1">Уровень</label>
+                        <select id="lesson-level" class="w-full bg-zinc-800 p-4 rounded-2xl">
+                            <option value="A1">A1</option>
+                            <option value="A2">A2</option>
+                            <option value="B1">B1</option>
+                            <option value="B2">B2</option>
+                            <option value="C1">C1</option>
+                            <option value="C2">C2</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm text-zinc-400 mb-1">Тип</label>
+                        <select id="lesson-type" class="w-full bg-zinc-800 p-4 rounded-2xl">
+                            <option value="lesson">📚 Урок</option>
+                            <option value="grammar">📖 Грамматика</option>
+                            <option value="practice">🎯 Практика (тест)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <textarea id="lesson-text" placeholder="Текст урока (опционально)" class="w-full bg-zinc-800 p-4 rounded-3xl h-32 mb-4"></textarea>
+                <button onclick="addLesson()" class="w-full bg-emerald-600 py-4 rounded-2xl font-bold">Добавить урок</button>
+            </div>
+
+            <div class="bg-zinc-900 rounded-3xl p-6">
+                <h2 class="text-xl font-semibold mb-4">📋 Текущие уроки</h2>
+                <div id="lessons-list" class="space-y-2 max-h-96 overflow-y-auto pr-2">
+                    <div class="text-zinc-500">Загрузка уроков...</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-questions" class="tab-content hidden">
+            <div class="bg-zinc-900 rounded-3xl p-6">
+                <h2 class="text-xl font-semibold mb-4">❓ Добавить вопрос (Multiple Choice)</h2>
+                <!-- Уровень подтягивается автоматически из выбранного урока -->
+                <select id="q-lesson" class="w-full bg-zinc-800 p-4 rounded-2xl mb-3" onchange="onLessonSelect()">
+                    <option value="">-- Выбери урок --</option>
+                </select>
+                <div id="q-level-hint" class="text-sm text-zinc-400 mb-3"></div>
+                <input id="q-text" placeholder="Текст вопроса" class="w-full bg-zinc-800 p-4 rounded-2xl mb-3">
+                <input id="q-opt1" placeholder="Вариант 1" class="w-full bg-zinc-800 p-4 rounded-2xl mb-2">
+                <input id="q-opt2" placeholder="Вариант 2" class="w-full bg-zinc-800 p-4 rounded-2xl mb-2">
+                <input id="q-opt3" placeholder="Вариант 3" class="w-full bg-zinc-800 p-4 rounded-2xl mb-3">
+                <select id="q-correct" class="w-full bg-zinc-800 p-4 rounded-2xl mb-4">
+                    <option value="1">Правильный ответ: Вариант 1</option>
+                    <option value="2">Правильный ответ: Вариант 2</option>
+                    <option value="3">Правильный ответ: Вариант 3</option>
+                </select>
+                <button onclick="addQuestion()" class="w-full bg-blue-600 py-4 rounded-2xl font-bold">Добавить вопрос</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Хранилище данных об уроках для вкладки вопросов
+        let lessonsData = [];
+
+        function showTab(tab) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById('tab-' + tab).classList.remove('hidden');
+            
+            if (tab === 'lessons') loadAdminLessonsList();
+        }
+
+        async function loadStats() {
+            try {
+                const res = await fetch('/api/admin/stats');
+                const data = await res.json();
+                document.getElementById('stats-content').innerHTML = `
+                    Пользователей: <b>${data.total_users || 0}</b><br>
+                    Premium: <b>${data.premium_users || 0}</b><br>
+                    Уроков A1: <b>${data.levels?.A1 || 0}</b>
+                `;
+            } catch (err) {
+                console.error("Ошибка загрузки статистики:", err);
+            }
+        }
+
+        async function loadAdminLessonsList() {
+            try {
+                const res = await fetch('/api/admin/lessons');
+                const lessons = await res.json();
+                const container = document.getElementById('lessons-list');
+                
+                if (lessons.length === 0) {
+                    container.innerHTML = '<div class="text-zinc-500 py-2">Уроков пока нет</div>';
+                    return;
+                }
+                
+                container.innerHTML = '';
+                lessons.forEach(l => {
+                    const typeLabels = { 'lesson': '📚 Урок', 'grammar': '📖 Грамм.', 'practice': '🎯 Практ.' };
+                    const label = typeLabels[l.type] || l.type;
+
+                    const row = document.createElement('div');
+                    row.className = "flex items-center justify-between bg-zinc-800 p-4 rounded-xl border border-zinc-700/50 hover:border-zinc-600 transition-all";
+                    row.innerHTML = `
+                        <div class="flex items-center gap-3">
+                            <span class="px-2 py-1 bg-zinc-700 text-xs font-bold rounded-lg text-yellow-400">${l.level}</span>
+                            <span class="text-sm font-medium">${l.title}</span>
+                            <span class="text-xs text-zinc-400 hidden sm:inline">${label}</span>
+                        </div>
+                        <button onclick="deleteLessonById(${l.id})" class="px-3 py-1.5 bg-red-950/40 text-red-400 hover:bg-red-900 hover:text-red-100 rounded-xl text-xs font-semibold transition-colors">
+                            🗑️ Удалить
+                        </button>
+                    `;
+                    container.appendChild(row);
+                });
+            } catch (err) {
+                console.error("Ошибка загрузки списка уроков:", err);
+            }
+        }
+
+        async function deleteLessonById(lessonId) {
+            if (!confirm("Вы действительно хотите удалить этот урок? Он будет скрыт из доступа пользователей.")) return;
+
+            try {
+                const res = await fetch(`/api/admin/delete_lesson/${lessonId}`, { method: 'DELETE' });
+                const result = await res.json();
+
+                if (result.status === 'success') {
+                    await loadAdminLessonsList();
+                    await loadLessonsForSelect();
+                } else {
+                    alert("Ошибка: " + result.message);
+                }
+            } catch (error) {
+                console.error("Ошибка при удалении урока:", error);
+                alert("Не удалось удалить урок");
+            }
+        }
+
+        async function loadLessonsForSelect() {
+            try {
+                const res = await fetch('/api/admin/lessons_for_questions');
+                lessonsData = await res.json();
+                const select = document.getElementById('q-lesson');
+                select.innerHTML = '<option value="">-- Выбери урок --</option>';
+                lessonsData.forEach(l => {
+                    const opt = document.createElement('option');
+                    opt.value = l.id;
+                    opt.dataset.level = l.level;
+                    opt.textContent = `[${l.level}] ${l.title}`;
+                    select.appendChild(opt);
+                });
+                // Сброс подсказки уровня
+                document.getElementById('q-level-hint').textContent = '';
+            } catch (err) {
+                console.error("Ошибка загрузки уроков для вопросов:", err);
+            }
+        }
+
+        function onLessonSelect() {
+            const select = document.getElementById('q-lesson');
+            const selectedOpt = select.options[select.selectedIndex];
+            const level = selectedOpt.dataset.level;
+            const hint = document.getElementById('q-level-hint');
+            hint.textContent = level ? `Уровень вопроса будет автоматически установлен: ${level}` : '';
+        }
+
+        async function addLesson() {
+            const title = document.getElementById('lesson-title').value.trim();
+            const level = document.getElementById('lesson-level').value;
+            const content_type = document.getElementById('lesson-type').value;
+            const lesson_text = document.getElementById('lesson-text').value.trim();
+
+            if (!title) return alert("Введите название урока");
+
+            try {
+                await fetch('/api/admin/add_lesson', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ level, title, lesson_text, content_type })
+                });
+
+                alert("Урок добавлен!");
+                document.getElementById('lesson-title').value = '';
+                document.getElementById('lesson-text').value = '';
+                await loadAdminLessonsList();
+                await loadLessonsForSelect();
+            } catch (err) {
+                console.error("Ошибка добавления урока:", err);
+                alert("Не удалось добавить урок");
+            }
+        }
+
+        async function addQuestion() {
+            const select = document.getElementById('q-lesson');
+            const lesson_id = select.value;
+            const selectedOpt = select.options[select.selectedIndex];
+            // Берём уровень из выбранного урока, а не хардкодим A1
+            const level = selectedOpt.dataset.level || "A1";
+
+            const question_text = document.getElementById('q-text').value.trim();
+            const option_1 = document.getElementById('q-opt1').value.trim();
+            const option_2 = document.getElementById('q-opt2').value.trim();
+            const option_3 = document.getElementById('q-opt3').value.trim();
+            const correct_option = parseInt(document.getElementById('q-correct').value);
+
+            if (!lesson_id || !question_text || !option_1 || !option_2 || !option_3) {
+                return alert("Заполните все поля");
+            }
+
+            try {
+                await fetch('/api/admin/add_question', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        lesson_id: parseInt(lesson_id),
+                        level,
+                        task_type: "multiple_choice",
+                        question_text,
+                        option_1,
+                        option_2,
+                        option_3,
+                        correct_option
+                    })
+                });
+
+                alert("Вопрос добавлен!");
+                document.getElementById('q-text').value = '';
+                document.getElementById('q-opt1').value = '';
+                document.getElementById('q-opt2').value = '';
+                document.getElementById('q-opt3').value = '';
+            } catch (err) {
+                console.error("Ошибка добавления вопроса:", err);
+                alert("Не удалось добавить вопрос");
+            }
+        }
+
+        async function manageUser(action) {
+            const input = document.getElementById('user-input').value.trim();
+            if (!input) return alert("Введите ID или username");
+
+            try {
+                await fetch('/api/admin/manage_user', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ tg_id: input, action })
+                });
+                alert("Выполнено!");
+            } catch (err) {
+                console.error("Ошибка управления пользователем:", err);
+                alert("Не удалось выполнить действие");
+            }
+        }
+
+        window.onload = () => {
+            loadStats();
+            loadLessonsForSelect();
+            showTab('stats');
+        };
+    </script>
+</body>
+</html>
