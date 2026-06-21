@@ -24,7 +24,8 @@ from database.db import (
     check_is_admin,
     get_user_level,
     add_word_to_user_dict,
-    get_user_words
+    get_user_words,
+    get_random_practice_question
 )
 
 from utils.ai_service import transcribe_voice, get_ai_response, generate_voice
@@ -233,6 +234,41 @@ async def complete_content(data: ProgressRequest):
         raise HTTPException(500, str(e))
 
 
+# ====================== ПРАКТИКА ======================
+@app.get("/api/random_question")
+async def random_question(
+    user_id: int = Query(...),
+    level: str = Query("A1"),
+    task_type: str = Query("multiple_choice", alias="type")
+):
+    try:
+        row = await get_random_practice_question(user_id, level, task_type)
+        if not row:
+            return {"error": "no_more_questions"}
+
+        return {
+            "question_id": row["id"],
+            "question": row["question_text"],
+            "options": [row["option_1"], row["option_2"], row["option_3"]],
+            "correct_option": row["correct_option"]
+        }
+    except Exception as e:
+        traceback.print_exc()
+        return {"error": "server_error"}
+
+
+@app.post("/api/check_answer")
+async def check_answer(data: AnswerCheckRequest):
+    try:
+        # XP и прогресс по верному ответу уже сохраняются через /api/progress/complete
+        # (фронтенд вызывает submitProgress('practice', ...) до этого запроса).
+        # Этот эндпоинт просто подтверждает приём результата для фронтенда.
+        return {"status": "success", "is_correct": data.is_correct}
+    except Exception as e:
+        traceback.print_exc()
+        raise HTTPException(500, str(e))
+
+
 # ====================== РЕГИСТРАЦИЯ ======================
 @app.post("/api/register_user")
 async def register_user(data: RegisterUserRequest):
@@ -263,6 +299,22 @@ async def admin_lessons():
                 "level": r["level"],
                 "title": r["title"],
                 "type": r["content_type"]
+            } for r in rows
+        ]
+    except Exception as e:
+        traceback.print_exc()
+        return []
+
+
+@app.get("/api/admin/lessons_for_questions")
+async def admin_lessons_for_questions():
+    try:
+        rows = await get_all_lessons()
+        return [
+            {
+                "id": r["id"],
+                "level": r["level"],
+                "title": r["title"]
             } for r in rows
         ]
     except Exception as e:
