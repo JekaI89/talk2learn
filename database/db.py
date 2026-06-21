@@ -83,6 +83,26 @@ async def init_db():
                 order_num INTEGER DEFAULT 0
             )
         """)
+        # На случай, если таблица questions уже существует с прошлого деплоя
+        # без колонки commentary (используется в get_next_queue_item)
+        await db.execute("""
+            ALTER TABLE questions ADD COLUMN IF NOT EXISTS commentary TEXT
+        """)
+
+        # USER_QUEUE (очередь заданий пользователя; использовалась в
+        # check_and_fill_queue/get_next_queue_item/handle_answer_result,
+        # но таблица нигде не создавалась — добавлена для согласованности схемы)
+        await db.execute("""
+            CREATE TABLE IF NOT EXISTS user_queue (
+                id SERIAL PRIMARY KEY,
+                user_id BIGINT REFERENCES users(user_id) ON DELETE CASCADE,
+                content_type TEXT NOT NULL,
+                content_id INTEGER NOT NULL,
+                queue_order INTEGER DEFAULT 0,
+                status TEXT DEFAULT 'pending',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
 
         # USER_PROGRESS
         await db.execute("""
@@ -310,62 +330,36 @@ async def save_user_progress(user_id: int, content_type: str, content_id: int):
         return {"status": "success", "xp_earned": xp_to_add}
 
 
-# ==================== ОЧЕРЕДЬ (USER_QUEUE) ====================
+# ==================== ПРАКТИКА (СЛУЧАЙНЫЙ ВОПРОС) ====================
+# Прежняя реализация опиралась на таблицу user_queue, которая нигде не
+# создавалась (init_db её не содержал), и на колонку questions.commentary,
+# которой тоже не существует в схеме — обращение к ним гарантированно
+# падало с ошибкой "relation/column does not exist". Эти функции нигде
+# не вызывались из webapp.py, поэтому ошибка не проявлялась раньше.
+# Вместо отдельной таблицы-очереди используем ту же логику, что и для
+# уроков: прогресс пользователя по вопросам трекаем в user_progress
+# с content_type='practice', content_id=questions.id.
 
-async def check_and_fill_queue(user_id: int, level: str):
-    pool = await get_pool()
-    async with pool.acquire() as db:
-        row = await db.fetchrow("""
-            SELECT COUNT(*) as cnt FROM user_queue
-            WHERE user_id = $1 AND status = 'pending'
-        """, user_id)
-        if row["cnt"] > 0:
-            return
-
-        await db.execute("""
-            INSERT INTO user_queue (user_id, content_type, content_id, queue_order, status)
-            SELECT $1, 'lesson', id, order_num, 'pending'
-            FROM lessons WHERE level = $2 AND is_active = TRUE ORDER BY order_num
-        """, user_id, level)
-
-
-async def get_next_queue_item(user_id: int, level: str):
-    await check_and_fill_queue(user_id, level)
+async def get_random_practice_question(user_id: int, level: str, task_type: str):
+    """Возвращает случайный вопрос уровня/типа, который пользователь ещё не прошёл."""
     pool = await get_pool()
     async with pool.acquire() as db:
         return await db.fetchrow("""
-            SELECT uq.id, uq.content_type, uq.content_id, l.title, l.lesson_text,
-                   q.question_text, q.option_1, q.option_2, q.option_3,
-                   q.correct_option, q.commentary
-            FROM user_queue uq
-            LEFT JOIN lessons l ON uq.content_id = l.id
-            LEFT JOIN questions q ON l.id = q.lesson_id
-            WHERE uq.user_id = $1 AND uq.status = 'pending'
-            ORDER BY uq.queue_order ASC
+            SELECT q.id, q.question_text, q.option_1, q.option_2, q.option_3, q.correct_option
+            FROM questions q
+            WHERE q.level = $1 AND q.task_type = $2
+              AND NOT EXISTS (
+                  SELECT 1 FROM user_progress up
+                  WHERE up.user_id = $3
+                    AND up.content_type = 'practice'
+                    AND up.content_id = q.id
+              )
+            ORDER BY random()
             LIMIT 1
-        """, user_id)
+        """, level, task_type, user_id)
 
 
-async def handle_answer_result(user_id: int, queue_item_id: int, is_correct: bool):
-    pool = await get_pool()
-    async with pool.acquire() as db:
-        if is_correct:
-            await db.execute(
-                "UPDATE user_queue SET status = 'completed' WHERE id = $1", queue_item_id
-            )
-            await db.execute(
-                "UPDATE users SET xp = xp + 10 WHERE user_id = $1", user_id
-            )
-        else:
-            row = await db.fetchrow(
-                "SELECT MAX(queue_order) as max_order FROM user_queue WHERE user_id = $1", user_id
-            )
-            max_order = row["max_order"] or 0
-            await db.execute(
-                "UPDATE user_queue SET queue_order = $1 WHERE id = $2",
-                max_order + 1, queue_item_id
-            )
-# ==================== СЛОВАРЬ ====================
+
 
 async def add_word_to_user_dict(
     user_id: int, 
