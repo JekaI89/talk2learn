@@ -1,5 +1,6 @@
 import os
 import asyncio
+import json
 from openai import AsyncOpenAI
 from gtts import gTTS
 from pathlib import Path
@@ -119,3 +120,47 @@ async def generate_voice(text: str, output_path: str):
         await asyncio.to_thread(save_tts)
     except Exception as e:
         print(f"❌ Ошибка генерации аудио: {e}")
+
+
+async def translate_word(word: str, context: str = "") -> dict:
+    """
+    Автоматический перевод слова на русский через Groq (для тапа по слову
+    в уроке или в разговорном клубе). Возвращает перевод, IPA-транскрипцию
+    и короткий пример использования. При ошибке/невалидном JSON от модели
+    возвращает translation="" — вызывающий код должен это проверить и не
+    сохранять пустой перевод в словарь.
+    """
+    system_prompt = (
+        "You are a precise English-Russian dictionary assistant. "
+        "Given an English word (and optionally the sentence it appeared in for context), "
+        "respond with ONLY a valid JSON object and nothing else — no markdown, no code fences, "
+        "no explanations. The JSON must have exactly these keys: "
+        '"translation" (short accurate Russian translation of the word in this context), '
+        '"transcription" (IPA transcription in slashes, e.g. /wɜːrd/), '
+        '"example" (one short, simple English sentence using the word).'
+    )
+    user_content = f"Word: {word}"
+    if context.strip():
+        user_content += f"\nSentence: {context.strip()}"
+
+    try:
+        response = await client.chat.completions.create(
+            model="llama-3.3-70b-versatile",
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_content}
+            ],
+            temperature=0.2
+        )
+        raw = response.choices[0].message.content.strip()
+        raw = raw.replace("```json", "").replace("```", "").strip()
+        data = json.loads(raw)
+
+        return {
+            "translation": str(data.get("translation", "")).strip(),
+            "transcription": str(data.get("transcription", "")).strip(),
+            "example": str(data.get("example", "")).strip()
+        }
+    except Exception as e:
+        print(f"❌ Ошибка перевода слова '{word}': {e}")
+        return {"translation": "", "transcription": "", "example": ""}
