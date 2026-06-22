@@ -4,9 +4,12 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from typing import Optional
 import os
+import asyncio
+import time
 import traceback
 import shutil
 import uuid
+from pathlib import Path
 from contextlib import asynccontextmanager
 
 from database.db import (
@@ -27,12 +30,17 @@ from database.db import (
     get_user_words,
     get_random_practice_question,
     get_next_uncompleted_lesson,
+    get_lesson_progress,
     get_vocab_topics,
     get_vocab_cards,
     add_vocab_card,
     update_vocab_card,
     delete_vocab_card,
-    get_all_vocab_cards_admin
+    get_all_vocab_cards_admin,
+    complete_onboarding,
+    get_onboarding_status,
+    update_word_status,
+    get_user_category_stats
 )
 
 from utils.ai_service import transcribe_voice, get_ai_response, generate_voice, translate_word
@@ -44,13 +52,70 @@ AUDIO_DIR = os.path.join(STATIC_DIR, "audio")
 ADMIN_IDS = [377424247, 696767499]
 
 
+# ====================== BOT (фоновая задача) ======================
+async def start_telegram_bot():
+    """Запускает Telegram-бота как фоновую asyncio-задачу внутри webapp."""
+    bot_token = os.environ.get("BOT_TOKEN", "")
+    if not bot_token:
+        print("⚠️ BOT_TOKEN не задан — Telegram-бот не запущен")
+        return
+    try:
+        from aiogram import Bot, Dispatcher
+        from aiogram.client.default import DefaultBotProperties
+        from aiogram.enums import ParseMode
+        from handlers import menu, speaking_club
+
+        bot = Bot(token=bot_token, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
+        dp = Dispatcher()
+        dp.include_router(menu.router)
+        dp.include_router(speaking_club.router)
+        print("🤖 Telegram-бот запущен (polling)...")
+        await dp.start_polling(bot, allowed_updates=["message", "callback_query"])
+    except asyncio.CancelledError:
+        print("🤖 Telegram-бот остановлен")
+    except Exception as e:
+        print(f"❌ Ошибка Telegram-бота: {e}")
+
+
+# ====================== AUDIO CLEANUP ======================
+async def audio_cleanup_loop():
+    """Удаляет аудиофайлы старше 1 часа каждые 30 минут."""
+    while True:
+        try:
+            await asyncio.sleep(1800)  # 30 минут
+            now = time.time()
+            cleaned = 0
+            for f in Path(AUDIO_DIR).glob("*.mp3"):
+                if now - f.stat().st_mtime > 3600:  # старше 1 часа
+                    f.unlink()
+                    cleaned += 1
+            if cleaned:
+                print(f"🧹 Аудиоочистка: удалено {cleaned} файлов")
+        except asyncio.CancelledError:
+            break
+        except Exception as e:
+            print(f"❌ Ошибка очистки аудио: {e}")
+
+
 # ====================== LIFESPAN ======================
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     print("🚀 Запуск Talk2Learn...")
     os.makedirs(AUDIO_DIR, exist_ok=True)
     await init_db()
+
+    # Запускаем бота и очистку аудио как фоновые задачи
+    bot_task = asyncio.create_task(start_telegram_bot())
+    cleanup_task = asyncio.create_task(audio_cleanup_loop())
+
     yield
+
+    bot_task.cancel()
+    cleanup_task.cancel()
+    try:
+        await bot_task
+    except asyncio.CancelledError:
+        pass
     await close_pool()
     print("🛑 Остановка Talk2Learn...")
 
@@ -112,6 +177,18 @@ class QuickAddWordRequest(BaseModel):
     word: str
     context_sentence: str = ""
 
+
+class OnboardingRequest(BaseModel):
+    user_id: int
+    level: str
+    goal: str = ""
+
+
+class WordStatusRequest(BaseModel):
+    user_id: int
+    word: str
+    status: str  # 'learning' | 'known'
+
 # ====================== ДАШБОРД ======================
 @app.get("/api/dashboard/{user_id}")
 async def get_dashboard(user_id: int):
@@ -168,6 +245,7 @@ async def get_profile(user_id: int):
             tasks_done = row["cnt"]
 
         is_admin = user_id in ADMIN_IDS or bool(user["is_admin"])
+        cat_stats = await get_user_category_stats(user_id)
         return {
             "name": user["name"] or "",
             "username": user["username"] or "",
@@ -178,6 +256,7 @@ async def get_profile(user_id: int):
             "is_admin": is_admin,
             "lessons_done": lessons_done,
             "tasks_done": tasks_done,
+            "category_stats": cat_stats,
         }
     except Exception as e:
         traceback.print_exc()
@@ -206,22 +285,20 @@ async def get_lessons_by_level(level: str, user_id: Optional[int] = Query(None))
 
 @app.get("/api/lessons/next/{level}")
 async def get_next_lesson(level: str, user_id: int = Query(...), content_type: Optional[str] = Query(None)):
-    """
-    Отдаёт следующий непройденный урок уровня (опционально по типу — lesson/grammar/vocabulary).
-    Используется фронтендом вместо списка уроков: при входе в уровень и сразу после
-    прохождения текущего урока автоматически подгружается следующий непройденный.
-    """
     try:
         row = await get_next_uncompleted_lesson(user_id, level, content_type)
+        progress = await get_lesson_progress(user_id, level, content_type)
+
         if not row:
-            return {"completed": True}
+            return {"completed": True, "progress": progress}
 
         return {
             "completed": False,
             "id": row["id"],
             "title": row["title"],
             "lesson_text": row["lesson_text"] or "",
-            "type": row["content_type"]
+            "type": row["content_type"],
+            "progress": progress  # {total, completed, next_num}
         }
     except Exception as e:
         traceback.print_exc()
@@ -676,6 +753,55 @@ async def admin_vocab_delete(card_id: int):
     except Exception as e:
         traceback.print_exc()
         raise HTTPException(500, str(e))
+
+
+# ====================== ОНБОРДИНГ ======================
+
+@app.get("/api/onboarding/{user_id}")
+async def check_onboarding(user_id: int):
+    try:
+        done = await get_onboarding_status(user_id)
+        return {"onboarding_done": done}
+    except Exception as e:
+        traceback.print_exc()
+        return {"onboarding_done": False}
+
+
+@app.post("/api/onboarding/complete")
+async def finish_onboarding(data: OnboardingRequest):
+    try:
+        await complete_onboarding(data.user_id, data.level, data.goal)
+        return {"status": "success"}
+    except Exception as e:
+        traceback.print_exc()
+        raise HTTPException(500, str(e))
+
+
+# ====================== СТАТУС СЛОВА ======================
+
+@app.post("/api/dictionary/status")
+async def set_word_status(data: WordStatusRequest):
+    try:
+        if data.status not in ("learning", "known"):
+            raise HTTPException(400, "status должен быть 'learning' или 'known'")
+        await update_word_status(data.user_id, data.word, data.status)
+        return {"status": "success"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        traceback.print_exc()
+        raise HTTPException(500, str(e))
+
+
+# ====================== СТАТИСТИКА ПО КАТЕГОРИЯМ ======================
+
+@app.get("/api/stats/categories/{user_id}")
+async def category_stats(user_id: int):
+    try:
+        return await get_user_category_stats(user_id)
+    except Exception as e:
+        traceback.print_exc()
+        return {}
 
 
 # ====================== СТАТИКА ======================
