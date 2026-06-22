@@ -16,6 +16,7 @@
             <button onclick="showTab('users')" class="px-6 py-2 bg-zinc-800 rounded-2xl text-sm font-medium hover:bg-zinc-700 transition-colors">Пользователи</button>
             <button onclick="showTab('lessons')" class="px-6 py-2 bg-zinc-800 rounded-2xl text-sm font-medium hover:bg-zinc-700 transition-colors">Уроки</button>
             <button onclick="showTab('questions')" class="px-6 py-2 bg-zinc-800 rounded-2xl text-sm font-medium hover:bg-zinc-700 transition-colors">Вопросы</button>
+            <button onclick="showTab('vocab')" class="px-6 py-2 bg-zinc-800 rounded-2xl text-sm font-medium hover:bg-zinc-700 transition-colors">📚 Словарь</button>
             <button onclick="closeAdmin()" class="px-6 py-2 bg-red-950/60 text-red-400 border border-red-900/50 rounded-2xl text-sm font-semibold hover:bg-red-900 hover:text-red-100 transition-colors ml-auto">
                 ◀ Назад в Академию
             </button>
@@ -100,6 +101,58 @@
                 <button onclick="addQuestion()" class="w-full bg-blue-600 py-4 rounded-2xl font-bold">Добавить вопрос</button>
             </div>
         </div>
+
+        <!-- ── ВКЛАДКА: СЛОВАРЬ ──────────────────────────── -->
+        <div id="tab-vocab" class="tab-content hidden space-y-6">
+
+            <!-- Форма добавления карточки -->
+            <div class="bg-zinc-900 rounded-3xl p-6">
+                <h2 class="text-xl font-semibold mb-4">➕ Добавить карточку</h2>
+                <div class="grid grid-cols-2 gap-3 mb-3">
+                    <input id="vc-word" placeholder="Слово (EN)" class="bg-zinc-800 p-3 rounded-2xl col-span-1">
+                    <input id="vc-translation" placeholder="Перевод (RU)" class="bg-zinc-800 p-3 rounded-2xl col-span-1">
+                </div>
+                <div class="grid grid-cols-2 gap-3 mb-3">
+                    <input id="vc-topic" placeholder="Тема (Animals, Food...)" class="bg-zinc-800 p-3 rounded-2xl">
+                    <input id="vc-emoji" placeholder="Emoji code (1F415)" class="bg-zinc-800 p-3 rounded-2xl font-mono">
+                </div>
+                <div class="grid grid-cols-2 gap-3 mb-3">
+                    <select id="vc-level" class="bg-zinc-800 p-3 rounded-2xl">
+                        <option value="A1">A1</option><option value="A2">A2</option>
+                        <option value="B1">B1</option><option value="B2">B2</option>
+                        <option value="C1">C1</option><option value="C2">C2</option>
+                    </select>
+                    <input id="vc-order" type="number" placeholder="Порядок (0)" value="0" class="bg-zinc-800 p-3 rounded-2xl">
+                </div>
+                <input id="vc-definition" placeholder="Значение на английском (необязательно)" class="w-full bg-zinc-800 p-3 rounded-2xl mb-3">
+
+                <!-- Превью -->
+                <div class="flex items-center gap-3 mb-4 bg-zinc-800 rounded-2xl p-3">
+                    <img id="vc-preview-img" src="" alt="" class="w-12 h-12 object-contain hidden">
+                    <span id="vc-preview-emoji" class="text-4xl hidden"></span>
+                    <div>
+                        <div id="vc-preview-word" class="font-bold text-white text-sm">— введите данные выше</div>
+                        <div id="vc-preview-tr" class="text-blue-400 text-xs"></div>
+                    </div>
+                </div>
+
+                <div class="flex gap-3">
+                    <button onclick="previewVocabCard()" class="flex-1 bg-zinc-700 py-3 rounded-2xl font-bold text-sm hover:bg-zinc-600">👁 Превью</button>
+                    <button onclick="addVocabCard()" class="flex-1 bg-emerald-600 py-3 rounded-2xl font-bold text-sm hover:bg-emerald-500">+ Добавить</button>
+                </div>
+                <div id="vc-add-status" class="text-center text-sm mt-2 min-h-[20px]"></div>
+            </div>
+
+            <!-- Таблица карточек -->
+            <div class="bg-zinc-900 rounded-3xl p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-semibold">📋 Все карточки</h2>
+                    <button onclick="loadAdminVocab()" class="text-xs bg-zinc-700 px-4 py-2 rounded-xl hover:bg-zinc-600">Обновить</button>
+                </div>
+                <div id="vocab-admin-list" class="space-y-2 max-h-[500px] overflow-y-auto pr-1"></div>
+            </div>
+        </div>
+
     </div>
 
     <script>
@@ -114,8 +167,9 @@
         function showTab(tab) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
             document.getElementById('tab-' + tab).classList.remove('hidden');
-            
+
             if (tab === 'lessons') loadAdminLessonsList();
+            if (tab === 'vocab') loadAdminVocab();
         }
 
         function closeAdmin() {
@@ -318,6 +372,107 @@
                 console.error("Ошибка управления пользователем:", err);
                 alert("Не удалось выполнить действие");
             }
+        }
+
+        // ====================== VOCAB ADMIN ======================
+
+        function emojiAdminUrl(code) {
+            return `https://raw.githubusercontent.com/hfg-gmuend/openmoji/master/color/svg/${code}.svg`;
+        }
+
+        function previewVocabCard() {
+            const code = document.getElementById('vc-emoji').value.trim().toUpperCase();
+            const word = document.getElementById('vc-word').value.trim();
+            const tr   = document.getElementById('vc-translation').value.trim();
+
+            const img = document.getElementById('vc-preview-img');
+            const fallback = document.getElementById('vc-preview-emoji');
+
+            if (code) {
+                img.src = emojiAdminUrl(code);
+                img.classList.remove('hidden');
+                img.onerror = () => {
+                    img.classList.add('hidden');
+                    fallback.textContent = String.fromCodePoint(parseInt(code, 16));
+                    fallback.classList.remove('hidden');
+                };
+            }
+            document.getElementById('vc-preview-word').textContent = word || '—';
+            document.getElementById('vc-preview-tr').textContent   = tr   || '';
+        }
+
+        async function addVocabCard() {
+            const word  = document.getElementById('vc-word').value.trim();
+            const tr    = document.getElementById('vc-translation').value.trim();
+            const topic = document.getElementById('vc-topic').value.trim();
+            const emoji = document.getElementById('vc-emoji').value.trim().toUpperCase();
+            const level = document.getElementById('vc-level').value;
+            const def   = document.getElementById('vc-definition').value.trim();
+            const order = parseInt(document.getElementById('vc-order').value) || 0;
+            const status = document.getElementById('vc-add-status');
+
+            if (!word || !tr || !topic || !emoji) {
+                status.textContent = '⚠️ Заполните Слово, Перевод, Тему и Emoji code';
+                status.className = 'text-center text-sm mt-2 text-yellow-400';
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/admin/vocab/add', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ word, translation: tr, topic, emoji_code: emoji, level, definition: def, order_num: order })
+                });
+                const data = await res.json();
+                if (data.status === 'success') {
+                    status.textContent = `✅ Добавлено! ID: ${data.id}`;
+                    status.className = 'text-center text-sm mt-2 text-emerald-400';
+                    ['vc-word','vc-translation','vc-emoji','vc-definition'].forEach(id => document.getElementById(id).value = '');
+                    loadAdminVocab();
+                } else {
+                    status.textContent = '❌ Ошибка: ' + (data.detail || 'неизвестная');
+                    status.className = 'text-center text-sm mt-2 text-red-400';
+                }
+            } catch(e) {
+                status.textContent = '❌ Ошибка соединения';
+                status.className = 'text-center text-sm mt-2 text-red-400';
+            }
+        }
+
+        async function loadAdminVocab() {
+            const list = document.getElementById('vocab-admin-list');
+            list.innerHTML = '<p class="text-zinc-400 text-sm text-center py-4">Загрузка...</p>';
+            try {
+                const res = await fetch('/api/admin/vocab');
+                const cards = await res.json();
+                if (!cards.length) {
+                    list.innerHTML = '<p class="text-zinc-500 text-sm text-center py-4">Карточек пока нет</p>';
+                    return;
+                }
+                list.innerHTML = cards.map(c => `
+                    <div class="flex items-center gap-3 bg-zinc-800 rounded-2xl p-3">
+                        <img src="${emojiAdminUrl(c.emoji_code)}" alt="${c.word}" class="w-10 h-10 object-contain flex-shrink-0"
+                             onerror="this.outerHTML='<span class=\\"text-2xl\\">' + String.fromCodePoint(parseInt('${c.emoji_code}',16)) + '</span>'">
+                        <div class="flex-1 min-w-0">
+                            <div class="font-bold text-white text-sm">${c.word} <span class="text-zinc-400 font-normal">— ${c.translation}</span></div>
+                            <div class="text-xs text-zinc-500">${c.topic} · ${c.level}</div>
+                        </div>
+                        <button onclick="deleteVocabCard(${c.id})"
+                            class="text-red-400 hover:text-red-300 text-xs px-3 py-1.5 bg-red-950/40 rounded-xl flex-shrink-0">🗑</button>
+                    </div>
+                `).join('');
+            } catch(e) {
+                list.innerHTML = '<p class="text-red-400 text-sm text-center py-4">Ошибка загрузки</p>';
+            }
+        }
+
+        async function deleteVocabCard(id) {
+            if (!confirm('Удалить карточку?')) return;
+            try {
+                const res = await fetch(`/api/admin/vocab/delete/${id}`, { method: 'DELETE' });
+                const data = await res.json();
+                if (data.status === 'success') loadAdminVocab();
+            } catch(e) { alert('Ошибка удаления'); }
         }
 
         window.onload = () => {
