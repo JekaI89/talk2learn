@@ -24,10 +24,18 @@ from database.db import (
     check_is_admin,
     get_user_level,
     add_word_to_user_dict,
-    get_user_words
+    get_user_words,
+    get_random_practice_question,
+    get_next_uncompleted_lesson,
+    get_vocab_topics,
+    get_vocab_cards,
+    add_vocab_card,
+    update_vocab_card,
+    delete_vocab_card,
+    get_all_vocab_cards_admin
 )
 
-from utils.ai_service import transcribe_voice, get_ai_response, generate_voice
+from utils.ai_service import transcribe_voice, get_ai_response, generate_voice, translate_word
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 STATIC_DIR = os.path.join(BASE_DIR, "static")
@@ -97,6 +105,12 @@ class AddWordRequest(BaseModel):
     translation: str
     transcription: str = ""
     context_example: str = ""
+
+
+class QuickAddWordRequest(BaseModel):
+    user_id: int
+    word: str
+    context_sentence: str = ""
 
 # ====================== ДАШБОРД ======================
 @app.get("/api/dashboard/{user_id}")
@@ -190,6 +204,30 @@ async def get_lessons_by_level(level: str, user_id: Optional[int] = Query(None))
         return []
 
 
+@app.get("/api/lessons/next/{level}")
+async def get_next_lesson(level: str, user_id: int = Query(...), content_type: Optional[str] = Query(None)):
+    """
+    Отдаёт следующий непройденный урок уровня (опционально по типу — lesson/grammar/vocabulary).
+    Используется фронтендом вместо списка уроков: при входе в уровень и сразу после
+    прохождения текущего урока автоматически подгружается следующий непройденный.
+    """
+    try:
+        row = await get_next_uncompleted_lesson(user_id, level, content_type)
+        if not row:
+            return {"completed": True}
+
+        return {
+            "completed": False,
+            "id": row["id"],
+            "title": row["title"],
+            "lesson_text": row["lesson_text"] or "",
+            "type": row["content_type"]
+        }
+    except Exception as e:
+        traceback.print_exc()
+        raise HTTPException(500, "Ошибка загрузки следующего урока")
+
+
 @app.get("/api/lesson/{lesson_id}")
 async def get_lesson(lesson_id: int):
     try:
@@ -233,6 +271,41 @@ async def complete_content(data: ProgressRequest):
         raise HTTPException(500, str(e))
 
 
+# ====================== ПРАКТИКА ======================
+@app.get("/api/random_question")
+async def random_question(
+    user_id: int = Query(...),
+    level: str = Query("A1"),
+    task_type: str = Query("multiple_choice", alias="type")
+):
+    try:
+        row = await get_random_practice_question(user_id, level, task_type)
+        if not row:
+            return {"error": "no_more_questions"}
+
+        return {
+            "question_id": row["id"],
+            "question": row["question_text"],
+            "options": [row["option_1"], row["option_2"], row["option_3"]],
+            "correct_option": row["correct_option"]
+        }
+    except Exception as e:
+        traceback.print_exc()
+        return {"error": "server_error"}
+
+
+@app.post("/api/check_answer")
+async def check_answer(data: AnswerCheckRequest):
+    try:
+        # XP и прогресс по верному ответу уже сохраняются через /api/progress/complete
+        # (фронтенд вызывает submitProgress('practice', ...) до этого запроса).
+        # Этот эндпоинт просто подтверждает приём результата для фронтенда.
+        return {"status": "success", "is_correct": data.is_correct}
+    except Exception as e:
+        traceback.print_exc()
+        raise HTTPException(500, str(e))
+
+
 # ====================== РЕГИСТРАЦИЯ ======================
 @app.post("/api/register_user")
 async def register_user(data: RegisterUserRequest):
@@ -263,6 +336,22 @@ async def admin_lessons():
                 "level": r["level"],
                 "title": r["title"],
                 "type": r["content_type"]
+            } for r in rows
+        ]
+    except Exception as e:
+        traceback.print_exc()
+        return []
+
+
+@app.get("/api/admin/lessons_for_questions")
+async def admin_lessons_for_questions():
+    try:
+        rows = await get_all_lessons()
+        return [
+            {
+                "id": r["id"],
+                "level": r["level"],
+                "title": r["title"]
             } for r in rows
         ]
     except Exception as e:
@@ -342,13 +431,17 @@ async def admin_manage_user(data: ManageUserRequest):
 
 # ====================== SPEAKING CLUB ======================
 @app.post("/api/web-club/text")
-async def web_club_text(user_id: int = Form(...), text: str = Form(...), level: str = Form("A1")):
+async def web_club_text(
+    user_id: int = Form(...),
+    text: str = Form(...),
+    level: str = Form("A1"),
+    situation: str = Form("")
+):
     try:
-        ai_response = await get_ai_response(text, user_level=level)
+        ai_response = await get_ai_response(text, user_level=level, situation=situation)
         session_id = f"ai_{user_id}_{uuid.uuid4().hex[:6]}"
         output_path = os.path.join(AUDIO_DIR, f"{session_id}.mp3")
         await generate_voice(ai_response, output_path)
-
         return {
             "user_text": text,
             "ai_text": ai_response,
@@ -360,7 +453,12 @@ async def web_club_text(user_id: int = Form(...), text: str = Form(...), level: 
 
 
 @app.post("/api/web-club/voice")
-async def web_club_voice(user_id: int = Form(...), file: UploadFile = File(...), level: str = Form("A1")):
+async def web_club_voice(
+    user_id: int = Form(...),
+    file: UploadFile = File(...),
+    level: str = Form("A1"),
+    situation: str = Form("")
+):
     try:
         temp_path = os.path.join(AUDIO_DIR, f"user_{user_id}_{uuid.uuid4().hex[:6]}.wav")
         with open(temp_path, "wb") as buffer:
@@ -373,7 +471,7 @@ async def web_club_voice(user_id: int = Form(...), file: UploadFile = File(...),
         if not user_text.strip():
             return {"user_text": "", "ai_text": "I couldn't hear you. Please try again!", "audio_url": ""}
 
-        ai_response = await get_ai_response(user_text, user_level=level)
+        ai_response = await get_ai_response(user_text, user_level=level, situation=situation)
         session_id = f"ai_{user_id}_{uuid.uuid4().hex[:6]}"
         output_path = os.path.join(AUDIO_DIR, f"{session_id}.mp3")
         await generate_voice(ai_response, output_path)
@@ -424,6 +522,161 @@ async def add_word(data: AddWordRequest):
     except Exception as e:
         traceback.print_exc()
         raise HTTPException(500, str(e))
+
+
+@app.post("/api/dictionary/quick_add")
+async def quick_add_word(data: QuickAddWordRequest):
+    """Перевод слова через AI + сохранение в личный словарь пользователя."""
+    try:
+        word_clean = data.word.strip()
+        if not word_clean:
+            raise HTTPException(400, "Пустое слово")
+
+        translated = await translate_word(word_clean, context=data.context_sentence)
+
+        if not translated["translation"]:
+            return {"status": "error", "message": "Не удалось получить перевод, попробуйте ещё раз"}
+
+        success = await add_word_to_user_dict(
+            user_id=data.user_id,
+            word=word_clean,
+            translation=translated["translation"],
+            transcription=translated["transcription"],
+            context=translated["example"] or data.context_sentence
+        )
+
+        if not success:
+            return {"status": "error", "message": "Не удалось добавить слово"}
+
+        return {
+            "status": "success",
+            "word": word_clean,
+            "translation": translated["translation"],
+            "transcription": translated["transcription"],
+            "context_example": translated["example"]
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        traceback.print_exc()
+        raise HTTPException(500, str(e))
+
+
+@app.post("/api/dictionary/translate")
+async def translate_word_only(data: QuickAddWordRequest):
+    """
+    Только перевод слова через AI — без сохранения в БД.
+    Вызывается фронтендом при тапе по слову для показа попапа.
+    Сохранение происходит отдельно через /api/dictionary/quick_add.
+    """
+    try:
+        word_clean = data.word.strip()
+        if not word_clean:
+            raise HTTPException(400, "Пустое слово")
+
+        translated = await translate_word(word_clean, context=data.context_sentence)
+
+        if not translated["translation"]:
+            return {"status": "error", "message": "Не удалось получить перевод"}
+
+        return {
+            "status": "success",
+            "word": word_clean,
+            "translation": translated["translation"],
+            "transcription": translated["transcription"],
+            "context_example": translated["example"]
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        traceback.print_exc()
+        raise HTTPException(500, str(e))
+
+# ====================== VOCABULARY CARDS ======================
+
+class VocabCardCreate(BaseModel):
+    topic: str
+    level: str = "A1"
+    word: str
+    translation: str
+    emoji_code: str
+    definition: str = ""
+    order_num: int = 0
+
+class VocabCardUpdate(VocabCardCreate):
+    id: int
+
+
+@app.get("/api/vocab/topics")
+async def vocab_topics(level: Optional[str] = Query(None)):
+    """Список тем с кол-вом карточек (для главного экрана раздела Словарь)."""
+    try:
+        rows = await get_vocab_topics(level)
+        return [dict(r) for r in rows]
+    except Exception as e:
+        traceback.print_exc()
+        return []
+
+
+@app.get("/api/vocab/cards")
+async def vocab_cards(topic: str = Query(...), level: Optional[str] = Query(None)):
+    """Все карточки темы."""
+    try:
+        rows = await get_vocab_cards(topic, level)
+        return [dict(r) for r in rows]
+    except Exception as e:
+        traceback.print_exc()
+        return []
+
+
+@app.get("/api/admin/vocab")
+async def admin_vocab_all():
+    """Все карточки для таблицы в админке."""
+    try:
+        rows = await get_all_vocab_cards_admin()
+        return [dict(r) for r in rows]
+    except Exception as e:
+        traceback.print_exc()
+        return []
+
+
+@app.post("/api/admin/vocab/add")
+async def admin_vocab_add(data: VocabCardCreate):
+    try:
+        card_id = await add_vocab_card(
+            topic=data.topic, level=data.level, word=data.word,
+            translation=data.translation, emoji_code=data.emoji_code,
+            definition=data.definition, order_num=data.order_num
+        )
+        return {"status": "success", "id": card_id}
+    except Exception as e:
+        traceback.print_exc()
+        raise HTTPException(500, str(e))
+
+
+@app.put("/api/admin/vocab/update")
+async def admin_vocab_update(data: VocabCardUpdate):
+    try:
+        await update_vocab_card(
+            card_id=data.id, topic=data.topic, level=data.level,
+            word=data.word, translation=data.translation,
+            emoji_code=data.emoji_code, definition=data.definition
+        )
+        return {"status": "success"}
+    except Exception as e:
+        traceback.print_exc()
+        raise HTTPException(500, str(e))
+
+
+@app.delete("/api/admin/vocab/delete/{card_id}")
+async def admin_vocab_delete(card_id: int):
+    try:
+        await delete_vocab_card(card_id)
+        return {"status": "success"}
+    except Exception as e:
+        traceback.print_exc()
+        raise HTTPException(500, str(e))
+
 
 # ====================== СТАТИКА ======================
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
