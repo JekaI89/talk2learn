@@ -234,6 +234,47 @@ async def delete_lesson(lesson_id: int):
     print(f"🗑️ Урок ID {lesson_id} скрыт")
 
 
+async def get_next_uncompleted_lesson(user_id: int, level: str, content_type: str = None):
+    """
+    Возвращает первый непройденный урок уровня (по order_num), опционально
+    отфильтрованный по типу контента ('lesson' / 'grammar' / 'vocabulary').
+    Пройденность определяется наличием записи в user_progress с тем же
+    content_type, что и у самого урока (так фронтенд уже отмечает прогресс
+    через /api/progress/complete). Если непройденных уроков не осталось —
+    возвращает None.
+    """
+    pool = await get_pool()
+    async with pool.acquire() as db:
+        if content_type:
+            return await db.fetchrow("""
+                SELECT l.id, l.title, l.lesson_text, l.content_type
+                FROM lessons l
+                WHERE l.level = $1 AND l.is_active = TRUE AND l.content_type = $2
+                  AND NOT EXISTS (
+                      SELECT 1 FROM user_progress up
+                      WHERE up.user_id = $3
+                        AND up.content_type = l.content_type
+                        AND up.content_id = l.id
+                  )
+                ORDER BY l.order_num, l.id
+                LIMIT 1
+            """, level, content_type, user_id)
+
+        return await db.fetchrow("""
+            SELECT l.id, l.title, l.lesson_text, l.content_type
+            FROM lessons l
+            WHERE l.level = $1 AND l.is_active = TRUE
+              AND NOT EXISTS (
+                  SELECT 1 FROM user_progress up
+                  WHERE up.user_id = $2
+                    AND up.content_type = l.content_type
+                    AND up.content_id = l.id
+              )
+            ORDER BY l.order_num, l.id
+            LIMIT 1
+        """, level, user_id)
+
+
 # ==================== ВОПРОСЫ ====================
 
 async def add_question(lesson_id: int, level: str, task_type: str, question_text: str,

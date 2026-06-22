@@ -25,10 +25,11 @@ from database.db import (
     get_user_level,
     add_word_to_user_dict,
     get_user_words,
-    get_random_practice_question
+    get_random_practice_question,
+    get_next_uncompleted_lesson
 )
 
-from utils.ai_service import transcribe_voice, get_ai_response, generate_voice
+from utils.ai_service import transcribe_voice, get_ai_response, generate_voice, translate_word
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 STATIC_DIR = os.path.join(BASE_DIR, "static")
@@ -98,6 +99,12 @@ class AddWordRequest(BaseModel):
     translation: str
     transcription: str = ""
     context_example: str = ""
+
+
+class QuickAddWordRequest(BaseModel):
+    user_id: int
+    word: str
+    context_sentence: str = ""
 
 # ====================== ДАШБОРД ======================
 @app.get("/api/dashboard/{user_id}")
@@ -189,6 +196,30 @@ async def get_lessons_by_level(level: str, user_id: Optional[int] = Query(None))
     except Exception as e:
         traceback.print_exc()
         return []
+
+
+@app.get("/api/lessons/next/{level}")
+async def get_next_lesson(level: str, user_id: int = Query(...), content_type: Optional[str] = Query(None)):
+    """
+    Отдаёт следующий непройденный урок уровня (опционально по типу — lesson/grammar/vocabulary).
+    Используется фронтендом вместо списка уроков: при входе в уровень и сразу после
+    прохождения текущего урока автоматически подгружается следующий непройденный.
+    """
+    try:
+        row = await get_next_uncompleted_lesson(user_id, level, content_type)
+        if not row:
+            return {"completed": True}
+
+        return {
+            "completed": False,
+            "id": row["id"],
+            "title": row["title"],
+            "lesson_text": row["lesson_text"] or "",
+            "type": row["content_type"]
+        }
+    except Exception as e:
+        traceback.print_exc()
+        raise HTTPException(500, "Ошибка загрузки следующего урока")
 
 
 @app.get("/api/lesson/{lesson_id}")
@@ -473,6 +504,47 @@ async def add_word(data: AddWordRequest):
         if success:
             return {"status": "success", "message": "Слово добавлено в словарь"}
         return {"status": "error", "message": "Не удалось добавить слово"}
+    except Exception as e:
+        traceback.print_exc()
+        raise HTTPException(500, str(e))
+
+
+@app.post("/api/dictionary/quick_add")
+async def quick_add_word(data: QuickAddWordRequest):
+    """
+    Добавление слова в личный словарь тапом по слову в уроке или в разговорном
+    клубе: перевод, транскрипция и пример подбираются автоматически через AI.
+    """
+    try:
+        word_clean = data.word.strip()
+        if not word_clean:
+            raise HTTPException(400, "Пустое слово")
+
+        translated = await translate_word(word_clean, context=data.context_sentence)
+
+        if not translated["translation"]:
+            return {"status": "error", "message": "Не удалось получить перевод, попробуйте ещё раз"}
+
+        success = await add_word_to_user_dict(
+            user_id=data.user_id,
+            word=word_clean,
+            translation=translated["translation"],
+            transcription=translated["transcription"],
+            context=translated["example"] or data.context_sentence
+        )
+
+        if not success:
+            return {"status": "error", "message": "Не удалось добавить слово"}
+
+        return {
+            "status": "success",
+            "word": word_clean,
+            "translation": translated["translation"],
+            "transcription": translated["transcription"],
+            "context_example": translated["example"]
+        }
+    except HTTPException:
+        raise
     except Exception as e:
         traceback.print_exc()
         raise HTTPException(500, str(e))
