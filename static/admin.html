@@ -385,17 +385,15 @@
             const word = document.getElementById('vc-word').value.trim();
             const tr   = document.getElementById('vc-translation').value.trim();
 
-            const img = document.getElementById('vc-preview-img');
             const fallback = document.getElementById('vc-preview-emoji');
-
             if (code) {
-                img.src = emojiAdminUrl(code);
-                img.classList.remove('hidden');
-                img.onerror = () => {
-                    img.classList.add('hidden');
+                try {
                     fallback.textContent = String.fromCodePoint(parseInt(code, 16));
                     fallback.classList.remove('hidden');
-                };
+                } catch(e) {
+                    fallback.textContent = '❓';
+                    fallback.classList.remove('hidden');
+                }
             }
             document.getElementById('vc-preview-word').textContent = word || '—';
             document.getElementById('vc-preview-tr').textContent   = tr   || '';
@@ -449,10 +447,12 @@
                     list.innerHTML = '<p class="text-zinc-500 text-sm text-center py-4">Карточек пока нет</p>';
                     return;
                 }
-                list.innerHTML = cards.map(c => `
+                list.innerHTML = cards.map(c => {
+                    let emojiChar = '📖';
+                    try { emojiChar = String.fromCodePoint(parseInt(c.emoji_code, 16)); } catch(e) {}
+                    return `
                     <div class="flex items-center gap-3 bg-zinc-800 rounded-2xl p-3">
-                        <img src="${emojiAdminUrl(c.emoji_code)}" alt="${c.word}" class="w-10 h-10 object-contain flex-shrink-0"
-                             onerror="this.outerHTML='<span class=\\"text-2xl\\">' + String.fromCodePoint(parseInt('${c.emoji_code}',16)) + '</span>'">
+                        <span style="font-size:32px;line-height:1;flex-shrink:0">${emojiChar}</span>
                         <div class="flex-1 min-w-0">
                             <div class="font-bold text-white text-sm">${c.word} <span class="text-zinc-400 font-normal">— ${c.translation}</span></div>
                             <div class="text-xs text-zinc-500">${c.topic} · ${c.level}</div>
@@ -460,7 +460,7 @@
                         <button onclick="deleteVocabCard(${c.id})"
                             class="text-red-400 hover:text-red-300 text-xs px-3 py-1.5 bg-red-950/40 rounded-xl flex-shrink-0">🗑</button>
                     </div>
-                `).join('');
+                `}).join('');
             } catch(e) {
                 list.innerHTML = '<p class="text-red-400 text-sm text-center py-4">Ошибка загрузки</p>';
             }

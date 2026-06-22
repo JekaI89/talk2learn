@@ -962,18 +962,14 @@
 
                 grid.innerHTML = cards.map(card => {
                     const lvlColor = LEVEL_COLORS[card.level] || LEVEL_COLORS['A1'];
+                    // Конвертируем hex-код в Unicode-символ напрямую — надёжно, без сети
+                    let emojiChar = '📖';
+                    try { emojiChar = String.fromCodePoint(parseInt(card.emoji_code, 16)); } catch(e) {}
                     return `
                         <div class="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden flex flex-col">
-                            <!-- Картинка -->
-                            <div class="bg-gradient-to-br ${lvlColor} p-4 flex items-center justify-center">
-                                <img
-                                    src="${emojiUrl(card.emoji_code)}"
-                                    alt="${card.word}"
-                                    class="w-16 h-16 object-contain"
-                                    onerror="this.outerHTML='<span class=\\"text-4xl\\">' + String.fromCodePoint(parseInt('${card.emoji_code}',16)) + '</span>'"
-                                >
+                            <div class="bg-gradient-to-br ${lvlColor} p-4 flex items-center justify-center" style="min-height:96px">
+                                <span style="font-size:56px;line-height:1">${emojiChar}</span>
                             </div>
-                            <!-- Текст -->
                             <div class="p-3 flex flex-col gap-1 flex-1">
                                 <div class="font-extrabold text-gray-900 text-base leading-tight">${card.word}</div>
                                 <div class="text-blue-600 font-semibold text-sm">${card.translation}</div>
