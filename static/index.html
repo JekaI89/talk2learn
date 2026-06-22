@@ -4,121 +4,64 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Talk2Learn - Академия</title>
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4">        async function openPersonalDictionary() {
-            showScreen('screen-personal-dict');
-            const listDiv = document.getElementById('personal-dict-list');
-            const countSpan = document.getElementById('dict-count');
-            
-            listDiv.innerHTML = "<p class='text-gray-400 text-center py-4'>Загрузка личного словаря...</p>";
-            
-            try {
-                const res = await fetch(`/api/dictionary/${userId}`);
-                const words = await res.json();
-                
-                countSpan.textContent = `${words.length} слов`;
-                
-                if (!words || words.length === 0) {
-                    listDiv.innerHTML = `
-                        <div class="text-center py-8 bg-gray-50 rounded-2xl border border-dashed border-gray-200 p-4">
-                            <p class="text-gray-400 text-sm">Ваш личный словарь пока пуст.</p>
-                            <p class="text-gray-400 text-xs mt-1">Добавляйте незнакомые слова во время уроков!</p>
-                        </div>`;
-                    return;
-                }
-                
-                listDiv.innerHTML = '';
-                words.forEach(w => {
-                    const statusClass = w.status === 'learned' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700';
-                    const statusText = w.status === 'learned' ? 'Выучено' : 'Изучаю';
-                    const transcriptionText = w.transcription ? `<span class="text-xs text-gray-400 font-normal">[${w.transcription}]</span>` : '';
-                    
-                    listDiv.innerHTML += `
-                        <div class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex justify-between items-center active:bg-gray-50 transition">
-                            <div class="space-y-1">
-                                <div class="font-extrabold text-gray-900 text-base">
-                                    ${w.word} ${transcriptionText}
-                                </div>
-                                <div class="text-sm text-gray-600 font-medium">
-                                    ${w.translation}
-                                </div>
-                            </div>
-                            <span class="text-xs font-bold px-2.5 py-1 rounded-full ${statusClass}">
-                                ${statusText}
-                            </span>
-                        </div>
-                    `;
-                });
-            } catch (e) {
-                console.error(e);
-                listDiv.innerHTML = "<p class='text-red-500 text-center py-4'>Ошибка загрузки словаря.</p>";
-            }
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        /* Кликабельное слово */
+        .clickable-word {
+            cursor: pointer;
+            border-bottom: 1px dashed #93c5fd;
+            transition: background 0.15s;
+            border-radius: 2px;
+            padding: 0 1px;
         }
-
-    </script>
-    <script src="https://telegram.org/js/telegram-web-app.js">        async function openPersonalDictionary() {
-            showScreen('screen-personal-dict');
-            const listDiv = document.getElementById('personal-dict-list');
-            const countSpan = document.getElementById('dict-count');
-            
-            listDiv.innerHTML = "<p class='text-gray-400 text-center py-4'>Загрузка личного словаря...</p>";
-            
-            try {
-                const res = await fetch(`/api/dictionary/${userId}`);
-                const words = await res.json();
-                
-                countSpan.textContent = `${words.length} слов`;
-                
-                if (!words || words.length === 0) {
-                    listDiv.innerHTML = `
-                        <div class="text-center py-8 bg-gray-50 rounded-2xl border border-dashed border-gray-200 p-4">
-                            <p class="text-gray-400 text-sm">Ваш личный словарь пока пуст.</p>
-                            <p class="text-gray-400 text-xs mt-1">Добавляйте незнакомые слова во время уроков!</p>
-                        </div>`;
-                    return;
-                }
-                
-                listDiv.innerHTML = '';
-                words.forEach(w => {
-                    const statusClass = w.status === 'learned' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700';
-                    const statusText = w.status === 'learned' ? 'Выучено' : 'Изучаю';
-                    const transcriptionText = w.transcription ? `<span class="text-xs text-gray-400 font-normal">[${w.transcription}]</span>` : '';
-                    
-                    listDiv.innerHTML += `
-                        <div class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex justify-between items-center active:bg-gray-50 transition">
-                            <div class="space-y-1">
-                                <div class="font-extrabold text-gray-900 text-base">
-                                    ${w.word} ${transcriptionText}
-                                </div>
-                                <div class="text-sm text-gray-600 font-medium">
-                                    ${w.translation}
-                                </div>
-                            </div>
-                            <span class="text-xs font-bold px-2.5 py-1 rounded-full ${statusClass}">
-                                ${statusText}
-                            </span>
-                        </div>
-                    `;
-                });
-            } catch (e) {
-                console.error(e);
-                listDiv.innerHTML = "<p class='text-red-500 text-center py-4'>Ошибка загрузки словаря.</p>";
-            }
+        .clickable-word:hover,
+        .clickable-word:active {
+            background: #dbeafe;
         }
-
-    </script>
+        /* Попап перевода */
+        #word-popup {
+            transition: opacity 0.15s, transform 0.15s;
+        }
+        #word-popup.hidden {
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(8px);
+        }
+    </style>
 </head>
 <body class="bg-[#F8FAFC] text-zinc-900 min-h-screen p-4 flex flex-col justify-between">
 
+    <!-- Попап перевода слова -->
+    <div id="word-popup" class="hidden fixed bottom-24 left-4 right-4 max-w-lg mx-auto bg-white rounded-2xl shadow-2xl border border-blue-100 p-4 z-50">
+        <div class="flex justify-between items-start mb-2">
+            <div>
+                <span id="popup-word" class="font-black text-xl text-gray-900"></span>
+                <span id="popup-transcription" class="text-sm text-gray-400 ml-2"></span>
+            </div>
+            <button onclick="hideWordPopup()" class="text-gray-400 hover:text-gray-700 text-xl leading-none">✕</button>
+        </div>
+        <div id="popup-translation" class="text-blue-700 font-bold text-base mb-2"></div>
+        <div id="popup-example" class="text-gray-500 text-sm italic mb-3"></div>
+        <div id="popup-status" class="text-xs text-center text-gray-400 mb-1 min-h-[16px]"></div>
+        <button id="popup-add-btn" onclick="addPopupWordToDict()"
+            class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-sm active:scale-95 transition">
+            + В мой словарь
+        </button>
+    </div>
+    <!-- Затемнение под попапом -->
+    <div id="word-popup-overlay" class="hidden fixed inset-0 z-40 bg-black/20" onclick="hideWordPopup()"></div>
+
     <div class="max-w-lg mx-auto bg-white min-h-screen shadow-xl rounded-3xl p-4 w-full flex flex-col justify-between">
-        
         <div>
+            <!-- Шапка -->
             <div class="p-4 flex items-center justify-between border-b border-zinc-100 bg-white rounded-t-2xl">
                 <div class="flex items-center gap-3">
                     <div onclick="openProfile()" class="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-lg cursor-pointer active:scale-95 transition">TL</div>
                     <div>
                         <div class="font-bold text-zinc-800" id="user-name">Загрузка...</div>
                         <div class="text-xs text-zinc-400 flex items-center gap-1">
-                            <span>🔥 <span id="user-streak">0</span> дней</span> • 
+                            <span>🔥 <span id="user-streak">0</span> дней</span> •
                             <span>✨ <span id="user-xp">0</span> XP</span>
                         </div>
                     </div>
@@ -126,6 +69,7 @@
                 <button id="admin-badge" onclick="window.location.href='/admin'" class="hidden px-3 py-1 bg-red-50 text-red-600 rounded-full text-xs font-bold border border-red-100 active:scale-95 transition">⚙️ Админка</button>
             </div>
 
+            <!-- ГЛАВНОЕ МЕНЮ -->
             <div id="screen-main" class="mt-6 space-y-6">
                 <h2 class="text-xl font-extrabold text-gray-900">📚 Занятия</h2>
                 <div class="grid grid-cols-2 gap-4">
@@ -164,41 +108,53 @@
                 </div>
             </div>
 
+            <!-- ВЫБОР УРОВНЯ -->
             <div id="screen-levels" class="hidden mt-6 space-y-4">
-              <button onclick="showScreen('screen-main')" class="text-blue-600 font-bold flex items-center gap-1 mb-2">← Главное меню</button>
-    
+                <button onclick="showScreen('screen-main')" class="text-blue-600 font-bold flex items-center gap-1 mb-2">← Главное меню</button>
                 <button onclick="showDictionary()" class="w-full p-4 bg-orange-500 hover:bg-orange-600 text-white rounded-2xl text-left font-bold flex justify-between items-center active:scale-[0.99] transition">
-                 <span>📓 Мой личный блокнот слов</span>
-                 <span class="text-white/70">→</span>
+                    <span>📓 Мой личный блокнот слов</span>
+                    <span class="text-white/70">→</span>
                 </button>
-
-              <h2 class="text-xl font-extrabold text-gray-900">Выберите уровень:</h2>
-              <div class="grid grid-cols-2 gap-3" id="levels-grid"></div>
+                <h2 class="text-xl font-extrabold text-gray-900">Выберите уровень:</h2>
+                <div class="grid grid-cols-2 gap-3" id="levels-grid"></div>
             </div>
 
-            <!-- ЭКРАН: ЛИЧНЫЙ СЛОВАРЬ -->
+            <!-- ЛИЧНЫЙ СЛОВАРЬ (старый экран, оставлен для совместимости) -->
             <div id="screen-personal-dict" class="hidden mt-6 space-y-4">
                 <button onclick="showScreen('screen-levels')" class="text-blue-600 font-bold flex items-center gap-1">← Назад</button>
                 <div class="flex items-center justify-between">
                     <h2 class="text-xl font-extrabold text-gray-900">📒 Мой словарь</h2>
                     <span id="dict-count" class="text-xs bg-zinc-100 text-zinc-600 px-2.5 py-1 rounded-full font-bold">0 слов</span>
                 </div>
-                <div id="personal-dict-list" class="space-y-3 max-h-[60vh] overflow-y-auto pr-1">
-                    <!-- Сюда подгружаются слова -->
-                </div>
+                <div id="personal-dict-list" class="space-y-3 max-h-[60vh] overflow-y-auto pr-1"></div>
             </div>
 
-            <div id="screen-list" class="hidden mt-6 space-y-4">
-                <button onclick="showScreen('screen-levels')" class="text-blue-600 font-bold flex items-center gap-1">← К уровням</button>
-                <h2 id="list-title" class="text-xl font-extrabold text-gray-900">Доступные материалы</h2>
-                <div id="lessons-list" class="space-y-3">Загрузка...</div>
-            </div>
-
+            <!-- УРОК (без кнопки "К списку" — вместо неё "К уровням") -->
             <div id="screen-lesson" class="hidden mt-6 space-y-4">
-                <button onclick="showScreen('screen-list')" class="text-blue-600 font-bold flex items-center gap-1">← К списку</button>
+                <button onclick="showScreen('screen-levels')" class="text-blue-600 font-bold flex items-center gap-1">← К уровням</button>
                 <div id="lesson-data" class="space-y-4"></div>
             </div>
 
+            <!-- УРОВЕНЬ ПРОЙДЕН -->
+            <div id="screen-level-complete" class="hidden mt-6">
+                <div class="flex flex-col items-center justify-center text-center gap-6 py-10">
+                    <div class="text-6xl animate-bounce">🏆</div>
+                    <h2 class="text-2xl font-black text-gray-900">Уровень пройден!</h2>
+                    <p id="level-complete-msg" class="text-gray-500 text-sm">Вы прошли все материалы этого уровня. Отличная работа!</p>
+                    <div class="w-full space-y-3 mt-2">
+                        <button id="btn-next-level" onclick="goNextLevel()"
+                            class="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl shadow-md active:scale-95 transition text-lg">
+                            Следующий уровень →
+                        </button>
+                        <button onclick="showScreen('screen-main')"
+                            class="w-full py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-2xl active:scale-95 transition">
+                            ← Назад в главное меню
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ПРАКТИКА -->
             <div id="screen-practice-task" class="hidden mt-6 space-y-4">
                 <button onclick="showScreen('screen-main')" class="text-blue-600 font-bold flex items-center gap-1">← Выйти</button>
                 <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm space-y-4">
@@ -209,6 +165,7 @@
                 </div>
             </div>
 
+            <!-- СИТУАЦИИ -->
             <div id="screen-situations" class="hidden mt-6 space-y-4">
                 <button onclick="showScreen('screen-main')" class="text-blue-600 font-bold flex items-center gap-1">← Главное меню</button>
                 <h2 class="text-xl font-extrabold text-gray-900">🗺️ Тематические диалоги:</h2>
@@ -220,6 +177,7 @@
                 </div>
             </div>
 
+            <!-- РАЗГОВОРНЫЙ КЛУБ -->
             <div id="screen-club" class="hidden mt-6 flex flex-col h-[calc(100vh-120px)] justify-between">
                 <div>
                     <button onclick="showScreen('screen-main')" class="text-blue-600 font-bold flex items-center gap-1 mb-2">← Главное меню</button>
@@ -227,27 +185,22 @@
                         <h2 class="text-xl font-extrabold text-gray-900">🎙️ Chat with AI Tutor</h2>
                         <span id="club-level-badge" class="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-bold rounded-md uppercase">A1</span>
                     </div>
-                    
+                    <p class="text-xs text-gray-400 mb-2">💡 Нажмите на любое слово в ответе AI, чтобы получить перевод</p>
                     <div id="chat-box" class="space-y-3 max-h-[380px] overflow-y-auto p-2 bg-gray-50 rounded-2xl border border-gray-100 min-h-[250px]">
                         <div class="bg-blue-600 text-white p-3 rounded-2xl rounded-tl-none max-w-[85%] text-sm shadow-sm">
                             🤖 <b>AI Tutor:</b> Hello! Welcome to our Speaking Club. How are you doing today? Feel free to type or hold the microphone to talk!
                         </div>
                     </div>
                 </div>
-
                 <div class="border-t border-gray-100 pt-3 bg-white mt-4">
                     <div class="flex items-center gap-2">
                         <input id="chat-input" type="text" placeholder="Type a message..." class="flex-1 p-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-blue-500">
-                        
-                        <button onclick="sendTextMessage()" class="p-3 bg-blue-600 text-white rounded-xl active:scale-95 transition">
-                            🕊️
-                        </button>
-                        
-                        <button id="mic-btn" 
-                                onmousedown="startRecording(event)" 
-                                onmouseup="stopRecording(event)" 
-                                ontouchstart="startRecording(event)" 
-                                ontouchend="stopRecording(event)" 
+                        <button onclick="sendTextMessage()" class="p-3 bg-blue-600 text-white rounded-xl active:scale-95 transition">🕊️</button>
+                        <button id="mic-btn"
+                                onmousedown="startRecording(event)"
+                                onmouseup="stopRecording(event)"
+                                ontouchstart="startRecording(event)"
+                                ontouchend="stopRecording(event)"
                                 class="p-3 bg-zinc-900 text-white rounded-xl active:scale-95 transition font-bold select-none touch-none">
                             🎤 Hold
                         </button>
@@ -256,7 +209,7 @@
                 </div>
             </div>
 
-
+            <!-- ПРОФИЛЬ -->
             <div id="screen-profile" class="hidden mt-6 space-y-4">
                 <button onclick="showScreen('screen-main')" class="text-blue-600 font-bold flex items-center gap-1">← Главное меню</button>
                 <h2 class="text-xl font-extrabold text-gray-900">👤 Мой профиль</h2>
@@ -264,22 +217,20 @@
                     <p class="text-gray-400 text-center py-6">Загрузка...</p>
                 </div>
             </div>
-            <!-- ==================== ЭКРАН СЛОВАРЯ ==================== -->
+
+            <!-- СЛОВАРЬ -->
             <div id="screen-dictionary" class="hidden mt-6 space-y-4">
                 <button onclick="showScreen('screen-main')" class="text-blue-600 font-bold flex items-center gap-1">← Главное меню</button>
-                
                 <div class="flex justify-between items-center">
                     <h2 class="text-xl font-extrabold text-gray-900">📓 Мой словарь</h2>
-                    <button onclick="showAddWordModal()" 
+                    <button onclick="showAddWordModal()"
                             class="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-xl text-sm font-bold active:scale-95 transition">
                         + Добавить слово
                     </button>
                 </div>
-
-                <div id="dictionary-list" class="space-y-3">
-                    <!-- Здесь будут отображаться слова -->
-                </div>
+                <div id="dictionary-list" class="space-y-3"></div>
             </div>
+
         </div>
     </div>
 
@@ -288,28 +239,39 @@
         tg.ready();
         tg.expand();
 
-        let userId = tg.initDataUnsafe?.user?.id || 123456789; 
-        let currentCategory = "lessons";
+        const userId = tg.initDataUnsafe?.user?.id || 0;
         let currentLevel = "A1";
+        let currentCategory = "lessons";
         let correctPracticeOption = null;
-        let currentPracticeQuestionId = null; 
-        
+        let currentPracticeQuestionId = null;
         let mediaRecorder = null;
         let audioChunks = [];
         let streamRef = null;
 
+        // Слово в попапе (для кнопки «Добавить»)
+        let popupWordData = null;
+
+        const LEVELS = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
+
+        const SCREENS = [
+            'screen-main', 'screen-levels', 'screen-personal-dict',
+            'screen-lesson', 'screen-level-complete',
+            'screen-practice-task', 'screen-situations',
+            'screen-club', 'screen-profile', 'screen-dictionary'
+        ];
+
         function showScreen(screenId) {
-            const screens = ['screen-main', 'screen-levels', 'screen-list', 'screen-lesson', 'screen-practice-task', 'screen-situations', 'screen-club', 'screen-profile', 'screen-personal-dict'];
-            screens.forEach(s => document.getElementById(s).classList.add('hidden'));
-            document.getElementById(screenId).classList.remove('hidden');
+            SCREENS.forEach(s => document.getElementById(s)?.classList.add('hidden'));
+            document.getElementById(screenId)?.classList.remove('hidden');
+            hideWordPopup();
         }
 
+        // ====================== ПРОФИЛЬ ======================
         async function loadProfile() {
             try {
                 const tgUser = tg.initDataUnsafe?.user;
                 document.getElementById('user-name').textContent = tgUser?.first_name || "Ученик";
 
-                // Регистрируем пользователя при каждом открытии (INSERT OR IGNORE — безопасно)
                 await fetch('/api/register_user', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -322,33 +284,33 @@
 
                 const res = await fetch(`/api/dashboard/${userId}`);
                 const data = await res.json();
-                
                 const profile = data.user ? data.user : data;
-                
                 if (profile) {
-                    document.getElementById('user-streak').textContent = profile.streak !== undefined ? profile.streak : 0;
-                    document.getElementById('user-xp').textContent = profile.xp !== undefined ? profile.xp : 0;
-                    
+                    document.getElementById('user-streak').textContent = profile.streak ?? 0;
+                    document.getElementById('user-xp').textContent = profile.xp ?? 0;
                     if (profile.is_admin || data.is_admin) {
                         document.getElementById('admin-badge').classList.remove('hidden');
                     }
                 }
-            } catch (e) { 
-                console.error("Ошибка дашборда:", e); 
-            }
+            } catch (e) { console.error("Ошибка дашборда:", e); }
         }
 
+        // ====================== УРОВНИ / КАТЕГОРИИ ======================
         function chooseCategory(category) {
             currentCategory = category;
-            const levels = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
-            const colors = { 'A1': 'from-green-500 to-teal-600', 'A2': 'from-blue-500 to-indigo-600', 'B1': 'from-orange-500 to-amber-600', 'B2': 'from-pink-500 to-rose-600', 'C1': 'from-red-500 to-purple-600', 'C2': 'from-zinc-700 to-gray-900' };
-            
-            document.getElementById('levels-grid').innerHTML = levels.map(lvl => `
+            const colors = {
+                'A1': 'from-green-500 to-teal-600',
+                'A2': 'from-blue-500 to-indigo-600',
+                'B1': 'from-orange-500 to-amber-600',
+                'B2': 'from-pink-500 to-rose-600',
+                'C1': 'from-red-500 to-purple-600',
+                'C2': 'from-zinc-700 to-gray-900'
+            };
+            document.getElementById('levels-grid').innerHTML = LEVELS.map(lvl => `
                 <button onclick="selectLevel('${lvl}')" class="w-full p-5 bg-gradient-to-r ${colors[lvl] || 'from-blue-500 to-indigo-600'} text-white rounded-2xl text-left font-bold text-lg shadow-sm active:scale-95 transition">
                     Уровень ${lvl}
                 </button>
             `).join('');
-
             showScreen('screen-levels');
         }
 
@@ -360,113 +322,104 @@
             if (currentCategory === 'practice') {
                 loadPracticeTask();
             } else {
-                loadLessonsList();
+                openNextLesson();
             }
         }
 
-        async function loadLessonsList() {
-            showScreen('screen-list');
-            const listDiv = document.getElementById('lessons-list');
-            const titleEl = document.getElementById('list-title');
+        // ====================== СЛЕДУЮЩИЙ УРОК ======================
+        async function openNextLesson() {
+            showScreen('screen-lesson');
+            const dataDiv = document.getElementById('lesson-data');
+            dataDiv.innerHTML = "<p class='text-gray-500 text-center py-6'>⏳ Загрузка урока...</p>";
 
-            // Меняем заголовок в зависимости от категории
-            if (currentCategory === 'grammar') {
-                titleEl.textContent = 'Грамматика';
-            } else if (currentCategory === 'vocabulary') {
-                titleEl.textContent = 'Словарь (Темы)';
-            } else {
-                titleEl.textContent = 'Доступные уроки';
-            }
-
-            listDiv.innerHTML = "<p class='text-gray-400'>Загрузка списка материалов...</p>";
+            const typeMap = { lessons: 'lesson', grammar: 'grammar', vocabulary: 'vocabulary' };
+            const contentType = typeMap[currentCategory] || 'lesson';
 
             try {
-                const res = await fetch(`/api/lessons/${currentLevel}?user_id=${userId}`);
-                let data = await res.json();
+                const res = await fetch(`/api/lessons/next/${currentLevel}?user_id=${userId}&content_type=${contentType}`);
+                const lesson = await res.json();
 
-                if (!data || data.length === 0) {
-                    listDiv.innerHTML = `<p class="text-gray-500 py-4">В категории для уровня ${currentLevel} пока нет материалов.</p>`;
+                if (lesson.completed) {
+                    showLevelComplete();
                     return;
                 }
 
-                // СТРОГАЯ ФИЛЬТРАЦИЯ: разделяем контент по вкладкам
-                if (currentCategory === 'grammar') {
-                    data = data.filter(l => l.type === 'grammar');
-                } else if (currentCategory === 'lessons') {
-                    data = data.filter(l => l.type === 'lesson');
-                } else if (currentCategory === 'vocabulary') {
-                    data = data.filter(l => l.type === 'vocabulary'); // Показываем ТОЛЬКО словари!
-                }
-
-                if (data.length === 0) {
-                    listDiv.innerHTML = `<p class="text-gray-500 py-4">В этой категории для уровня ${currentLevel} еще нет материалов.</p>`;
-                    return;
-                }
-
-                listDiv.innerHTML = '';
-                data.forEach(l => {
-                    // Настраиваем иконку и цвет кнопки в зависимости от типа
-                    let icon = '📖';
-                    let btnText = 'Читать урок';
-                    let badgeColor = 'bg-blue-50 text-blue-700';
-                    
-                    if (l.type === 'grammar') {
-                        icon = '✍️';
-                        badgeColor = 'bg-purple-50 text-purple-700';
-                    } else if (l.type === 'vocabulary') {
-                        icon = '🧠';
-                        btnText = 'Учить слова';
-                        badgeColor = 'bg-green-50 text-green-700';
-                    }
-
-                    listDiv.innerHTML += `
-                        <div class="p-4 bg-white border border-gray-100 rounded-2xl shadow-sm flex flex-col justify-between items-start gap-3">
-                            <div class="flex items-start gap-2.5">
-                                <span class="text-xl">${icon}</span>
-                                <div>
-                                    <h3 class="font-bold text-gray-900 text-sm leading-tight">${l.title}</h3>
-                                    <span class="inline-block text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md mt-1 ${badgeColor}">
-                                        ${l.type}
-                                    </span>
-                                </div>
-                            </div>
-                            <button onclick="openLesson(${l.id})" class="w-full text-center py-2 bg-gray-50 hover:bg-gray-100 text-gray-800 text-xs font-bold rounded-xl active:scale-[0.98] transition">
-                                ${btnText} →
-                            </button>
-                        </div>
-                    `;
-                });
+                renderLesson(lesson);
             } catch (e) {
-                console.error(e);
-                listDiv.innerHTML = "<p class='text-red-500 py-4'>Ошибка загрузки списка.</p>";
+                dataDiv.innerHTML = "<p class='text-red-500 text-center py-4'>Ошибка загрузки урока.</p>";
             }
         }
 
         async function openLesson(id) {
             showScreen('screen-lesson');
             const dataDiv = document.getElementById('lesson-data');
-            dataDiv.innerHTML = "<p class='text-gray-500 text-center py-6'>Загрузка контента...</p>";
-
+            dataDiv.innerHTML = "<p class='text-gray-500 text-center py-6'>⏳ Загрузка...</p>";
             try {
                 const res = await fetch(`/api/lesson/${id}`);
                 const lesson = await res.json();
-
-                dataDiv.innerHTML = `
-                    <h2 class="text-2xl font-black text-gray-900">${lesson.title}</h2>
-                    <div class="bg-gray-50 p-5 rounded-2xl border border-gray-100 text-gray-700 leading-relaxed">
-                        ${lesson.lesson_text ? lesson.lesson_text.replace(/\n/g, '<br>') : 'Текст урока пуст.'}
-                    </div>
-                    <button id="complete-lesson-btn" onclick="submitProgress('${lesson.type || 'lesson'}', ${lesson.id})" class="w-full mt-4 bg-green-600 hover:bg-green-500 text-white font-bold py-4 rounded-2xl shadow-md active:scale-95 transition">
-                        ✅ Просмотрено (+5 XP)
-                    </button>
-                `;
+                renderLesson(lesson);
             } catch (e) {
                 dataDiv.innerHTML = "<p class='text-red-500'>Не удалось открыть урок.</p>";
             }
         }
 
+        function renderLesson(lesson) {
+            const dataDiv = document.getElementById('lesson-data');
+            const iconMap = { grammar: '✍️', vocabulary: '🧠', lesson: '📖' };
+            const icon = iconMap[lesson.type] || '📖';
+            const rawText = lesson.lesson_text || 'Текст урока пуст.';
+
+            // Кликабельный текст урока
+            const clickableBody = makeTextClickable(rawText, rawText);
+
+            dataDiv.innerHTML = `
+                <div class="flex items-center gap-2 mb-1">
+                    <span class="text-xl">${icon}</span>
+                    <span class="text-xs font-bold uppercase tracking-wider text-blue-600">${lesson.type || 'урок'}</span>
+                    <span class="text-xs text-gray-400 ml-1">• Уровень ${currentLevel}</span>
+                </div>
+                <h2 class="text-2xl font-black text-gray-900">${lesson.title}</h2>
+                <p class="text-xs text-blue-400 mb-1">💡 Нажмите на любое слово, чтобы получить перевод</p>
+                <div class="bg-gray-50 p-5 rounded-2xl border border-gray-100 text-gray-700 leading-loose lesson-text-body">
+                    ${clickableBody}
+                </div>
+                <button id="complete-lesson-btn"
+                    onclick="submitProgress('${lesson.type || 'lesson'}', ${lesson.id})"
+                    class="w-full mt-4 bg-green-600 hover:bg-green-500 text-white font-bold py-4 rounded-2xl shadow-md active:scale-95 transition">
+                    ✅ Просмотрено (+5 XP)
+                </button>
+            `;
+        }
+
+        // ====================== ЭКРАН "УРОВЕНЬ ПРОЙДЕН" ======================
+        function showLevelComplete() {
+            const idx = LEVELS.indexOf(currentLevel);
+            const hasNext = idx < LEVELS.length - 1;
+            const nextBtn = document.getElementById('btn-next-level');
+            const msg = document.getElementById('level-complete-msg');
+
+            if (hasNext) {
+                nextBtn.classList.remove('hidden');
+                nextBtn.textContent = `Следующий уровень: ${LEVELS[idx + 1]} →`;
+                msg.textContent = `Вы прошли все материалы уровня ${currentLevel}. Отличная работа!`;
+            } else {
+                nextBtn.classList.add('hidden');
+                msg.textContent = `Поздравляем! Вы прошли все уровни. Вы — настоящий мастер!`;
+            }
+            showScreen('screen-level-complete');
+        }
+
+        function goNextLevel() {
+            const idx = LEVELS.indexOf(currentLevel);
+            if (idx < LEVELS.length - 1) {
+                currentLevel = LEVELS[idx + 1];
+                document.getElementById('club-level-badge').innerText = currentLevel;
+                openNextLesson();
+            }
+        }
+
+        // ====================== ПРОГРЕСС ======================
         async function submitProgress(contentType, contentId) {
-            // Блокируем кнопку чтобы не отправить дважды
             const btn = document.getElementById('complete-lesson-btn');
             if (btn) { btn.disabled = true; btn.textContent = '⏳ Сохранение...'; }
 
@@ -482,16 +435,12 @@
                 });
 
                 if (!res.ok) {
-                    const err = await res.text();
-                    console.error('progress/complete error:', res.status, err);
                     showToast('Ошибка сервера: ' + res.status, 'gray');
                     if (btn) { btn.disabled = false; btn.textContent = '✅ Просмотрено (+5 XP)'; }
                     return;
                 }
 
                 const data = await res.json();
-                console.log('progress result:', data);
-
                 if (data.xp_earned > 0) {
                     showToast(`🎉 +${data.xp_earned} XP начислено!`);
                 } else {
@@ -499,95 +448,216 @@
                 }
 
                 await loadProfile();
+                // После урока сразу грузим следующий (или экран «уровень пройден»)
+                openNextLesson();
 
-                if (contentType === 'lesson' || contentType === 'theory' || contentType === 'grammar') {
-                    showScreen('screen-list');
-                }
             } catch (e) {
-                console.error("Ошибка начисления баллов:", e);
+                console.error(e);
                 showToast('Ошибка соединения с сервером.', 'gray');
                 if (btn) { btn.disabled = false; btn.textContent = '✅ Просмотрено (+5 XP)'; }
             }
         }
 
+        // ====================== ПРАКТИКА ======================
         async function loadPracticeTask() {
             showScreen('screen-practice-task');
             document.getElementById('practice-feedback').classList.add('hidden');
-            
+            document.getElementById('practice-question-text').textContent = 'Загрузка вопроса...';
+            document.getElementById('practice-options').innerHTML = '';
+
             try {
                 const res = await fetch(`/api/random_question?user_id=${userId}&type=multiple_choice&level=${currentLevel}`);
-                const task = await res.json();
+                const q = await res.json();
 
-                if (task.error) {
-                    document.getElementById('practice-question-text').textContent = "Задания этого уровня закончены!";
-                    document.getElementById('practice-options').innerHTML = "";
+                if (q.error === 'no_more_questions') {
+                    document.getElementById('practice-question-text').textContent = '🎉 Все вопросы этого уровня пройдены!';
                     return;
                 }
 
-                document.getElementById('practice-question-text').textContent = task.question;
-                correctPracticeOption = parseInt(task.correct_option);
-                currentPracticeQuestionId = task.question_id; 
+                currentPracticeQuestionId = q.question_id;
+                correctPracticeOption = q.correct_option;
 
-                document.getElementById('practice-options').innerHTML = task.options.map((opt, i) => `
-                    <button onclick="checkPracticeAnswer(${i+1}, this)" class="w-full text-left p-4 bg-gray-50 border border-gray-200 rounded-xl font-medium transition active:scale-[0.99]">
+                document.getElementById('practice-question-text').textContent = q.question;
+                document.getElementById('practice-options').innerHTML = q.options.map((opt, i) => `
+                    <button onclick="checkPracticeAnswer(${i + 1}, this)"
+                        class="w-full text-left px-4 py-3 rounded-xl border border-gray-200 bg-white hover:bg-blue-50 text-sm font-medium transition">
                         ${opt}
                     </button>
                 `).join('');
-            } catch (e) { console.error(e); }
+            } catch (e) {
+                document.getElementById('practice-question-text').textContent = 'Ошибка загрузки вопроса.';
+            }
         }
 
         async function checkPracticeAnswer(selected, btnElement) {
-            const buttons = document.querySelectorAll('#practice-options button');
-            buttons.forEach(b => b.disabled = true);
-
+            document.querySelectorAll('#practice-options button').forEach(b => b.disabled = true);
             const feedback = document.getElementById('practice-feedback');
             feedback.classList.remove('hidden');
 
             if (selected === correctPracticeOption) {
                 btnElement.classList.add('border-green-500', 'bg-green-50', 'text-green-700');
                 feedback.className = "p-4 rounded-xl text-center font-bold bg-green-50 text-green-700 border border-green-200";
-                feedback.innerHTML = "🎉 Абсолютно верно! +10 XP";
-                
-                await submitProgress('practice', currentPracticeQuestionId);
-                
+                feedback.innerHTML = "✅ Правильно! Отлично!";
                 try {
-                    await fetch('/api/check_answer', {
+                    await fetch('/api/progress/complete', {
                         method: 'POST',
-                        headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify({ user_id: userId, queue_item_id: currentPracticeQuestionId, is_correct: true })
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ user_id: parseInt(userId), content_type: 'practice', content_id: currentPracticeQuestionId })
                     });
-                } catch(e) { console.error("Ошибка обновления очереди:", e); }
-                
-                await loadProfile();
+                    await loadProfile();
+                } catch(e) { console.error(e); }
             } else {
                 btnElement.classList.add('border-red-500', 'bg-red-50', 'text-red-700');
                 feedback.className = "p-4 rounded-xl text-center font-bold bg-red-50 text-red-700 border border-red-200";
                 feedback.innerHTML = "❌ Ошибка! Это задание отправлено в конец вашей очереди.";
-                
                 try {
                     await fetch('/api/check_answer', {
                         method: 'POST',
-                        headers: {'Content-Type': 'application/json'},
+                        headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ user_id: userId, queue_item_id: currentPracticeQuestionId, is_correct: false })
                     });
                 } catch(e) { console.error(e); }
             }
-
             setTimeout(loadPracticeTask, 2500);
         }
+
+        // ====================== КЛИКАБЕЛЬНЫЕ СЛОВА ======================
+
+        /**
+         * Оборачивает каждое слово текста в <span class="clickable-word">.
+         * Сохраняет переносы строк и HTML-теги (теги пропускает без изменений).
+         * @param {string} text  — исходный текст (может содержать \n)
+         * @param {string} fullSentence — полный контекст для запроса перевода
+         */
+        function makeTextClickable(text, fullSentence) {
+            // Экранируем исходный текст как HTML, потом обрабатываем
+            const lines = text.split('\n');
+            return lines.map(line => {
+                // Разбиваем строку на слова и не-слова (пунктуация, пробелы)
+                return line.replace(/([A-Za-zÀ-ÿА-яёЁ'-]+)/g, (word) => {
+                    // Оборачиваем только слова из 2+ символов
+                    if (word.length < 2) return word;
+                    const escaped = word.replace(/'/g, "\\'");
+                    const ctx = fullSentence.replace(/'/g, "\\'").substring(0, 200);
+                    return `<span class="clickable-word" onclick="handleWordTap('${escaped}','${ctx}')">${word}</span>`;
+                });
+            }).join('<br>');
+        }
+
+        /** Состояние попапа */
+        let popupWord = '';
+        let popupContext = '';
+
+        async function handleWordTap(word, context) {
+            // Сбрасываем предыдущее состояние
+            popupWord = word;
+            popupContext = context;
+            popupWordData = null;
+
+            document.getElementById('popup-word').textContent = word;
+            document.getElementById('popup-transcription').textContent = '';
+            document.getElementById('popup-translation').textContent = '⏳ Перевод...';
+            document.getElementById('popup-example').textContent = '';
+            document.getElementById('popup-status').textContent = '';
+            document.getElementById('popup-add-btn').disabled = false;
+            document.getElementById('popup-add-btn').textContent = '+ В мой словарь';
+
+            showWordPopup();
+
+            try {
+                const res = await fetch('/api/dictionary/quick_add', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_id: 0, word, context_sentence: context })
+                    // user_id=0 — только перевод, не сохраняем; сохраним по кнопке
+                });
+                const data = await res.json();
+
+                if (data.status === 'success' || data.translation) {
+                    popupWordData = data;
+                    document.getElementById('popup-transcription').textContent = data.transcription ? `[${data.transcription}]` : '';
+                    document.getElementById('popup-translation').textContent = data.translation || '—';
+                    document.getElementById('popup-example').textContent = data.context_example ? `"${data.context_example}"` : '';
+                } else {
+                    document.getElementById('popup-translation').textContent = 'Перевод недоступен';
+                }
+            } catch (e) {
+                document.getElementById('popup-translation').textContent = 'Ошибка соединения';
+            }
+        }
+
+        async function addPopupWordToDict() {
+            if (!popupWordData && !popupWord) return;
+            const btn = document.getElementById('popup-add-btn');
+            btn.disabled = true;
+            btn.textContent = '⏳ Сохранение...';
+
+            try {
+                const res = await fetch('/api/dictionary/quick_add', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        user_id: parseInt(userId),
+                        word: popupWord,
+                        context_sentence: popupContext
+                    })
+                });
+                const data = await res.json();
+
+                if (data.status === 'success') {
+                    document.getElementById('popup-status').textContent = '✅ Добавлено в словарь!';
+                    btn.textContent = '✓ Добавлено';
+                    btn.classList.replace('bg-blue-600', 'bg-green-600');
+                } else {
+                    document.getElementById('popup-status').textContent = data.message || 'Ошибка';
+                    btn.disabled = false;
+                    btn.textContent = '+ В мой словарь';
+                }
+            } catch(e) {
+                document.getElementById('popup-status').textContent = 'Ошибка соединения';
+                btn.disabled = false;
+                btn.textContent = '+ В мой словарь';
+            }
+        }
+
+        function showWordPopup() {
+            document.getElementById('word-popup').classList.remove('hidden');
+            document.getElementById('word-popup-overlay').classList.remove('hidden');
+        }
+
+        function hideWordPopup() {
+            document.getElementById('word-popup').classList.add('hidden');
+            document.getElementById('word-popup-overlay').classList.add('hidden');
+            // Сбрасываем цвет кнопки на синий для следующего вызова
+            const btn = document.getElementById('popup-add-btn');
+            if (btn) {
+                btn.classList.remove('bg-green-600');
+                btn.classList.add('bg-blue-600');
+            }
+        }
+
+        // ====================== РАЗГОВОРНЫЙ КЛУБ ======================
 
         function appendMessage(sender, text, isAi = false) {
             const chatBox = document.getElementById('chat-box');
             const msgDiv = document.createElement('div');
-            
+
             if (isAi) {
                 msgDiv.className = "bg-blue-600 text-white p-3 rounded-2xl rounded-tl-none max-w-[85%] text-sm shadow-sm";
-                msgDiv.innerHTML = `🤖 <b>AI Tutor:</b> ${text}`;
+                // Для AI-реплик делаем слова кликабельными
+                const clickable = makeTextClickable(text, text);
+                msgDiv.innerHTML = `🤖 <b>AI Tutor:</b> <span class="ai-msg-body">${clickable}</span>`;
+                // Переопределяем цвет подчёркивания для тёмного фона
+                msgDiv.querySelectorAll && setTimeout(() => {
+                    msgDiv.querySelectorAll('.clickable-word').forEach(el => {
+                        el.style.borderBottomColor = 'rgba(255,255,255,0.5)';
+                    });
+                }, 0);
             } else {
                 msgDiv.className = "bg-gray-200 text-gray-800 p-3 rounded-2xl rounded-tr-none max-w-[85%] text-sm shadow-sm ml-auto";
                 msgDiv.innerHTML = `👤 <b>You:</b> ${text}`;
             }
-            
+
             chatBox.appendChild(msgDiv);
             chatBox.scrollTop = chatBox.scrollHeight;
         }
@@ -596,7 +666,6 @@
             const input = document.getElementById('chat-input');
             const text = input.value.trim();
             if (!text) return;
-
             input.value = "";
             appendMessage("You", text, false);
 
@@ -608,7 +677,6 @@
 
                 const res = await fetch('/api/web-club/text', { method: 'POST', body: formData });
                 const data = await res.json();
-
                 appendMessage("AI Tutor", data.ai_text, true);
 
                 if (data.audio_url) {
@@ -617,12 +685,12 @@
                 }
             } catch (e) {
                 console.error(e);
-                appendMessage("AI Tutor", "Sorry, error connection to server.", true);
+                appendMessage("AI Tutor", "Sorry, error connecting to server.", true);
             }
         }
 
         async function startRecording(e) {
-            if (e) e.preventDefault(); 
+            if (e) e.preventDefault();
             audioChunks = [];
             const micBtn = document.getElementById('mic-btn');
             micBtn.classList.replace('bg-zinc-900', 'bg-red-600');
@@ -638,15 +706,12 @@
                 } else if (MediaRecorder.isTypeSupported('audio/ogg;codecs=opus')) {
                     options = { mimeType: 'audio/ogg;codecs=opus' };
                 } else if (MediaRecorder.isTypeSupported('audio/mp4')) {
-                    options = { mimeType: 'audio/mp4' }; 
+                    options = { mimeType: 'audio/mp4' };
                 }
 
                 mediaRecorder = new MediaRecorder(stream, options);
-                
                 mediaRecorder.ondataavailable = event => {
-                    if (event.data && event.data.size > 0) {
-                        audioChunks.push(event.data);
-                    }
+                    if (event.data && event.data.size > 0) audioChunks.push(event.data);
                 };
 
                 mediaRecorder.onstop = async () => {
@@ -661,13 +726,10 @@
                     try {
                         const res = await fetch('/api/web-club/voice', { method: 'POST', body: formData });
                         const data = await res.json();
-
                         const chatBox = document.getElementById('chat-box');
                         if (chatBox.lastChild) chatBox.removeChild(chatBox.lastChild);
-
                         appendMessage("You", data.user_text || "🎤 [Voice Message]", false);
                         appendMessage("AI Tutor", data.ai_text, true);
-
                         if (data.audio_url) {
                             const audio = new Audio(data.audio_url);
                             audio.play().catch(e => console.log(e));
@@ -694,16 +756,11 @@
             const micBtn = document.getElementById('mic-btn');
             micBtn.classList.replace('bg-red-600', 'bg-zinc-900');
             micBtn.innerText = "🎤 Hold";
-
-            if (mediaRecorder && mediaRecorder.state !== "inactive") {
-                mediaRecorder.stop();
-            }
-            if (streamRef) {
-                streamRef.getTracks().forEach(track => track.stop());
-                streamRef = null;
-            }
+            if (mediaRecorder && mediaRecorder.state !== "inactive") mediaRecorder.stop();
+            if (streamRef) { streamRef.getTracks().forEach(t => t.stop()); streamRef = null; }
         }
 
+        // ====================== ПРОФИЛЬ ЭКРАН ======================
         async function openProfile() {
             showScreen('screen-profile');
             const container = document.getElementById('profile-content');
@@ -717,8 +774,8 @@
                 const adminBadge = p.is_admin
                     ? '<span class="px-2 py-1 bg-red-100 text-red-600 text-xs font-bold rounded-full ml-1">⚙️ Admin</span>'
                     : '';
-                const xpToNext = 100 - (p.xp % 100);
-                const xpPct = Math.round((p.xp % 100));
+                const xpPct = Math.round(p.xp % 100);
+                const xpToNext = 100 - xpPct;
                 container.innerHTML = `
                     <div class="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl p-5 text-white text-center">
                         <div class="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center text-3xl mx-auto mb-2">🎓</div>
@@ -726,7 +783,6 @@
                         <div class="text-blue-200 text-sm">${p.username ? '@' + p.username : ''}</div>
                         <div class="flex justify-center gap-2 mt-2">${premiumBadge}${adminBadge}</div>
                     </div>
-
                     <div class="grid grid-cols-2 gap-3">
                         <div class="bg-orange-50 border border-orange-100 rounded-2xl p-4 text-center">
                             <div class="text-3xl font-black text-orange-500">${p.streak}</div>
@@ -745,7 +801,6 @@
                             <div class="text-xs text-gray-500 mt-1">🎯 Заданий выполнено</div>
                         </div>
                     </div>
-
                     <div class="bg-gray-50 border border-gray-100 rounded-2xl p-4">
                         <div class="flex justify-between text-sm font-bold text-gray-700 mb-2">
                             <span>Уровень ${p.level}</span>
@@ -762,6 +817,62 @@
             }
         }
 
+        // ====================== СЛОВАРЬ ======================
+        async function showDictionary() {
+            showScreen('screen-dictionary');
+            const container = document.getElementById('dictionary-list');
+            container.innerHTML = '<p class="text-gray-400 text-center py-4">Загрузка словаря...</p>';
+
+            try {
+                const res = await fetch(`/api/dictionary/${userId}`);
+                const words = await res.json();
+
+                if (!words || words.length === 0) {
+                    container.innerHTML = `
+                        <div class="text-center py-8 bg-gray-50 rounded-2xl border border-dashed border-gray-200 p-4">
+                            <p class="text-gray-400 text-sm">Ваш словарь пока пуст.</p>
+                            <p class="text-gray-400 text-xs mt-1">Нажмите на слово в уроке — оно появится здесь!</p>
+                        </div>`;
+                    return;
+                }
+
+                container.innerHTML = words.map(w => `
+                    <div class="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <div class="font-bold text-lg text-gray-900">${w.word}</div>
+                                ${w.transcription ? `<div class="text-sm text-gray-400">${w.transcription}</div>` : ''}
+                                <div class="text-blue-700 font-medium mt-0.5">${w.translation}</div>
+                            </div>
+                            <span class="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-600 font-medium">${w.status}</span>
+                        </div>
+                        ${w.context_example ? `<div class="mt-2 text-sm text-gray-500 italic border-t border-gray-100 pt-2">"${w.context_example}"</div>` : ''}
+                    </div>
+                `).join('');
+            } catch (e) {
+                container.innerHTML = '<p class="text-red-500">Ошибка загрузки словаря</p>';
+            }
+        }
+
+        function showAddWordModal() {
+            const word = prompt("Введите слово на английском:");
+            if (!word) return;
+            const translation = prompt("Введите перевод:");
+            if (!translation) return;
+            const transcription = prompt("Транскрипция (необязательно):") || "";
+            const context = prompt("Пример использования (необязательно):") || "";
+
+            fetch('/api/dictionary/add', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user_id: userId, word, translation, transcription, context_example: context })
+            }).then(r => r.json()).then(data => {
+                if (data.status === 'success') { showToast('✅ Слово добавлено!'); showDictionary(); }
+                else showToast(data.message || 'Ошибка', 'gray');
+            }).catch(() => showToast('Ошибка соединения', 'gray'));
+        }
+
+        // ====================== ТОСТ ======================
         function showToast(msg, color = 'green') {
             const toast = document.createElement('div');
             const bg = color === 'green' ? 'bg-green-500' : 'bg-gray-700';
@@ -771,135 +882,8 @@
             setTimeout(() => toast.remove(), 2800);
         }
 
+        // ====================== ИНИЦИАЛИЗАЦИЯ ======================
         window.onload = loadProfile;
-            async function openPersonalDictionary() {
-            showScreen('screen-personal-dict');
-            const listDiv = document.getElementById('personal-dict-list');
-            const countSpan = document.getElementById('dict-count');
-            
-            listDiv.innerHTML = "<p class='text-gray-400 text-center py-4'>Загрузка личного словаря...</p>";
-            
-            try {
-                const res = await fetch(`/api/dictionary/${userId}`);
-                const words = await res.json();
-                
-                countSpan.textContent = `${words.length} слов`;
-                
-                if (!words || words.length === 0) {
-                    listDiv.innerHTML = `
-                        <div class="text-center py-8 bg-gray-50 rounded-2xl border border-dashed border-gray-200 p-4">
-                            <p class="text-gray-400 text-sm">Ваш личный словарь пока пуст.</p>
-                            <p class="text-gray-400 text-xs mt-1">Добавляйте незнакомые слова во время уроков!</p>
-                        </div>`;
-                    return;
-                }
-                
-                listDiv.innerHTML = '';
-                words.forEach(w => {
-                    const statusClass = w.status === 'learned' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700';
-                    const statusText = w.status === 'learned' ? 'Выучено' : 'Изучаю';
-                    const transcriptionText = w.transcription ? `<span class="text-xs text-gray-400 font-normal">[${w.transcription}]</span>` : '';
-                    
-                    listDiv.innerHTML += `
-                        <div class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex justify-between items-center active:bg-gray-50 transition">
-                            <div class="space-y-1">
-                                <div class="font-extrabold text-gray-900 text-base">
-                                    ${w.word} ${transcriptionText}
-                                </div>
-                                <div class="text-sm text-gray-600 font-medium">
-                                    ${w.translation}
-                                </div>
-                            </div>
-                            <span class="text-xs font-bold px-2.5 py-1 rounded-full ${statusClass}">
-                                ${statusText}
-                            </span>
-                        </div>
-                    `;
-                });
-            } catch (e) {
-                console.error(e);
-                listDiv.innerHTML = "<p class='text-red-500 text-center py-4'>Ошибка загрузки словаря.</p>";
-            }
-        }
-async function showDictionary() {
-    showScreen('screen-dictionary');
-    const container = document.getElementById('dictionary-list');
-    container.innerHTML = '<p class="text-gray-400 text-center py-4">Загрузка словаря...</p>';
-
-    try {
-        const res = await fetch(`/api/dictionary/${userId}`);
-        const words = await res.json();
-
-        if (!words || words.length === 0) {
-            container.innerHTML = `
-                <div class="text-center py-8 text-gray-500">
-                    <p>Ваш словарь пока пуст.</p>
-                    <button onclick="showAddWordModal()" class="mt-4 px-4 py-2 bg-orange-500 text-white rounded-xl text-sm">
-                        Добавить первое слово
-                    </button>
-                </div>
-            `;
-            return;
-        }
-
-        container.innerHTML = words.map(w => `
-            <div class="bg-white border border-gray-100 rounded-2xl p-4">
-                <div class="flex justify-between items-start">
-                    <div>
-                        <div class="font-bold text-lg">${w.word}</div>
-                        <div class="text-gray-600">${w.translation}</div>
-                        ${w.transcription ? `<div class="text-sm text-gray-400">${w.transcription}</div>` : ''}
-                    </div>
-                    <span class="text-xs px-2 py-1 rounded-full bg-orange-100 text-orange-600 font-medium">${w.status}</span>
-                </div>
-                ${w.context_example ? `<div class="mt-2 text-sm text-gray-500 italic">"${w.context_example}"</div>` : ''}
-            </div>
-        `).join('');
-
-    } catch (e) {
-        container.innerHTML = '<p class="text-red-500">Ошибка загрузки словаря</p>';
-    }
-}
-
-function showAddWordModal() {
-    const word = prompt("Введите слово на английском:");
-    if (!word) return;
-
-    const translation = prompt("Введите перевод:");
-    if (!translation) return;
-
-    const transcription = prompt("Транскрипция (необязательно):") || "";
-    const context = prompt("Пример использования (необязательно):") || "";
-
-    addWordToDictionary(word, translation, transcription, context);
-}
-
-async function addWordToDictionary(word, translation, transcription = "", context = "") {
-    try {
-        const res = await fetch('/api/dictionary/add', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                user_id: userId,
-                word: word,
-                translation: translation,
-                transcription: transcription,
-                context_example: context
-            })
-        });
-
-        const data = await res.json();
-
-        if (data.status === 'success') {
-            alert('Слово успешно добавлено!');
-            showDictionary(); // обновляем список
-        } else {
-            alert(data.message || 'Ошибка при добавлении слова');
-        }
-    } catch (e) {
-        alert('Ошибка соединения с сервером');
-    }
-}
     </script>
 </body>
 </html>
