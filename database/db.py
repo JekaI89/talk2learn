@@ -83,6 +83,26 @@ async def init_db():
                 order_num INTEGER DEFAULT 0
             )
         """)
+        # На случай, если таблица questions уже существует с прошлого деплоя
+        # без колонки commentary (используется в get_next_queue_item)
+        await db.execute("""
+            ALTER TABLE questions ADD COLUMN IF NOT EXISTS commentary TEXT
+        """)
+
+        # USER_QUEUE (очередь заданий пользователя; использовалась в
+        # check_and_fill_queue/get_next_queue_item/handle_answer_result,
+        # но таблица нигде не создавалась — добавлена для согласованности схемы)
+        await db.execute("""
+            CREATE TABLE IF NOT EXISTS user_queue (
+                id SERIAL PRIMARY KEY,
+                user_id BIGINT REFERENCES users(user_id) ON DELETE CASCADE,
+                content_type TEXT NOT NULL,
+                content_id INTEGER NOT NULL,
+                queue_order INTEGER DEFAULT 0,
+                status TEXT DEFAULT 'pending',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
 
         # USER_PROGRESS
         await db.execute("""
@@ -118,6 +138,21 @@ async def init_db():
                 next_review_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 UNIQUE(user_id, word_id)
+            )
+        """)
+        # ==================== VOCABULARY_CARDS ====================
+        await db.execute("""
+            CREATE TABLE IF NOT EXISTS vocabulary_cards (
+                id SERIAL PRIMARY KEY,
+                topic TEXT NOT NULL,
+                level TEXT NOT NULL DEFAULT 'A1',
+                word TEXT NOT NULL,
+                translation TEXT NOT NULL,
+                definition TEXT DEFAULT '',
+                emoji_code TEXT NOT NULL,
+                order_num INTEGER DEFAULT 0,
+                is_active BOOLEAN DEFAULT TRUE,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """)
         print("✅ PostgreSQL: База данных инициализирована")
@@ -212,6 +247,47 @@ async def delete_lesson(lesson_id: int):
     async with pool.acquire() as db:
         await db.execute("UPDATE lessons SET is_active = FALSE WHERE id = $1", lesson_id)
     print(f"🗑️ Урок ID {lesson_id} скрыт")
+
+
+async def get_next_uncompleted_lesson(user_id: int, level: str, content_type: str = None):
+    """
+    Возвращает первый непройденный урок уровня (по order_num), опционально
+    отфильтрованный по типу контента ('lesson' / 'grammar' / 'vocabulary').
+    Пройденность определяется наличием записи в user_progress с тем же
+    content_type, что и у самого урока (так фронтенд уже отмечает прогресс
+    через /api/progress/complete). Если непройденных уроков не осталось —
+    возвращает None.
+    """
+    pool = await get_pool()
+    async with pool.acquire() as db:
+        if content_type:
+            return await db.fetchrow("""
+                SELECT l.id, l.title, l.lesson_text, l.content_type
+                FROM lessons l
+                WHERE l.level = $1 AND l.is_active = TRUE AND l.content_type = $2
+                  AND NOT EXISTS (
+                      SELECT 1 FROM user_progress up
+                      WHERE up.user_id = $3
+                        AND up.content_type = l.content_type
+                        AND up.content_id = l.id
+                  )
+                ORDER BY l.order_num, l.id
+                LIMIT 1
+            """, level, content_type, user_id)
+
+        return await db.fetchrow("""
+            SELECT l.id, l.title, l.lesson_text, l.content_type
+            FROM lessons l
+            WHERE l.level = $1 AND l.is_active = TRUE
+              AND NOT EXISTS (
+                  SELECT 1 FROM user_progress up
+                  WHERE up.user_id = $2
+                    AND up.content_type = l.content_type
+                    AND up.content_id = l.id
+              )
+            ORDER BY l.order_num, l.id
+            LIMIT 1
+        """, level, user_id)
 
 
 # ==================== ВОПРОСЫ ====================
@@ -310,62 +386,36 @@ async def save_user_progress(user_id: int, content_type: str, content_id: int):
         return {"status": "success", "xp_earned": xp_to_add}
 
 
-# ==================== ОЧЕРЕДЬ (USER_QUEUE) ====================
+# ==================== ПРАКТИКА (СЛУЧАЙНЫЙ ВОПРОС) ====================
+# Прежняя реализация опиралась на таблицу user_queue, которая нигде не
+# создавалась (init_db её не содержал), и на колонку questions.commentary,
+# которой тоже не существует в схеме — обращение к ним гарантированно
+# падало с ошибкой "relation/column does not exist". Эти функции нигде
+# не вызывались из webapp.py, поэтому ошибка не проявлялась раньше.
+# Вместо отдельной таблицы-очереди используем ту же логику, что и для
+# уроков: прогресс пользователя по вопросам трекаем в user_progress
+# с content_type='practice', content_id=questions.id.
 
-async def check_and_fill_queue(user_id: int, level: str):
-    pool = await get_pool()
-    async with pool.acquire() as db:
-        row = await db.fetchrow("""
-            SELECT COUNT(*) as cnt FROM user_queue
-            WHERE user_id = $1 AND status = 'pending'
-        """, user_id)
-        if row["cnt"] > 0:
-            return
-
-        await db.execute("""
-            INSERT INTO user_queue (user_id, content_type, content_id, queue_order, status)
-            SELECT $1, 'lesson', id, order_num, 'pending'
-            FROM lessons WHERE level = $2 AND is_active = TRUE ORDER BY order_num
-        """, user_id, level)
-
-
-async def get_next_queue_item(user_id: int, level: str):
-    await check_and_fill_queue(user_id, level)
+async def get_random_practice_question(user_id: int, level: str, task_type: str):
+    """Возвращает случайный вопрос уровня/типа, который пользователь ещё не прошёл."""
     pool = await get_pool()
     async with pool.acquire() as db:
         return await db.fetchrow("""
-            SELECT uq.id, uq.content_type, uq.content_id, l.title, l.lesson_text,
-                   q.question_text, q.option_1, q.option_2, q.option_3,
-                   q.correct_option, q.commentary
-            FROM user_queue uq
-            LEFT JOIN lessons l ON uq.content_id = l.id
-            LEFT JOIN questions q ON l.id = q.lesson_id
-            WHERE uq.user_id = $1 AND uq.status = 'pending'
-            ORDER BY uq.queue_order ASC
+            SELECT q.id, q.question_text, q.option_1, q.option_2, q.option_3, q.correct_option
+            FROM questions q
+            WHERE q.level = $1 AND q.task_type = $2
+              AND NOT EXISTS (
+                  SELECT 1 FROM user_progress up
+                  WHERE up.user_id = $3
+                    AND up.content_type = 'practice'
+                    AND up.content_id = q.id
+              )
+            ORDER BY random()
             LIMIT 1
-        """, user_id)
+        """, level, task_type, user_id)
 
 
-async def handle_answer_result(user_id: int, queue_item_id: int, is_correct: bool):
-    pool = await get_pool()
-    async with pool.acquire() as db:
-        if is_correct:
-            await db.execute(
-                "UPDATE user_queue SET status = 'completed' WHERE id = $1", queue_item_id
-            )
-            await db.execute(
-                "UPDATE users SET xp = xp + 10 WHERE user_id = $1", user_id
-            )
-        else:
-            row = await db.fetchrow(
-                "SELECT MAX(queue_order) as max_order FROM user_queue WHERE user_id = $1", user_id
-            )
-            max_order = row["max_order"] or 0
-            await db.execute(
-                "UPDATE user_queue SET queue_order = $1 WHERE id = $2",
-                max_order + 1, queue_item_id
-            )
-# ==================== СЛОВАРЬ ====================
+
 
 async def add_word_to_user_dict(
     user_id: int, 
@@ -413,4 +463,94 @@ async def get_user_words(user_id: int):
             WHERE ud.user_id = $1
             ORDER BY ud.created_at DESC
         """, user_id)
+        return rows
+
+
+# ==================== VOCABULARY CARDS ====================
+
+async def get_vocab_topics(level: str = None):
+    """Список тем с количеством карточек (для главного экрана словаря)."""
+    pool = await get_pool()
+    async with pool.acquire() as db:
+        if level:
+            rows = await db.fetch("""
+                SELECT topic, level, COUNT(*) as card_count
+                FROM vocabulary_cards
+                WHERE is_active = TRUE AND level = $1
+                GROUP BY topic, level
+                ORDER BY MIN(order_num), topic
+            """, level)
+        else:
+            rows = await db.fetch("""
+                SELECT topic, level, COUNT(*) as card_count
+                FROM vocabulary_cards
+                WHERE is_active = TRUE
+                GROUP BY topic, level
+                ORDER BY level, MIN(order_num), topic
+            """)
+        return rows
+
+
+async def get_vocab_cards(topic: str, level: str = None):
+    """Все карточки темы (опционально фильтр по уровню)."""
+    pool = await get_pool()
+    async with pool.acquire() as db:
+        if level:
+            rows = await db.fetch("""
+                SELECT id, topic, level, word, translation, definition, emoji_code
+                FROM vocabulary_cards
+                WHERE topic = $1 AND level = $2 AND is_active = TRUE
+                ORDER BY order_num, id
+            """, topic, level)
+        else:
+            rows = await db.fetch("""
+                SELECT id, topic, level, word, translation, definition, emoji_code
+                FROM vocabulary_cards
+                WHERE topic = $1 AND is_active = TRUE
+                ORDER BY order_num, id
+            """, topic)
+        return rows
+
+
+async def add_vocab_card(topic: str, level: str, word: str, translation: str,
+                          emoji_code: str, definition: str = "", order_num: int = 0) -> int:
+    """Добавить карточку. Возвращает id новой записи."""
+    pool = await get_pool()
+    async with pool.acquire() as db:
+        row = await db.fetchrow("""
+            INSERT INTO vocabulary_cards (topic, level, word, translation, definition, emoji_code, order_num)
+            VALUES ($1, $2, $3, $4, $5, $6, $7)
+            RETURNING id
+        """, topic, level, word, translation, definition, emoji_code, order_num)
+        return row["id"]
+
+
+async def update_vocab_card(card_id: int, topic: str, level: str, word: str,
+                             translation: str, emoji_code: str, definition: str = ""):
+    pool = await get_pool()
+    async with pool.acquire() as db:
+        await db.execute("""
+            UPDATE vocabulary_cards
+            SET topic=$1, level=$2, word=$3, translation=$4, emoji_code=$5, definition=$6
+            WHERE id=$7
+        """, topic, level, word, translation, emoji_code, definition, card_id)
+
+
+async def delete_vocab_card(card_id: int):
+    """Мягкое удаление — is_active = FALSE."""
+    pool = await get_pool()
+    async with pool.acquire() as db:
+        await db.execute("UPDATE vocabulary_cards SET is_active=FALSE WHERE id=$1", card_id)
+
+
+async def get_all_vocab_cards_admin():
+    """Все активные карточки для просмотра в админке."""
+    pool = await get_pool()
+    async with pool.acquire() as db:
+        rows = await db.fetch("""
+            SELECT id, topic, level, word, translation, definition, emoji_code, order_num
+            FROM vocabulary_cards
+            WHERE is_active = TRUE
+            ORDER BY level, topic, order_num, id
+        """)
         return rows
