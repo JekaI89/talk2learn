@@ -162,6 +162,127 @@ tailwind.config = {
   <!-- ── SCREENS ── -->
   <main class="flex-1 relative">
 
+    <!-- ══════════ ОНБОРДИНГ ══════════ -->
+    <div id="screen-onboarding" class="hidden screen-body px-md pt-xl pb-32">
+      <!-- Шаг 1: Цель -->
+      <div id="ob-step-1" class="space-y-lg">
+        <div class="text-center">
+          <div class="text-5xl mb-md">👋</div>
+          <h1 class="font-headline font-extrabold text-on-surface text-2xl mb-sm">Добро пожаловать!</h1>
+          <p class="font-body text-on-surface-variant text-sm">Давайте настроим Talk2Learn под вас. Какова ваша цель?</p>
+        </div>
+        <div class="space-y-sm">
+          <button onclick="selectGoal('travel')" data-goal="travel"
+            class="ob-goal w-full p-md bg-surface-container-lowest border-2 border-surface-variant rounded-2xl flex items-center gap-md active:scale-[0.99] transition-all">
+            <span class="text-3xl">✈️</span>
+            <div class="text-left">
+              <div class="font-headline font-bold text-on-surface text-sm">Путешествия</div>
+              <div class="font-label text-xs text-outline">Общаться за рубежом</div>
+            </div>
+          </button>
+          <button onclick="selectGoal('work')" data-goal="work"
+            class="ob-goal w-full p-md bg-surface-container-lowest border-2 border-surface-variant rounded-2xl flex items-center gap-md active:scale-[0.99] transition-all">
+            <span class="text-3xl">💼</span>
+            <div class="text-left">
+              <div class="font-headline font-bold text-on-surface text-sm">Работа и карьера</div>
+              <div class="font-label text-xs text-outline">Английский для бизнеса</div>
+            </div>
+          </button>
+          <button onclick="selectGoal('study')" data-goal="study"
+            class="ob-goal w-full p-md bg-surface-container-lowest border-2 border-surface-variant rounded-2xl flex items-center gap-md active:scale-[0.99] transition-all">
+            <span class="text-3xl">🎓</span>
+            <div class="text-left">
+              <div class="font-headline font-bold text-on-surface text-sm">Учёба</div>
+              <div class="font-label text-xs text-outline">Сдать экзамен (IELTS, TOEFL)</div>
+            </div>
+          </button>
+          <button onclick="selectGoal('general')" data-goal="general"
+            class="ob-goal w-full p-md bg-surface-container-lowest border-2 border-surface-variant rounded-2xl flex items-center gap-md active:scale-[0.99] transition-all">
+            <span class="text-3xl">🌍</span>
+            <div class="text-left">
+              <div class="font-headline font-bold text-on-surface text-sm">Общее развитие</div>
+              <div class="font-label text-xs text-outline">Говорить свободно</div>
+            </div>
+          </button>
+        </div>
+      </div>
+
+      <!-- Шаг 2: Уровень -->
+      <div id="ob-step-2" class="hidden space-y-lg">
+        <div class="text-center">
+          <div class="text-5xl mb-md">📊</div>
+          <h1 class="font-headline font-extrabold text-on-surface text-2xl mb-sm">Ваш уровень?</h1>
+          <p class="font-body text-on-surface-variant text-sm">Честная оценка поможет подобрать нужный контент</p>
+        </div>
+        <div class="grid grid-cols-2 gap-sm">
+          <button onclick="selectObLevel('A1')" class="ob-level p-md bg-gradient-to-br from-green-400 to-teal-500 rounded-2xl text-white text-left active:scale-95 transition-transform">
+            <span class="font-label text-xs text-white/70 block">Уровень</span>
+            <span class="font-headline font-extrabold text-2xl">A1</span>
+            <span class="font-label text-xs text-white/80 block mt-xs">Начинаю с нуля</span>
+          </button>
+          <button onclick="selectObLevel('A2')" class="ob-level p-md bg-gradient-to-br from-blue-400 to-indigo-500 rounded-2xl text-white text-left active:scale-95 transition-transform">
+            <span class="font-label text-xs text-white/70 block">Уровень</span>
+            <span class="font-headline font-extrabold text-2xl">A2</span>
+            <span class="font-label text-xs text-white/80 block mt-xs">Базовые фразы</span>
+          </button>
+          <button onclick="selectObLevel('B1')" class="ob-level p-md bg-gradient-to-br from-orange-400 to-amber-500 rounded-2xl text-white text-left active:scale-95 transition-transform">
+            <span class="font-label text-xs text-white/70 block">Уровень</span>
+            <span class="font-headline font-extrabold text-2xl">B1</span>
+            <span class="font-label text-xs text-white/80 block mt-xs">Средний</span>
+          </button>
+          <button onclick="selectObLevel('B2')" class="ob-level p-md bg-gradient-to-br from-pink-400 to-rose-500 rounded-2xl text-white text-left active:scale-95 transition-transform">
+            <span class="font-label text-xs text-white/70 block">Уровень</span>
+            <span class="font-headline font-extrabold text-2xl">B2</span>
+            <span class="font-label text-xs text-white/80 block mt-xs">Выше среднего</span>
+          </button>
+          <button onclick="selectObLevel('C1')" class="ob-level p-md bg-gradient-to-br from-red-400 to-purple-500 rounded-2xl text-white text-left active:scale-95 transition-transform">
+            <span class="font-label text-xs text-white/70 block">Уровень</span>
+            <span class="font-headline font-extrabold text-2xl">C1</span>
+            <span class="font-label text-xs text-white/80 block mt-xs">Продвинутый</span>
+          </button>
+          <button onclick="selectObLevel('C2')" class="ob-level p-md bg-gradient-to-br from-zinc-600 to-gray-800 rounded-2xl text-white text-left active:scale-95 transition-transform">
+            <span class="font-label text-xs text-white/70 block">Уровень</span>
+            <span class="font-headline font-extrabold text-2xl">C2</span>
+            <span class="font-label text-xs text-white/80 block mt-xs">Мастер</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Шаг 3: Готово -->
+      <div id="ob-step-3" class="hidden flex flex-col items-center text-center gap-lg py-xl">
+        <div class="text-6xl animate-bounce">🚀</div>
+        <div>
+          <h1 class="font-headline font-extrabold text-on-surface text-2xl mb-sm">Всё готово!</h1>
+          <p id="ob-ready-msg" class="font-body text-on-surface-variant text-sm"></p>
+        </div>
+        <button onclick="finishOnboarding()"
+          class="w-full h-touch rounded-xl bg-primary-container text-on-primary font-label font-bold uppercase tracking-wider text-sm active:scale-[0.98] transition-transform shadow-md">
+          Начать обучение →
+        </button>
+      </div>
+    </div>
+
+    <!-- ══════════ НЕТ УРОКОВ ══════════ -->
+    <div id="screen-no-content" class="hidden screen-body px-md pt-xl pb-32">
+      <div class="flex flex-col items-center text-center gap-lg py-xl">
+        <div class="w-20 h-20 rounded-full bg-surface-container flex items-center justify-center">
+          <span class="material-symbols-outlined text-outline" style="font-size:40px">construction</span>
+        </div>
+        <div>
+          <h1 class="font-headline font-extrabold text-on-surface text-2xl mb-sm">Контент в разработке</h1>
+          <p class="font-body text-on-surface-variant text-sm">Уроки для этого раздела ещё не добавлены. Загляните позже или выберите другой уровень.</p>
+        </div>
+        <button onclick="showScreen('screen-levels')"
+          class="w-full h-touch rounded-xl bg-surface-container text-on-surface-variant font-label font-bold uppercase tracking-wider text-sm active:scale-[0.98] transition-transform">
+          ← Выбрать другой уровень
+        </button>
+        <button onclick="showScreen('screen-main')"
+          class="w-full h-touch rounded-xl bg-primary-container text-on-primary font-label font-bold uppercase tracking-wider text-sm active:scale-[0.98] transition-transform shadow-md">
+          Главное меню
+        </button>
+      </div>
+    </div>
+
     <!-- ══════════ MAIN MENU ══════════ -->
     <div id="screen-main" class="screen-body px-md pt-lg pb-32 space-y-lg">
       <section>
@@ -489,6 +610,7 @@ const LEVEL_GRADIENTS = {
 };
 
 const SCREENS = [
+  'screen-onboarding','screen-no-content',
   'screen-main','screen-levels','screen-personal-dict',
   'screen-lesson','screen-level-complete',
   'screen-practice-task','screen-situations','screen-situation-chat',
@@ -568,7 +690,7 @@ async function loadProfile() {
     if (p) {
       document.getElementById('user-streak').textContent = p.streak ?? 0;
       document.getElementById('user-xp').textContent = p.xp ?? 0;
-      const xpPct = Math.min(100, Math.round((p.xp || 0) % 100));
+      const xpPct = xpProgress(p.xp || 0);
       document.getElementById('header-progress-fill').style.width = xpPct + '%';
       if (p.is_admin || data.is_admin) {
         document.getElementById('admin-badge').classList.remove('hidden');
@@ -1009,7 +1131,30 @@ async function openProfile() {
   try {
     const res = await fetch(`/api/profile/${userId}`);
     const p = await res.json();
-    const xpPct = Math.min(100, Math.round((p.xp||0) % 100));
+    const xpPct = xpProgress(p.xp || 0);
+    const xpToNext = XP_PER_LEVEL - ((p.xp || 0) % XP_PER_LEVEL);
+
+    // Категорийная статистика
+    let catHtml = '';
+    try {
+      const catRes = await fetch(`/api/stats/categories/${userId}`);
+      const cats = await catRes.json();
+      const catLabels = { lesson:'📖 Уроки', grammar:'✍️ Грамматика', vocabulary:'🧠 Словарный', practice:'🎯 Практика', words:'💾 Слов сохранено' };
+      catHtml = Object.entries(catLabels).map(([key, label]) => {
+        const s = cats[key] || {completed:0, total:0};
+        const pct = s.total > 0 ? Math.min(100, Math.round(s.completed / s.total * 100)) : 0;
+        return `<div class="mb-sm">
+          <div class="flex justify-between font-label text-xs text-on-surface-variant mb-xs">
+            <span>${label}</span>
+            <span class="text-outline">${s.completed}${s.total>0?' / '+s.total:''}</span>
+          </div>
+          <div class="h-1.5 w-full bg-surface-container-high rounded-full overflow-hidden">
+            <div class="h-full bg-primary-container rounded-full" style="width:${pct}%"></div>
+          </div>
+        </div>`;
+      }).join('');
+    } catch(e) {}
+
     container.innerHTML = `
       <div class="bg-gradient-to-br from-primary to-primary-container rounded-2xl p-lg text-white text-center mb-lg">
         <div class="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-sm">
@@ -1040,16 +1185,20 @@ async function openProfile() {
           <div class="font-label text-xs text-outline mt-xs">🎯 Заданий</div>
         </div>
       </div>
-      <div class="bg-surface-container-lowest border border-surface-variant rounded-2xl p-md">
+      <div class="bg-surface-container-lowest border border-surface-variant rounded-2xl p-md mb-md">
         <div class="flex justify-between font-label text-xs text-on-surface-variant mb-sm">
-          <span class="font-bold">Уровень ${p.level}</span>
-          <span>${p.xp} XP</span>
+          <span class="font-bold">Прогресс XP</span>
+          <span>${p.xp} XP · +${xpToNext} до следующего</span>
         </div>
         <div class="h-2 w-full bg-surface-container-high rounded-full overflow-hidden">
           <div class="h-full bg-primary-container rounded-full transition-all" style="width:${xpPct}%"></div>
         </div>
-        <div class="font-label text-xs text-outline mt-xs text-right">+${100-xpPct} XP до следующего</div>
-      </div>`;
+      </div>
+      ${catHtml ? `<div class="bg-surface-container-lowest border border-surface-variant rounded-2xl p-md">
+        <p class="font-label text-xs text-outline uppercase tracking-wider mb-md">Прогресс по разделам</p>
+        ${catHtml}
+      </div>` : ''}
+    `;
   } catch(e) {
     container.innerHTML = '<p class="text-error text-center py-lg">Ошибка загрузки</p>';
   }
@@ -1081,7 +1230,10 @@ async function openPersonalDictionary() {
             ${w.transcription?`<div class="font-label text-xs text-outline">${w.transcription}</div>`:''}
             <div class="text-primary font-body font-bold mt-xs">${w.translation}</div>
           </div>
-          <span class="font-label text-xs px-sm py-xs rounded-full bg-surface-container text-on-surface-variant">${w.status}</span>
+          <button onclick="toggleWordStatus('${w.word.replace(/'/g,"\\'")}','${w.status}')"
+            class="flex-shrink-0 px-sm py-xs rounded-full text-xs font-label font-bold transition-all active:scale-90 ${w.status==='known'?'bg-tertiary-container text-on-tertiary':'bg-surface-container text-on-surface-variant'}">
+            ${w.status==='known'?'✓ Знаю':'Учу'}
+          </button>
         </div>
         ${w.context_example?`<div class="mt-sm font-body text-sm text-on-surface-variant italic border-t border-surface-variant pt-sm">"${w.context_example}"</div>`:''}
       </div>`).join('');
@@ -1173,6 +1325,147 @@ async function openVocabTopic(topic, level) {
 }
 
 // ─────────────────────────────────────────────
+// ОНБОРДИНГ
+// ─────────────────────────────────────────────
+let obGoal = 'general';
+let obLevel = 'A1';
+
+function selectGoal(goal) {
+  obGoal = goal;
+  document.querySelectorAll('.ob-goal').forEach(b => {
+    const isMe = b.dataset.goal === goal;
+    b.classList.toggle('border-primary-container', isMe);
+    b.classList.toggle('bg-surface-container-low', isMe);
+    b.classList.toggle('border-surface-variant', !isMe);
+  });
+  setTimeout(() => {
+    document.getElementById('ob-step-1').classList.add('hidden');
+    document.getElementById('ob-step-2').classList.remove('hidden');
+  }, 300);
+}
+
+function selectObLevel(level) {
+  obLevel = level;
+  document.getElementById('ob-step-2').classList.add('hidden');
+  const goals = { travel:'путешествий', work:'карьеры', study:'учёбы', general:'общения' };
+  document.getElementById('ob-ready-msg').textContent =
+    `Ваша цель — улучшение английского для ${goals[obGoal]||'общения'}. Начинаем с уровня ${level}!`;
+  document.getElementById('ob-step-3').classList.remove('hidden');
+}
+
+async function finishOnboarding() {
+  try {
+    await fetch('/api/onboarding/complete', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ user_id: parseInt(userId), level: obLevel, goal: obGoal })
+    });
+    currentLevel = obLevel;
+    await loadProfile();
+    showScreen('screen-main');
+  } catch(e) {
+    showScreen('screen-main');
+  }
+}
+
+// ─────────────────────────────────────────────
+// СЧЁТЧИК «УРОК X ИЗ Y» + ЭКРАН НЕТ УРОКОВ
+// ─────────────────────────────────────────────
+function renderLesson(lesson) {
+  const dataDiv = document.getElementById('lesson-data');
+  const iconMap = { grammar:'edit_note', vocabulary:'psychology', lesson:'menu_book' };
+  const icon = iconMap[lesson.type] || 'menu_book';
+  const rawText = lesson.lesson_text || 'Текст урока пуст.';
+  const clickableBody = makeTextClickable(rawText, rawText);
+
+  // Счётчик прогресса
+  const p = lesson.progress || {};
+  const total = p.total || 0;
+  const num = p.next_num || 1;
+  const pct = total > 0 ? Math.round(((num - 1) / total) * 100) : 0;
+  const counterHtml = total > 0 ? `
+    <div class="mb-md">
+      <div class="flex justify-between font-label text-xs text-outline mb-xs">
+        <span>Урок ${num} из ${total}</span>
+        <span>${pct}%</span>
+      </div>
+      <div class="h-1.5 w-full bg-surface-container-high rounded-full overflow-hidden">
+        <div class="h-full bg-primary-container rounded-full transition-all" style="width:${pct}%"></div>
+      </div>
+    </div>` : '';
+
+  dataDiv.innerHTML = `
+    ${counterHtml}
+    <div class="flex items-center gap-sm mb-md">
+      <span class="material-symbols-outlined filled text-primary-container">${icon}</span>
+      <span class="font-label text-xs text-outline uppercase tracking-wider">${lesson.type||'урок'} · ${currentLevel}</span>
+    </div>
+    <h1 class="font-headline font-extrabold text-on-surface text-2xl mb-lg leading-tight">${lesson.title}</h1>
+    <p class="font-label text-xs text-outline mb-sm">💡 Нажмите на слово для перевода</p>
+    <div class="bg-surface-container-lowest border border-surface-variant rounded-2xl p-lg text-on-surface-variant leading-loose text-base font-body lesson-text-body mb-xl">
+      ${clickableBody}
+    </div>
+    <button id="complete-lesson-btn" onclick="submitProgress('${lesson.type||'lesson'}', ${lesson.id})"
+      class="w-full h-touch rounded-xl bg-tertiary-container text-on-tertiary font-label font-bold uppercase tracking-wider text-sm active:scale-[0.98] transition-transform shadow-md">
+      ✅ Просмотрено · +5 XP
+    </button>
+  `;
+}
+
+async function openNextLesson() {
+  showScreen('screen-lesson', 'screen-levels');
+  const dataDiv = document.getElementById('lesson-data');
+  dataDiv.innerHTML = `<div class="flex items-center gap-sm text-outline py-xl justify-center">
+    <span class="material-symbols-outlined animate-spin">progress_activity</span> Загрузка...
+  </div>`;
+  const typeMap = { lessons:'lesson', grammar:'grammar', vocabulary:'vocabulary' };
+  const contentType = typeMap[currentCategory] || 'lesson';
+  try {
+    const res = await fetch(`/api/lessons/next/${currentLevel}?user_id=${userId}&content_type=${contentType}`);
+    const lesson = await res.json();
+    if (lesson.completed) {
+      // Различаем «уровень пройден» от «уроков нет совсем»
+      const prog = lesson.progress || {};
+      if (prog.total === 0) {
+        showScreen('screen-no-content');
+      } else {
+        showLevelComplete();
+      }
+      return;
+    }
+    renderLesson(lesson);
+  } catch(e) {
+    dataDiv.innerHTML = `<p class="text-error text-center py-lg">Ошибка загрузки</p>`;
+  }
+}
+
+// ─────────────────────────────────────────────
+// XP ПРОГРЕСС-БАР (реальные пороги)
+// ─────────────────────────────────────────────
+// 10 уроков × 5 XP = 50 XP на уровень — реалистичный порог
+const XP_PER_LEVEL = 50;
+
+function xpProgress(xp) {
+  const inLevel = xp % XP_PER_LEVEL;
+  return Math.min(100, Math.round((inLevel / XP_PER_LEVEL) * 100));
+}
+
+// ─────────────────────────────────────────────
+// СТАТУС СЛОВА В БЛОКНОТЕ
+// ─────────────────────────────────────────────
+async function toggleWordStatus(word, currentStatus) {
+  const newStatus = currentStatus === 'known' ? 'learning' : 'known';
+  try {
+    await fetch('/api/dictionary/status', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ user_id: parseInt(userId), word, status: newStatus })
+    });
+    await openPersonalDictionary(); // перерисовываем список
+  } catch(e) {
+    showToast('Ошибка обновления', 'neutral');
+  }
+}
+
+// ─────────────────────────────────────────────
 // TOAST
 // ─────────────────────────────────────────────
 function showToast(msg, type='success') {
@@ -1187,14 +1480,17 @@ function showToast(msg, type='success') {
 // ─────────────────────────────────────────────
 // INIT
 // ─────────────────────────────────────────────
-// Initial AI greeting in club
-document.getElementById('chat-box').innerHTML = `
-  <div class="bg-primary-container text-on-primary p-md rounded-2xl rounded-tl-none max-w-[85%] text-sm shadow-sm">
-    Hello! Welcome to the Speaking Club. How are you doing today? Feel free to type or hold the mic to talk!
-  </div>`;
-
-window.onload = () => {
-  loadProfile();
+window.onload = async () => {
+  await loadProfile();
+  // Проверяем онбординг
+  try {
+    const res = await fetch(`/api/onboarding/${userId}`);
+    const data = await res.json();
+    if (!data.onboarding_done && userId > 0) {
+      showScreen('screen-onboarding');
+      return;
+    }
+  } catch(e) { /* если ошибка — просто показываем главный экран */ }
   showScreen('screen-main');
 };
 </script>
