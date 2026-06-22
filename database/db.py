@@ -140,6 +140,21 @@ async def init_db():
                 UNIQUE(user_id, word_id)
             )
         """)
+        # ==================== VOCABULARY_CARDS ====================
+        await db.execute("""
+            CREATE TABLE IF NOT EXISTS vocabulary_cards (
+                id SERIAL PRIMARY KEY,
+                topic TEXT NOT NULL,
+                level TEXT NOT NULL DEFAULT 'A1',
+                word TEXT NOT NULL,
+                translation TEXT NOT NULL,
+                definition TEXT DEFAULT '',
+                emoji_code TEXT NOT NULL,
+                order_num INTEGER DEFAULT 0,
+                is_active BOOLEAN DEFAULT TRUE,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
         print("✅ PostgreSQL: База данных инициализирована")
 
 
@@ -448,4 +463,94 @@ async def get_user_words(user_id: int):
             WHERE ud.user_id = $1
             ORDER BY ud.created_at DESC
         """, user_id)
+        return rows
+
+
+# ==================== VOCABULARY CARDS ====================
+
+async def get_vocab_topics(level: str = None):
+    """Список тем с количеством карточек (для главного экрана словаря)."""
+    pool = await get_pool()
+    async with pool.acquire() as db:
+        if level:
+            rows = await db.fetch("""
+                SELECT topic, level, COUNT(*) as card_count
+                FROM vocabulary_cards
+                WHERE is_active = TRUE AND level = $1
+                GROUP BY topic, level
+                ORDER BY MIN(order_num), topic
+            """, level)
+        else:
+            rows = await db.fetch("""
+                SELECT topic, level, COUNT(*) as card_count
+                FROM vocabulary_cards
+                WHERE is_active = TRUE
+                GROUP BY topic, level
+                ORDER BY level, MIN(order_num), topic
+            """)
+        return rows
+
+
+async def get_vocab_cards(topic: str, level: str = None):
+    """Все карточки темы (опционально фильтр по уровню)."""
+    pool = await get_pool()
+    async with pool.acquire() as db:
+        if level:
+            rows = await db.fetch("""
+                SELECT id, topic, level, word, translation, definition, emoji_code
+                FROM vocabulary_cards
+                WHERE topic = $1 AND level = $2 AND is_active = TRUE
+                ORDER BY order_num, id
+            """, topic, level)
+        else:
+            rows = await db.fetch("""
+                SELECT id, topic, level, word, translation, definition, emoji_code
+                FROM vocabulary_cards
+                WHERE topic = $1 AND is_active = TRUE
+                ORDER BY order_num, id
+            """, topic)
+        return rows
+
+
+async def add_vocab_card(topic: str, level: str, word: str, translation: str,
+                          emoji_code: str, definition: str = "", order_num: int = 0) -> int:
+    """Добавить карточку. Возвращает id новой записи."""
+    pool = await get_pool()
+    async with pool.acquire() as db:
+        row = await db.fetchrow("""
+            INSERT INTO vocabulary_cards (topic, level, word, translation, definition, emoji_code, order_num)
+            VALUES ($1, $2, $3, $4, $5, $6, $7)
+            RETURNING id
+        """, topic, level, word, translation, definition, emoji_code, order_num)
+        return row["id"]
+
+
+async def update_vocab_card(card_id: int, topic: str, level: str, word: str,
+                             translation: str, emoji_code: str, definition: str = ""):
+    pool = await get_pool()
+    async with pool.acquire() as db:
+        await db.execute("""
+            UPDATE vocabulary_cards
+            SET topic=$1, level=$2, word=$3, translation=$4, emoji_code=$5, definition=$6
+            WHERE id=$7
+        """, topic, level, word, translation, emoji_code, definition, card_id)
+
+
+async def delete_vocab_card(card_id: int):
+    """Мягкое удаление — is_active = FALSE."""
+    pool = await get_pool()
+    async with pool.acquire() as db:
+        await db.execute("UPDATE vocabulary_cards SET is_active=FALSE WHERE id=$1", card_id)
+
+
+async def get_all_vocab_cards_admin():
+    """Все активные карточки для просмотра в админке."""
+    pool = await get_pool()
+    async with pool.acquire() as db:
+        rows = await db.fetch("""
+            SELECT id, topic, level, word, translation, definition, emoji_code, order_num
+            FROM vocabulary_cards
+            WHERE is_active = TRUE
+            ORDER BY level, topic, order_num, id
+        """)
         return rows
