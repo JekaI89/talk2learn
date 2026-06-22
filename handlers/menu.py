@@ -1,14 +1,13 @@
 from aiogram import Router, types
 from aiogram.filters import CommandStart, Command
 from aiogram.utils.keyboard import InlineKeyboardBuilder
+import os
 
 from database.db import check_is_admin
 
 router = Router()
 
-# Переменная в начале файла menu.py
-WEBAPP_URL = "https://talk2learn-4gmx.onrender.com"
-# Главные администраторы (всегда имеют права)
+WEBAPP_URL = os.environ.get("WEBAPP_URL", "https://talk2learn-4gmx.onrender.com")
 ADMIN_IDS = [377424247, 696767499]
 
 
