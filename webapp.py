@@ -26,7 +26,13 @@ from database.db import (
     add_word_to_user_dict,
     get_user_words,
     get_random_practice_question,
-    get_next_uncompleted_lesson
+    get_next_uncompleted_lesson,
+    get_vocab_topics,
+    get_vocab_cards,
+    add_vocab_card,
+    update_vocab_card,
+    delete_vocab_card,
+    get_all_vocab_cards_admin
 )
 
 from utils.ai_service import transcribe_voice, get_ai_response, generate_voice, translate_word
@@ -511,10 +517,7 @@ async def add_word(data: AddWordRequest):
 
 @app.post("/api/dictionary/quick_add")
 async def quick_add_word(data: QuickAddWordRequest):
-    """
-    Добавление слова в личный словарь тапом по слову в уроке или в разговорном
-    клубе: перевод, транскрипция и пример подбираются автоматически через AI.
-    """
+    """Перевод слова через AI + сохранение в личный словарь пользователя."""
     try:
         word_clean = data.word.strip()
         if not word_clean:
@@ -548,6 +551,123 @@ async def quick_add_word(data: QuickAddWordRequest):
     except Exception as e:
         traceback.print_exc()
         raise HTTPException(500, str(e))
+
+
+@app.post("/api/dictionary/translate")
+async def translate_word_only(data: QuickAddWordRequest):
+    """
+    Только перевод слова через AI — без сохранения в БД.
+    Вызывается фронтендом при тапе по слову для показа попапа.
+    Сохранение происходит отдельно через /api/dictionary/quick_add.
+    """
+    try:
+        word_clean = data.word.strip()
+        if not word_clean:
+            raise HTTPException(400, "Пустое слово")
+
+        translated = await translate_word(word_clean, context=data.context_sentence)
+
+        if not translated["translation"]:
+            return {"status": "error", "message": "Не удалось получить перевод"}
+
+        return {
+            "status": "success",
+            "word": word_clean,
+            "translation": translated["translation"],
+            "transcription": translated["transcription"],
+            "context_example": translated["example"]
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        traceback.print_exc()
+        raise HTTPException(500, str(e))
+
+# ====================== VOCABULARY CARDS ======================
+
+class VocabCardCreate(BaseModel):
+    topic: str
+    level: str = "A1"
+    word: str
+    translation: str
+    emoji_code: str
+    definition: str = ""
+    order_num: int = 0
+
+class VocabCardUpdate(VocabCardCreate):
+    id: int
+
+
+@app.get("/api/vocab/topics")
+async def vocab_topics(level: Optional[str] = Query(None)):
+    """Список тем с кол-вом карточек (для главного экрана раздела Словарь)."""
+    try:
+        rows = await get_vocab_topics(level)
+        return [dict(r) for r in rows]
+    except Exception as e:
+        traceback.print_exc()
+        return []
+
+
+@app.get("/api/vocab/cards")
+async def vocab_cards(topic: str = Query(...), level: Optional[str] = Query(None)):
+    """Все карточки темы."""
+    try:
+        rows = await get_vocab_cards(topic, level)
+        return [dict(r) for r in rows]
+    except Exception as e:
+        traceback.print_exc()
+        return []
+
+
+@app.get("/api/admin/vocab")
+async def admin_vocab_all():
+    """Все карточки для таблицы в админке."""
+    try:
+        rows = await get_all_vocab_cards_admin()
+        return [dict(r) for r in rows]
+    except Exception as e:
+        traceback.print_exc()
+        return []
+
+
+@app.post("/api/admin/vocab/add")
+async def admin_vocab_add(data: VocabCardCreate):
+    try:
+        card_id = await add_vocab_card(
+            topic=data.topic, level=data.level, word=data.word,
+            translation=data.translation, emoji_code=data.emoji_code,
+            definition=data.definition, order_num=data.order_num
+        )
+        return {"status": "success", "id": card_id}
+    except Exception as e:
+        traceback.print_exc()
+        raise HTTPException(500, str(e))
+
+
+@app.put("/api/admin/vocab/update")
+async def admin_vocab_update(data: VocabCardUpdate):
+    try:
+        await update_vocab_card(
+            card_id=data.id, topic=data.topic, level=data.level,
+            word=data.word, translation=data.translation,
+            emoji_code=data.emoji_code, definition=data.definition
+        )
+        return {"status": "success"}
+    except Exception as e:
+        traceback.print_exc()
+        raise HTTPException(500, str(e))
+
+
+@app.delete("/api/admin/vocab/delete/{card_id}")
+async def admin_vocab_delete(card_id: int):
+    try:
+        await delete_vocab_card(card_id)
+        return {"status": "success"}
+    except Exception as e:
+        traceback.print_exc()
+        raise HTTPException(500, str(e))
+
 
 # ====================== СТАТИКА ======================
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
