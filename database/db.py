@@ -50,9 +50,12 @@ async def init_db():
                 last_activity_date TEXT,
                 is_admin BOOLEAN DEFAULT FALSE,
                 is_premium BOOLEAN DEFAULT FALSE,
+                onboarding_done BOOLEAN DEFAULT FALSE,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """)
+        # Добавляем onboarding_done для существующих БД
+        await db.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS onboarding_done BOOLEAN DEFAULT FALSE")
 
         # LESSONS
         await db.execute("""
@@ -554,3 +557,105 @@ async def get_all_vocab_cards_admin():
             ORDER BY level, topic, order_num, id
         """)
         return rows
+
+
+# ==================== ОНБОРДИНГ ====================
+
+async def complete_onboarding(user_id: int, level: str, goal: str = ""):
+    """Отмечаем онбординг пройденным и сохраняем выбранный уровень."""
+    pool = await get_pool()
+    async with pool.acquire() as db:
+        await db.execute("""
+            UPDATE users SET onboarding_done = TRUE, level = $1 WHERE user_id = $2
+        """, level, user_id)
+
+
+async def get_onboarding_status(user_id: int) -> bool:
+    pool = await get_pool()
+    async with pool.acquire() as db:
+        row = await db.fetchrow("SELECT onboarding_done FROM users WHERE user_id = $1", user_id)
+        return bool(row["onboarding_done"]) if row else False
+
+
+# ==================== ПРОГРЕСС ПО УРОВНЮ ====================
+
+async def get_lesson_progress(user_id: int, level: str, content_type: str = None) -> dict:
+    """
+    Возвращает {total, completed, next_num} для экрана «Урок X из Y».
+    """
+    pool = await get_pool()
+    async with pool.acquire() as db:
+        if content_type:
+            total_row = await db.fetchrow("""
+                SELECT COUNT(*) as cnt FROM lessons
+                WHERE level = $1 AND content_type = $2 AND is_active = TRUE
+            """, level, content_type)
+            done_row = await db.fetchrow("""
+                SELECT COUNT(*) as cnt FROM user_progress up
+                JOIN lessons l ON up.content_id = l.id AND up.content_type = l.content_type
+                WHERE up.user_id = $1 AND l.level = $2 AND l.content_type = $3 AND l.is_active = TRUE
+            """, user_id, level, content_type)
+        else:
+            total_row = await db.fetchrow("""
+                SELECT COUNT(*) as cnt FROM lessons WHERE level = $1 AND is_active = TRUE
+            """, level)
+            done_row = await db.fetchrow("""
+                SELECT COUNT(*) as cnt FROM user_progress up
+                JOIN lessons l ON up.content_id = l.id AND up.content_type = l.content_type
+                WHERE up.user_id = $1 AND l.level = $2 AND l.is_active = TRUE
+            """, user_id, level)
+
+        total = int(total_row["cnt"]) if total_row else 0
+        completed = int(done_row["cnt"]) if done_row else 0
+        return {"total": total, "completed": completed, "next_num": completed + 1}
+
+
+# ==================== СТАТУС СЛОВА В СЛОВАРЕ ====================
+
+async def update_word_status(user_id: int, word: str, status: str):
+    """Меняет статус слова: 'learning' → 'known' или обратно."""
+    pool = await get_pool()
+    async with pool.acquire() as db:
+        await db.execute("""
+            UPDATE user_dictionary ud
+            SET status = $1
+            FROM dictionary d
+            WHERE ud.word_id = d.id AND ud.user_id = $2 AND d.word = $3
+        """, status, user_id, word)
+
+
+# ==================== СТАТИСТИКА ПО КАТЕГОРИЯМ ====================
+
+async def get_user_category_stats(user_id: int) -> dict:
+    """Прогресс пользователя по каждой категории контента."""
+    pool = await get_pool()
+    async with pool.acquire() as db:
+        rows = await db.fetch("""
+            SELECT
+                l.content_type,
+                COUNT(DISTINCT l.id) as total,
+                COUNT(DISTINCT up.content_id) as completed
+            FROM lessons l
+            LEFT JOIN user_progress up
+                ON up.content_id = l.id
+                AND up.content_type = l.content_type
+                AND up.user_id = $1
+            WHERE l.is_active = TRUE
+            GROUP BY l.content_type
+        """, user_id)
+
+        practice_total = await db.fetchrow(
+            "SELECT COUNT(*) as cnt FROM questions WHERE lesson_id IS NOT NULL OR lesson_id IS NULL"
+        )
+        practice_done = await db.fetchrow(
+            "SELECT COUNT(*) as cnt FROM user_progress WHERE user_id = $1 AND content_type = 'practice'",
+            user_id
+        )
+        words_done = await db.fetchrow(
+            "SELECT COUNT(*) as cnt FROM user_dictionary WHERE user_id = $1", user_id
+        )
+
+        stats = {r["content_type"]: {"total": int(r["total"]), "completed": int(r["completed"])} for r in rows}
+        stats["practice"] = {"total": int(practice_total["cnt"]), "completed": int(practice_done["cnt"])}
+        stats["words"] = {"total": 0, "completed": int(words_done["cnt"])}
+        return stats
