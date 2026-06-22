@@ -9,6 +9,10 @@ from database.db import check_is_admin, get_user_level
 
 router = Router()
 
+# Используем /data (persistent disk Render) в продакшене, temp/ локально
+TEMP_DIR = Path(os.environ.get("TEMP_DIR", "/data" if os.path.exists("/data") else "temp"))
+TEMP_DIR.mkdir(parents=True, exist_ok=True)
+
 
 class ClubStates(StatesGroup):
     in_conversation = State()
@@ -53,7 +57,7 @@ async def club_text_message(message: types.Message):
         user_level = await get_user_level(message.from_user.id)
 
         ai_text = await get_ai_response(message.text, user_level=user_level)
-        voice_path = f"temp/ai_voice_{message.from_user.id}.mp3"
+        voice_path = str(TEMP_DIR / f"ai_voice_{message.from_user.id}.mp3")
 
         await generate_voice(ai_text, voice_path)
 
@@ -72,11 +76,10 @@ async def club_voice_message(message: types.Message):
     await message.bot.send_chat_action(message.chat.id, "record_voice")
 
     user_id = message.from_user.id
-    input_ogg = f"temp/user_{user_id}.ogg"
-    output_mp3 = f"temp/ai_{user_id}.mp3"
+    input_ogg = str(TEMP_DIR / f"user_{user_id}.ogg")
+    output_mp3 = str(TEMP_DIR / f"ai_{user_id}.mp3")
 
     try:
-        Path("temp").mkdir(exist_ok=True)
 
         voice_file = await message.bot.get_file(message.voice.file_id)
         await message.bot.download_file(voice_file.file_path, input_ogg)
