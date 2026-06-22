@@ -1,1217 +1,1202 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Talk2Learn - Академия</title>
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <style>
-        /* Кликабельное слово */
-        .clickable-word {
-            cursor: pointer;
-            border-bottom: 1px dashed #93c5fd;
-            transition: background 0.15s;
-            border-radius: 2px;
-            padding: 0 1px;
-        }
-        .clickable-word:hover,
-        .clickable-word:active {
-            background: #dbeafe;
-        }
-        /* Попап перевода */
-        #word-popup {
-            transition: opacity 0.15s, transform 0.15s;
-        }
-        #word-popup.hidden {
-            opacity: 0;
-            pointer-events: none;
-            transform: translateY(8px);
-        }
-    </style>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Talk2Learn</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700;800&family=Be+Vietnam+Pro:wght@400;500;600&family=Hanken+Grotesk:wght@500;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script>
+tailwind.config = {
+  darkMode: "class",
+  theme: {
+    extend: {
+      colors: {
+        "surface": "#f7f9fb",
+        "surface-dim": "#d8dadc",
+        "surface-bright": "#f7f9fb",
+        "surface-container-lowest": "#ffffff",
+        "surface-container-low": "#f2f4f6",
+        "surface-container": "#eceef0",
+        "surface-container-high": "#e6e8ea",
+        "surface-container-highest": "#e0e3e5",
+        "on-surface": "#191c1e",
+        "on-surface-variant": "#434655",
+        "outline": "#737686",
+        "outline-variant": "#c3c6d7",
+        "primary": "#004ac6",
+        "on-primary": "#ffffff",
+        "primary-container": "#2563eb",
+        "on-primary-container": "#eeefff",
+        "inverse-primary": "#b4c5ff",
+        "secondary": "#9d4300",
+        "on-secondary": "#ffffff",
+        "secondary-container": "#fd761a",
+        "on-secondary-container": "#5c2400",
+        "tertiary": "#006329",
+        "on-tertiary": "#ffffff",
+        "tertiary-container": "#007f36",
+        "on-tertiary-container": "#c7ffca",
+        "error": "#ba1a1a",
+        "on-error": "#ffffff",
+        "error-container": "#ffdad6",
+        "surface-variant": "#e0e3e5",
+        "on-secondary-fixed": "#341100",
+      },
+      fontFamily: {
+        "body": ["Be Vietnam Pro", "sans-serif"],
+        "headline": ["Plus Jakarta Sans", "sans-serif"],
+        "label": ["Hanken Grotesk", "sans-serif"],
+      },
+      spacing: {
+        "xs": "4px", "sm": "8px", "md": "16px",
+        "lg": "24px", "xl": "32px",
+        "touch": "52px",
+      },
+    }
+  }
+}
+</script>
+<style>
+  body { font-family: 'Be Vietnam Pro', sans-serif; background: #f7f9fb; min-height: 100dvh; }
+  .material-symbols-outlined { font-variation-settings: 'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24; vertical-align: middle; }
+  .filled { font-variation-settings: 'FILL' 1,'wght' 400,'GRAD' 0,'opsz' 24; }
+
+  /* Clickable words */
+  .clickable-word {
+    cursor: pointer;
+    border-bottom: 1.5px dashed rgba(180,197,255,0.7);
+    transition: background 0.12s ease;
+    border-radius: 2px;
+    padding: 0 1px;
+  }
+  .clickable-word:hover, .clickable-word:active { background: rgba(219,225,255,0.3); }
+
+  /* Bottom-sheet word popup */
+  #word-popup {
+    transition: transform 0.25s cubic-bezier(0.4,0,0.2,1), opacity 0.2s;
+  }
+  #word-popup.sheet-hidden { transform: translateY(100%); opacity: 0; pointer-events: none; }
+
+  /* Chip shadow */
+  .chip-shadow { box-shadow: 0px 3px 0px #c3c6d7; }
+  .chip-shadow:active { box-shadow: none; transform: translateY(2px); }
+
+  /* Progress bar animation */
+  .progress-fill { transition: width 0.5s ease; }
+
+  /* Screen scroll */
+  .screen-body { overflow-y: auto; -webkit-overflow-scrolling: touch; }
+</style>
 </head>
-<body class="bg-[#F8FAFC] text-zinc-900 min-h-screen p-4 flex flex-col justify-between">
+<body class="flex flex-col items-center overflow-x-hidden bg-surface">
 
-    <!-- Попап перевода слова -->
-    <div id="word-popup" class="hidden fixed bottom-24 left-4 right-4 max-w-lg mx-auto bg-white rounded-2xl shadow-2xl border border-blue-100 p-4 z-50">
-        <div class="flex justify-between items-start mb-2">
-            <div>
-                <span id="popup-word" class="font-black text-xl text-gray-900"></span>
-                <span id="popup-transcription" class="text-sm text-gray-400 ml-2"></span>
-            </div>
-            <button onclick="hideWordPopup()" class="text-gray-400 hover:text-gray-700 text-xl leading-none">✕</button>
-        </div>
-        <div id="popup-translation" class="text-blue-700 font-bold text-base mb-2"></div>
-        <div id="popup-example" class="text-gray-500 text-sm italic mb-3"></div>
-        <div id="popup-status" class="text-xs text-center text-gray-400 mb-1 min-h-[16px]"></div>
-        <button id="popup-add-btn" onclick="addPopupWordToDict()"
-            class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-sm active:scale-95 transition">
-            + В мой словарь
-        </button>
+<!-- ═══════════════════════════════════════════════════════════
+     WORD POPUP — bottom sheet
+════════════════════════════════════════════════════════════ -->
+<div id="word-popup-overlay" class="hidden fixed inset-0 z-40 bg-black/30 backdrop-blur-[2px]" onclick="hideWordPopup()"></div>
+<div id="word-popup" class="sheet-hidden fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[512px] z-50 bg-surface-container-lowest rounded-t-[24px] shadow-2xl p-md pb-8">
+  <!-- Handle -->
+  <div class="w-10 h-1 bg-outline-variant rounded-full mx-auto mb-md"></div>
+  <div class="flex justify-between items-start mb-sm">
+    <div>
+      <span id="popup-word" class="font-headline text-2xl font-extrabold text-on-surface"></span>
+      <span id="popup-transcription" class="text-sm text-outline ml-2 font-label"></span>
     </div>
-    <!-- Затемнение под попапом -->
-    <div id="word-popup-overlay" class="hidden fixed inset-0 z-40 bg-black/20" onclick="hideWordPopup()"></div>
+    <button onclick="hideWordPopup()" class="w-8 h-8 flex items-center justify-center rounded-full bg-surface-container active:scale-90 transition-transform">
+      <span class="material-symbols-outlined text-on-surface-variant text-lg">close</span>
+    </button>
+  </div>
+  <div id="popup-translation" class="text-primary-container text-xl font-bold font-headline mb-xs"></div>
+  <div id="popup-example" class="text-on-surface-variant text-sm mb-md italic"></div>
+  <div id="popup-status" class="text-sm text-center text-tertiary-container font-label mb-xs min-h-[18px]"></div>
+  <button id="popup-add-btn" onclick="addPopupWordToDict()"
+    class="w-full h-touch rounded-xl bg-secondary-container text-on-secondary font-label font-bold text-sm uppercase tracking-wider active:scale-[0.98] transition-transform">
+    + В мой словарь
+  </button>
+</div>
 
-    <div class="max-w-lg mx-auto bg-white min-h-screen shadow-xl rounded-3xl p-4 w-full flex flex-col justify-between">
+<!-- ═══════════════════════════════════════════════════════════
+     MAIN CONTAINER
+════════════════════════════════════════════════════════════ -->
+<div class="w-full max-w-[512px] min-h-screen flex flex-col relative">
+
+  <!-- ── STICKY HEADER ── -->
+  <header id="app-header" class="sticky top-0 z-30 bg-surface border-b border-surface-variant">
+    <div class="h-touch px-md flex items-center gap-md">
+      <button id="header-back" onclick="headerBack()" class="hidden w-10 h-10 flex items-center justify-center rounded-full active:bg-surface-container active:scale-90 transition-all">
+        <span class="material-symbols-outlined text-on-surface-variant">arrow_back</span>
+      </button>
+      <div id="header-avatar" class="w-10 h-10 bg-primary-container rounded-full flex items-center justify-center text-on-primary font-headline font-bold text-sm cursor-pointer active:scale-90 transition-transform flex-shrink-0" onclick="openProfile()">TL</div>
+      <div id="header-user-info" class="flex-1 min-w-0">
+        <div id="user-name" class="font-headline font-bold text-on-surface text-sm truncate">Загрузка...</div>
+        <div class="flex items-center gap-sm text-xs text-outline font-label">
+          <span class="flex items-center gap-xs">
+            <span class="material-symbols-outlined filled text-secondary-container text-sm">local_fire_department</span>
+            <span id="user-streak">0</span>
+          </span>
+          <span>·</span>
+          <span class="flex items-center gap-xs">
+            <span class="material-symbols-outlined filled text-[#f59e0b] text-sm">star</span>
+            <span id="user-xp">0</span> XP
+          </span>
+        </div>
+      </div>
+      <button id="admin-badge" onclick="window.location.href='/admin'" class="hidden px-sm py-xs bg-error-container text-error rounded-full text-xs font-label font-bold active:scale-90 transition-transform">
+        <span class="material-symbols-outlined text-sm">settings</span>
+      </button>
+      <div id="header-title-block" class="hidden flex-1">
+        <div id="header-title" class="font-headline font-bold text-on-surface text-sm"></div>
+      </div>
+    </div>
+    <!-- XP progress bar (shown on lesson/practice screens) -->
+    <div id="header-progress" class="hidden px-md pb-sm">
+      <div class="h-1.5 w-full bg-surface-container-high rounded-full overflow-hidden">
+        <div id="header-progress-fill" class="h-full bg-primary-container rounded-full progress-fill" style="width:0%"></div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ── SCREENS ── -->
+  <main class="flex-1 relative">
+
+    <!-- ══════════ MAIN MENU ══════════ -->
+    <div id="screen-main" class="screen-body px-md pt-lg pb-32 space-y-lg">
+      <section>
+        <p class="font-label text-xs uppercase tracking-wider text-outline mb-sm">Занятия</p>
+        <div class="grid grid-cols-2 gap-sm">
+          <button onclick="chooseCategory('lessons')" class="p-md bg-surface-container-lowest rounded-2xl text-left border border-surface-variant active:scale-95 transition-transform shadow-sm">
+            <span class="material-symbols-outlined filled text-primary-container text-3xl block mb-xs">menu_book</span>
+            <span class="font-headline font-bold text-on-surface block text-sm">Уроки</span>
+            <span class="font-label text-xs text-outline">Теория курса</span>
+          </button>
+          <button onclick="chooseCategory('grammar')" class="p-md bg-surface-container-lowest rounded-2xl text-left border border-surface-variant active:scale-95 transition-transform shadow-sm">
+            <span class="material-symbols-outlined filled text-[#7c3aed] text-3xl block mb-xs">edit_note</span>
+            <span class="font-headline font-bold text-on-surface block text-sm">Грамматика</span>
+            <span class="font-label text-xs text-outline">Правила</span>
+          </button>
+          <button onclick="showDictionary()" class="p-md bg-surface-container-lowest rounded-2xl text-left border border-surface-variant active:scale-95 transition-transform shadow-sm">
+            <span class="material-symbols-outlined filled text-secondary-container text-3xl block mb-xs">psychology</span>
+            <span class="font-headline font-bold text-on-surface block text-sm">Словарь</span>
+            <span class="font-label text-xs text-outline">Лексика</span>
+          </button>
+          <button onclick="chooseCategory('practice')" class="p-md bg-surface-container-lowest rounded-2xl text-left border border-surface-variant active:scale-95 transition-transform shadow-sm">
+            <span class="material-symbols-outlined filled text-tertiary-container text-3xl block mb-xs">target</span>
+            <span class="font-headline font-bold text-on-surface block text-sm">Практика</span>
+            <span class="font-label text-xs text-outline">Тесты</span>
+          </button>
+        </div>
+      </section>
+
+      <section>
+        <p class="font-label text-xs uppercase tracking-wider text-outline mb-sm">Интерактив</p>
+        <div class="space-y-sm">
+          <button onclick="showScreen('screen-situations')" class="w-full p-md bg-surface-container-lowest border border-surface-variant rounded-2xl flex items-center justify-between active:scale-[0.99] transition-transform shadow-sm">
+            <div class="flex items-center gap-md">
+              <span class="material-symbols-outlined filled text-[#0891b2] text-2xl">map</span>
+              <div class="text-left">
+                <div class="font-headline font-bold text-on-surface text-sm">Ситуации</div>
+                <div class="font-label text-xs text-outline">В магазине, ресторане...</div>
+              </div>
+            </div>
+            <span class="material-symbols-outlined text-outline">chevron_right</span>
+          </button>
+          <button onclick="showScreen('screen-club')" class="w-full p-md bg-on-surface rounded-2xl flex items-center justify-between active:scale-[0.99] transition-transform shadow-md">
+            <div class="flex items-center gap-md">
+              <span class="material-symbols-outlined filled text-inverse-primary text-2xl">mic</span>
+              <div class="text-left">
+                <div class="font-headline font-bold text-surface text-sm">Разговорный клуб</div>
+                <div class="font-label text-xs text-outline-variant">AI-репетитор</div>
+              </div>
+            </div>
+            <span class="px-sm py-xs bg-primary-container text-on-primary font-label text-xs font-bold rounded-lg">AI</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- Personal notebook shortcut -->
+      <button onclick="openPersonalDictionary()" class="w-full p-md bg-gradient-to-r from-secondary to-secondary-container rounded-2xl flex items-center gap-md active:scale-[0.99] transition-transform">
+        <span class="material-symbols-outlined filled text-white text-2xl">book_2</span>
+        <div class="text-left">
+          <div class="font-headline font-bold text-white text-sm">Мой блокнот слов</div>
+          <div class="font-label text-xs text-white/70">Слова, которые вы сохранили</div>
+        </div>
+        <span class="material-symbols-outlined text-white ml-auto">chevron_right</span>
+      </button>
+    </div>
+
+    <!-- ══════════ LEVELS ══════════ -->
+    <div id="screen-levels" class="hidden screen-body px-md pt-lg pb-32 space-y-md">
+      <h1 class="font-headline font-extrabold text-on-surface text-2xl">Выберите уровень</h1>
+      <div id="levels-grid" class="grid grid-cols-2 gap-sm"></div>
+    </div>
+
+    <!-- ══════════ LESSON ══════════ -->
+    <div id="screen-lesson" class="hidden screen-body px-md pt-lg pb-36">
+      <div id="lesson-data"></div>
+    </div>
+
+    <!-- ══════════ LEVEL COMPLETE ══════════ -->
+    <div id="screen-level-complete" class="hidden screen-body px-md pt-xl pb-32">
+      <div class="flex flex-col items-center text-center gap-lg py-xl">
+        <div class="w-24 h-24 rounded-full bg-gradient-to-br from-[#f59e0b] to-[#d97706] flex items-center justify-center shadow-lg">
+          <span class="material-symbols-outlined filled text-white" style="font-size:48px">emoji_events</span>
+        </div>
         <div>
-            <!-- Шапка -->
-            <div class="p-4 flex items-center justify-between border-b border-zinc-100 bg-white rounded-t-2xl">
-                <div class="flex items-center gap-3">
-                    <div onclick="openProfile()" class="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-lg cursor-pointer active:scale-95 transition">TL</div>
-                    <div>
-                        <div class="font-bold text-zinc-800" id="user-name">Загрузка...</div>
-                        <div class="text-xs text-zinc-400 flex items-center gap-1">
-                            <span>🔥 <span id="user-streak">0</span> дней</span> •
-                            <span>✨ <span id="user-xp">0</span> XP</span>
-                        </div>
-                    </div>
-                </div>
-                <button id="admin-badge" onclick="window.location.href='/admin'" class="hidden px-3 py-1 bg-red-50 text-red-600 rounded-full text-xs font-bold border border-red-100 active:scale-95 transition">⚙️ Админка</button>
-            </div>
-
-            <!-- ГЛАВНОЕ МЕНЮ -->
-            <div id="screen-main" class="mt-6 space-y-6">
-                <h2 class="text-xl font-extrabold text-gray-900">📚 Занятия</h2>
-                <div class="grid grid-cols-2 gap-4">
-                    <button onclick="chooseCategory('lessons')" class="p-5 bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 rounded-2xl text-left active:scale-95 transition">
-                        <span class="text-2xl block mb-2">📖</span>
-                        <span class="font-bold text-gray-800 block">Уроки</span>
-                        <span class="text-xs text-gray-400">Теория курса</span>
-                    </button>
-                    <button onclick="chooseCategory('grammar')" class="p-5 bg-gradient-to-br from-purple-50 to-pink-50 border border-purple-100 rounded-2xl text-left active:scale-95 transition">
-                        <span class="text-2xl block mb-2">✍️</span>
-                        <span class="font-bold text-gray-800 block">Грамматика</span>
-                        <span class="text-xs text-gray-400">Правила и разборы</span>
-                    </button>
-                    <button onclick="showDictionary()" class="p-5 bg-gradient-to-br from-green-50 to-emerald-50 border border-green-100 rounded-2xl text-left active:scale-95 transition">
-                        <span class="text-2xl block mb-2">🧠</span>
-                        <span class="font-bold text-gray-800 block">Словарь</span>
-                        <span class="text-xs text-gray-400">Лексика по темам</span>
-                    </button>
-                    <button onclick="chooseCategory('practice')" class="p-5 bg-gradient-to-br from-orange-50 to-amber-50 border border-orange-100 rounded-2xl text-left active:scale-95 transition">
-                        <span class="text-2xl block mb-2">🎯</span>
-                        <span class="font-bold text-gray-800 block">Практика</span>
-                        <span class="text-xs text-gray-400">Теория и тесты</span>
-                    </button>
-                </div>
-
-                <h2 class="text-xl font-extrabold text-gray-900 pt-2">💬 Интерактив</h2>
-                <div class="space-y-3">
-                    <button onclick="showScreen('screen-situations')" class="w-full p-4 bg-gray-50 border border-gray-100 rounded-xl text-left font-bold flex justify-between items-center active:scale-[0.99] transition">
-                        <span>🗺️ Ситуации (В магазине, Аэропорт...)</span>
-                        <span class="text-gray-400">→</span>
-                    </button>
-                    <button onclick="showScreen('screen-club')" class="w-full p-4 bg-zinc-900 text-white rounded-xl text-left font-bold flex justify-between items-center active:scale-[0.99] transition shadow-md">
-                        <span>🎙️ Разговорный клуб с ИИ</span>
-                        <span class="bg-blue-600 text-xs px-2 py-1 rounded-md">AI</span>
-                    </button>
-                </div>
-            </div>
-
-            <!-- ВЫБОР УРОВНЯ -->
-            <div id="screen-levels" class="hidden mt-6 space-y-4">
-                <button onclick="showScreen('screen-main')" class="text-blue-600 font-bold flex items-center gap-1 mb-2">← Главное меню</button>
-                <button onclick="showDictionary()" class="w-full p-4 bg-orange-500 hover:bg-orange-600 text-white rounded-2xl text-left font-bold flex justify-between items-center active:scale-[0.99] transition">
-                    <span>📓 Мой личный блокнот слов</span>
-                    <span class="text-white/70">→</span>
-                </button>
-                <h2 class="text-xl font-extrabold text-gray-900">Выберите уровень:</h2>
-                <div class="grid grid-cols-2 gap-3" id="levels-grid"></div>
-            </div>
-
-            <!-- ЛИЧНЫЙ СЛОВАРЬ (старый экран, оставлен для совместимости) -->
-            <div id="screen-personal-dict" class="hidden mt-6 space-y-4">
-                <button onclick="showScreen('screen-levels')" class="text-blue-600 font-bold flex items-center gap-1">← Назад</button>
-                <div class="flex items-center justify-between">
-                    <h2 class="text-xl font-extrabold text-gray-900">📒 Мой словарь</h2>
-                    <span id="dict-count" class="text-xs bg-zinc-100 text-zinc-600 px-2.5 py-1 rounded-full font-bold">0 слов</span>
-                </div>
-                <div id="personal-dict-list" class="space-y-3 max-h-[60vh] overflow-y-auto pr-1"></div>
-            </div>
-
-            <!-- УРОК (без кнопки "К списку" — вместо неё "К уровням") -->
-            <div id="screen-lesson" class="hidden mt-6 space-y-4">
-                <button onclick="showScreen('screen-levels')" class="text-blue-600 font-bold flex items-center gap-1">← К уровням</button>
-                <div id="lesson-data" class="space-y-4"></div>
-            </div>
-
-            <!-- УРОВЕНЬ ПРОЙДЕН -->
-            <div id="screen-level-complete" class="hidden mt-6">
-                <div class="flex flex-col items-center justify-center text-center gap-6 py-10">
-                    <div class="text-6xl animate-bounce">🏆</div>
-                    <h2 class="text-2xl font-black text-gray-900">Уровень пройден!</h2>
-                    <p id="level-complete-msg" class="text-gray-500 text-sm">Вы прошли все материалы этого уровня. Отличная работа!</p>
-                    <div class="w-full space-y-3 mt-2">
-                        <button id="btn-next-level" onclick="goNextLevel()"
-                            class="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl shadow-md active:scale-95 transition text-lg">
-                            Следующий уровень →
-                        </button>
-                        <button onclick="showScreen('screen-main')"
-                            class="w-full py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-2xl active:scale-95 transition">
-                            ← Назад в главное меню
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ПРАКТИКА -->
-            <div id="screen-practice-task" class="hidden mt-6 space-y-4">
-                <button onclick="showScreen('screen-main')" class="text-blue-600 font-bold flex items-center gap-1">← Выйти</button>
-                <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm space-y-4">
-                    <h3 class="text-xs font-bold text-blue-600 tracking-wider uppercase">Вопрос практики</h3>
-                    <p id="practice-question-text" class="text-lg font-bold text-gray-800"></p>
-                    <div id="practice-options" class="space-y-2"></div>
-                    <div id="practice-feedback" class="hidden p-4 rounded-xl text-center font-bold"></div>
-                </div>
-            </div>
-
-            <!-- СИТУАЦИИ — ВЫБОР -->
-            <div id="screen-situations" class="hidden mt-6 space-y-4">
-                <button onclick="showScreen('screen-main')" class="text-blue-600 font-bold flex items-center gap-1">← Главное меню</button>
-                <h2 class="text-xl font-extrabold text-gray-900">🗺️ Тематические диалоги</h2>
-                <p class="text-sm text-gray-400">Выберите ситуацию — AI войдёт в роль и будет общаться с вами на английском</p>
-                <div class="space-y-3">
-                    <button onclick="openSituation('shop','🛒 В магазине','shop')"
-                        class="w-full p-4 bg-white border border-gray-200 rounded-2xl text-left flex items-center gap-4 active:scale-[0.99] transition shadow-sm">
-                        <span class="text-3xl">🛒</span>
-                        <div>
-                            <div class="font-bold text-gray-800">В магазине</div>
-                            <div class="text-xs text-gray-400">AI играет роль продавца-консультанта</div>
-                        </div>
-                    </button>
-                    <button onclick="openSituation('restaurant','🍽️ В ресторане','restaurant')"
-                        class="w-full p-4 bg-white border border-gray-200 rounded-2xl text-left flex items-center gap-4 active:scale-[0.99] transition shadow-sm">
-                        <span class="text-3xl">🍽️</span>
-                        <div>
-                            <div class="font-bold text-gray-800">В ресторане</div>
-                            <div class="text-xs text-gray-400">AI играет роль официанта</div>
-                        </div>
-                    </button>
-                    <button onclick="openSituation('airport','✈️ Аэропорт','airport')"
-                        class="w-full p-4 bg-white border border-gray-200 rounded-2xl text-left flex items-center gap-4 active:scale-[0.99] transition shadow-sm">
-                        <span class="text-3xl">✈️</span>
-                        <div>
-                            <div class="font-bold text-gray-800">Аэропорт и путешествия</div>
-                            <div class="text-xs text-gray-400">AI играет роль сотрудника на стойке</div>
-                        </div>
-                    </button>
-                    <button onclick="openSituation('hotel','🏨 В отеле','hotel')"
-                        class="w-full p-4 bg-white border border-gray-200 rounded-2xl text-left flex items-center gap-4 active:scale-[0.99] transition shadow-sm">
-                        <span class="text-3xl">🏨</span>
-                        <div>
-                            <div class="font-bold text-gray-800">В отеле</div>
-                            <div class="text-xs text-gray-400">AI играет роль администратора на ресепшене</div>
-                        </div>
-                    </button>
-                    <button onclick="openSituation('doctor','🏥 У врача','doctor')"
-                        class="w-full p-4 bg-white border border-gray-200 rounded-2xl text-left flex items-center gap-4 active:scale-[0.99] transition shadow-sm">
-                        <span class="text-3xl">🏥</span>
-                        <div>
-                            <div class="font-bold text-gray-800">У врача</div>
-                            <div class="text-xs text-gray-400">AI играет роль терапевта на приёме</div>
-                        </div>
-                    </button>
-                    <button onclick="openSituation('emergency','🚨 Экстренный случай','emergency')"
-                        class="w-full p-4 bg-white border border-gray-200 rounded-2xl text-left flex items-center gap-4 active:scale-[0.99] transition shadow-sm">
-                        <span class="text-3xl">🚨</span>
-                        <div>
-                            <div class="font-bold text-gray-800">Экстренный случай</div>
-                            <div class="text-xs text-gray-400">AI играет роль диспетчера экстренных служб</div>
-                        </div>
-                    </button>
-                </div>
-            </div>
-
-            <!-- СИТУАЦИИ — ЧАТ -->
-            <div id="screen-situation-chat" class="hidden mt-6 flex flex-col h-[calc(100vh-120px)] justify-between">
-                <div>
-                    <button onclick="showScreen('screen-situations')" class="text-blue-600 font-bold flex items-center gap-1 mb-2">← Ситуации</button>
-                    <div class="flex justify-between items-center mb-3">
-                        <h2 id="situation-title" class="text-lg font-extrabold text-gray-900"></h2>
-                        <span id="situation-level-badge" class="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-bold rounded-md uppercase">A1</span>
-                    </div>
-                    <div id="situation-hint" class="text-xs text-gray-400 bg-amber-50 border border-amber-100 rounded-xl px-3 py-2 mb-3"></div>
-                    <p class="text-xs text-blue-400 mb-2">💡 Нажмите на любое слово в ответе AI, чтобы получить перевод</p>
-                    <div id="situation-chat-box" class="space-y-3 max-h-[340px] overflow-y-auto p-2 bg-gray-50 rounded-2xl border border-gray-100 min-h-[220px]"></div>
-                </div>
-                <div class="border-t border-gray-100 pt-3 bg-white mt-4">
-                    <div class="flex items-center gap-2">
-                        <input id="situation-input" type="text" placeholder="Type your message..."
-                            class="flex-1 p-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-blue-500"
-                            onkeydown="if(event.key==='Enter') sendSituationMessage()">
-                        <button onclick="sendSituationMessage()" class="p-3 bg-blue-600 text-white rounded-xl active:scale-95 transition">🕊️</button>
-                        <button id="sit-mic-btn"
-                            onmousedown="startSituationRecording(event)"
-                            onmouseup="stopSituationRecording(event)"
-                            ontouchstart="startSituationRecording(event)"
-                            ontouchend="stopSituationRecording(event)"
-                            class="p-3 bg-zinc-900 text-white rounded-xl active:scale-95 transition font-bold select-none touch-none">
-                            🎤
-                        </button>
-                    </div>
-                    <p class="text-[10px] text-gray-400 text-center mt-1">Зажми 🎤 для записи голоса</p>
-                </div>
-            </div>
-
-            <!-- РАЗГОВОРНЫЙ КЛУБ -->
-            <div id="screen-club" class="hidden mt-6 flex flex-col h-[calc(100vh-120px)] justify-between">
-                <div>
-                    <button onclick="showScreen('screen-main')" class="text-blue-600 font-bold flex items-center gap-1 mb-2">← Главное меню</button>
-                    <div class="flex justify-between items-center mb-4">
-                        <h2 class="text-xl font-extrabold text-gray-900">🎙️ Chat with AI Tutor</h2>
-                        <span id="club-level-badge" class="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-bold rounded-md uppercase">A1</span>
-                    </div>
-                    <p class="text-xs text-gray-400 mb-2">💡 Нажмите на любое слово в ответе AI, чтобы получить перевод</p>
-                    <div id="chat-box" class="space-y-3 max-h-[380px] overflow-y-auto p-2 bg-gray-50 rounded-2xl border border-gray-100 min-h-[250px]">
-                        <div class="bg-blue-600 text-white p-3 rounded-2xl rounded-tl-none max-w-[85%] text-sm shadow-sm">
-                            🤖 <b>AI Tutor:</b> Hello! Welcome to our Speaking Club. How are you doing today? Feel free to type or hold the microphone to talk!
-                        </div>
-                    </div>
-                </div>
-                <div class="border-t border-gray-100 pt-3 bg-white mt-4">
-                    <div class="flex items-center gap-2">
-                        <input id="chat-input" type="text" placeholder="Type a message..." class="flex-1 p-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-blue-500">
-                        <button onclick="sendTextMessage()" class="p-3 bg-blue-600 text-white rounded-xl active:scale-95 transition">🕊️</button>
-                        <button id="mic-btn"
-                                onmousedown="startRecording(event)"
-                                onmouseup="stopRecording(event)"
-                                ontouchstart="startRecording(event)"
-                                ontouchend="stopRecording(event)"
-                                class="p-3 bg-zinc-900 text-white rounded-xl active:scale-95 transition font-bold select-none touch-none">
-                            🎤 Hold
-                        </button>
-                    </div>
-                    <p class="text-[10px] text-gray-400 text-center mt-1">Зажми кнопку "🎤 Hold" для записи голоса, отпусти для отправки</p>
-                </div>
-            </div>
-
-            <!-- ПРОФИЛЬ -->
-            <div id="screen-profile" class="hidden mt-6 space-y-4">
-                <button onclick="showScreen('screen-main')" class="text-blue-600 font-bold flex items-center gap-1">← Главное меню</button>
-                <h2 class="text-xl font-extrabold text-gray-900">👤 Мой профиль</h2>
-                <div id="profile-content" class="space-y-3">
-                    <p class="text-gray-400 text-center py-6">Загрузка...</p>
-                </div>
-            </div>
-
-            <!-- СЛОВАРЬ — ТЕМЫ -->
-            <div id="screen-dictionary" class="hidden mt-6 space-y-4">
-                <button onclick="showScreen('screen-main')" class="text-blue-600 font-bold flex items-center gap-1">← Главное меню</button>
-                <div class="flex justify-between items-center">
-                    <h2 class="text-xl font-extrabold text-gray-900">📚 Словарь</h2>
-                </div>
-                <!-- Фильтр по уровню -->
-                <div class="flex gap-2 flex-wrap" id="vocab-level-filter">
-                    <button onclick="loadVocabTopics(null)" data-lvl="all"
-                        class="vocab-lvl-btn px-3 py-1.5 rounded-full text-xs font-bold bg-blue-600 text-white transition">Все</button>
-                    <button onclick="loadVocabTopics('A1')" data-lvl="A1"
-                        class="vocab-lvl-btn px-3 py-1.5 rounded-full text-xs font-bold bg-gray-100 text-gray-600 hover:bg-blue-50 transition">A1</button>
-                    <button onclick="loadVocabTopics('A2')" data-lvl="A2"
-                        class="vocab-lvl-btn px-3 py-1.5 rounded-full text-xs font-bold bg-gray-100 text-gray-600 hover:bg-blue-50 transition">A2</button>
-                    <button onclick="loadVocabTopics('B1')" data-lvl="B1"
-                        class="vocab-lvl-btn px-3 py-1.5 rounded-full text-xs font-bold bg-gray-100 text-gray-600 hover:bg-blue-50 transition">B1</button>
-                    <button onclick="loadVocabTopics('B2')" data-lvl="B2"
-                        class="vocab-lvl-btn px-3 py-1.5 rounded-full text-xs font-bold bg-gray-100 text-gray-600 hover:bg-blue-50 transition">B2</button>
-                    <button onclick="loadVocabTopics('C1')" data-lvl="C1"
-                        class="vocab-lvl-btn px-3 py-1.5 rounded-full text-xs font-bold bg-gray-100 text-gray-600 hover:bg-blue-50 transition">C1</button>
-                </div>
-                <div id="vocab-topics-list" class="grid grid-cols-2 gap-3"></div>
-            </div>
-
-            <!-- СЛОВАРЬ — КАРТОЧКИ ТЕМЫ -->
-            <div id="screen-vocab-cards" class="hidden mt-6">
-                <button onclick="showScreen('screen-dictionary')" class="text-blue-600 font-bold flex items-center gap-1 mb-4">← Темы</button>
-                <div class="flex items-center justify-between mb-4">
-                    <h2 id="vocab-topic-title" class="text-xl font-extrabold text-gray-900"></h2>
-                    <span id="vocab-topic-count" class="text-xs bg-blue-100 text-blue-700 px-2.5 py-1 rounded-full font-bold"></span>
-                </div>
-                <div id="vocab-cards-grid" class="grid grid-cols-2 gap-3"></div>
-            </div>
-
+          <h1 class="font-headline font-extrabold text-on-surface text-3xl mb-sm">Уровень пройден!</h1>
+          <p id="level-complete-msg" class="font-body text-on-surface-variant text-base"></p>
         </div>
+        <div class="w-full space-y-sm mt-sm">
+          <button id="btn-next-level" onclick="goNextLevel()"
+            class="w-full h-touch rounded-xl bg-primary-container text-on-primary font-label font-bold uppercase tracking-wider text-sm active:scale-[0.98] transition-transform shadow-md">
+          </button>
+          <button onclick="showScreen('screen-main')"
+            class="w-full h-touch rounded-xl bg-surface-container text-on-surface-variant font-label font-bold uppercase tracking-wider text-sm active:scale-[0.98] transition-transform">
+            ← Главное меню
+          </button>
+        </div>
+      </div>
     </div>
 
-    <script>
-        const tg = window.Telegram.WebApp;
-        tg.ready();
-        tg.expand();
-
-        const userId = tg.initDataUnsafe?.user?.id || 0;
-        let currentLevel = "A1";
-        let currentCategory = "lessons";
-        let correctPracticeOption = null;
-        let currentPracticeQuestionId = null;
-        let mediaRecorder = null;
-        let audioChunks = [];
-        let streamRef = null;
-
-        // Слово в попапе (для кнопки «Добавить»)
-        let popupWordData = null;
-
-        const LEVELS = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
-
-        const SCREENS = [
-            'screen-main', 'screen-levels', 'screen-personal-dict',
-            'screen-lesson', 'screen-level-complete',
-            'screen-practice-task', 'screen-situations', 'screen-situation-chat',
-            'screen-club', 'screen-profile', 'screen-dictionary',
-            'screen-vocab-cards'
-        ];
-
-        function showScreen(screenId) {
-            SCREENS.forEach(s => document.getElementById(s)?.classList.add('hidden'));
-            document.getElementById(screenId)?.classList.remove('hidden');
-            hideWordPopup();
-        }
-
-        // ====================== ПРОФИЛЬ ======================
-        async function loadProfile() {
-            try {
-                const tgUser = tg.initDataUnsafe?.user;
-                document.getElementById('user-name').textContent = tgUser?.first_name || "Ученик";
-
-                await fetch('/api/register_user', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        user_id: userId,
-                        name: tgUser?.first_name || "",
-                        username: tgUser?.username || ""
-                    })
-                });
-
-                const res = await fetch(`/api/dashboard/${userId}`);
-                const data = await res.json();
-                const profile = data.user ? data.user : data;
-                if (profile) {
-                    document.getElementById('user-streak').textContent = profile.streak ?? 0;
-                    document.getElementById('user-xp').textContent = profile.xp ?? 0;
-                    if (profile.is_admin || data.is_admin) {
-                        document.getElementById('admin-badge').classList.remove('hidden');
-                    }
-                }
-            } catch (e) { console.error("Ошибка дашборда:", e); }
-        }
-
-        // ====================== УРОВНИ / КАТЕГОРИИ ======================
-        function chooseCategory(category) {
-            currentCategory = category;
-            const colors = {
-                'A1': 'from-green-500 to-teal-600',
-                'A2': 'from-blue-500 to-indigo-600',
-                'B1': 'from-orange-500 to-amber-600',
-                'B2': 'from-pink-500 to-rose-600',
-                'C1': 'from-red-500 to-purple-600',
-                'C2': 'from-zinc-700 to-gray-900'
-            };
-            document.getElementById('levels-grid').innerHTML = LEVELS.map(lvl => `
-                <button onclick="selectLevel('${lvl}')" class="w-full p-5 bg-gradient-to-r ${colors[lvl] || 'from-blue-500 to-indigo-600'} text-white rounded-2xl text-left font-bold text-lg shadow-sm active:scale-95 transition">
-                    Уровень ${lvl}
-                </button>
-            `).join('');
-            showScreen('screen-levels');
-        }
-
-        function selectLevel(level) {
-            currentLevel = level;
-            const badge = document.getElementById('club-level-badge');
-            if (badge) badge.innerText = level;
-
-            if (currentCategory === 'practice') {
-                loadPracticeTask();
-            } else {
-                openNextLesson();
-            }
-        }
-
-        // ====================== СЛЕДУЮЩИЙ УРОК ======================
-        async function openNextLesson() {
-            showScreen('screen-lesson');
-            const dataDiv = document.getElementById('lesson-data');
-            dataDiv.innerHTML = "<p class='text-gray-500 text-center py-6'>⏳ Загрузка урока...</p>";
-
-            const typeMap = { lessons: 'lesson', grammar: 'grammar', vocabulary: 'vocabulary' };
-            const contentType = typeMap[currentCategory] || 'lesson';
-
-            try {
-                const res = await fetch(`/api/lessons/next/${currentLevel}?user_id=${userId}&content_type=${contentType}`);
-                const lesson = await res.json();
-
-                if (lesson.completed) {
-                    showLevelComplete();
-                    return;
-                }
-
-                renderLesson(lesson);
-            } catch (e) {
-                dataDiv.innerHTML = "<p class='text-red-500 text-center py-4'>Ошибка загрузки урока.</p>";
-            }
-        }
-
-        async function openLesson(id) {
-            showScreen('screen-lesson');
-            const dataDiv = document.getElementById('lesson-data');
-            dataDiv.innerHTML = "<p class='text-gray-500 text-center py-6'>⏳ Загрузка...</p>";
-            try {
-                const res = await fetch(`/api/lesson/${id}`);
-                const lesson = await res.json();
-                renderLesson(lesson);
-            } catch (e) {
-                dataDiv.innerHTML = "<p class='text-red-500'>Не удалось открыть урок.</p>";
-            }
-        }
-
-        function renderLesson(lesson) {
-            const dataDiv = document.getElementById('lesson-data');
-            const iconMap = { grammar: '✍️', vocabulary: '🧠', lesson: '📖' };
-            const icon = iconMap[lesson.type] || '📖';
-            const rawText = lesson.lesson_text || 'Текст урока пуст.';
-
-            // Кликабельный текст урока
-            const clickableBody = makeTextClickable(rawText, rawText);
-
-            dataDiv.innerHTML = `
-                <div class="flex items-center gap-2 mb-1">
-                    <span class="text-xl">${icon}</span>
-                    <span class="text-xs font-bold uppercase tracking-wider text-blue-600">${lesson.type || 'урок'}</span>
-                    <span class="text-xs text-gray-400 ml-1">• Уровень ${currentLevel}</span>
-                </div>
-                <h2 class="text-2xl font-black text-gray-900">${lesson.title}</h2>
-                <p class="text-xs text-blue-400 mb-1">💡 Нажмите на любое слово, чтобы получить перевод</p>
-                <div class="bg-gray-50 p-5 rounded-2xl border border-gray-100 text-gray-700 leading-loose lesson-text-body">
-                    ${clickableBody}
-                </div>
-                <button id="complete-lesson-btn"
-                    onclick="submitProgress('${lesson.type || 'lesson'}', ${lesson.id})"
-                    class="w-full mt-4 bg-green-600 hover:bg-green-500 text-white font-bold py-4 rounded-2xl shadow-md active:scale-95 transition">
-                    ✅ Просмотрено (+5 XP)
-                </button>
-            `;
-        }
-
-        // ====================== ЭКРАН "УРОВЕНЬ ПРОЙДЕН" ======================
-        function showLevelComplete() {
-            const idx = LEVELS.indexOf(currentLevel);
-            const hasNext = idx < LEVELS.length - 1;
-            const nextBtn = document.getElementById('btn-next-level');
-            const msg = document.getElementById('level-complete-msg');
-
-            if (hasNext) {
-                nextBtn.classList.remove('hidden');
-                nextBtn.textContent = `Следующий уровень: ${LEVELS[idx + 1]} →`;
-                msg.textContent = `Вы прошли все материалы уровня ${currentLevel}. Отличная работа!`;
-            } else {
-                nextBtn.classList.add('hidden');
-                msg.textContent = `Поздравляем! Вы прошли все уровни. Вы — настоящий мастер!`;
-            }
-            showScreen('screen-level-complete');
-        }
-
-        function goNextLevel() {
-            const idx = LEVELS.indexOf(currentLevel);
-            if (idx < LEVELS.length - 1) {
-                currentLevel = LEVELS[idx + 1];
-                document.getElementById('club-level-badge').innerText = currentLevel;
-                openNextLesson();
-            }
-        }
-
-        // ====================== ПРОГРЕСС ======================
-        async function submitProgress(contentType, contentId) {
-            const btn = document.getElementById('complete-lesson-btn');
-            if (btn) { btn.disabled = true; btn.textContent = '⏳ Сохранение...'; }
-
-            try {
-                const res = await fetch('/api/progress/complete', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        user_id: parseInt(userId),
-                        content_type: contentType,
-                        content_id: parseInt(contentId)
-                    })
-                });
-
-                if (!res.ok) {
-                    showToast('Ошибка сервера: ' + res.status, 'gray');
-                    if (btn) { btn.disabled = false; btn.textContent = '✅ Просмотрено (+5 XP)'; }
-                    return;
-                }
-
-                const data = await res.json();
-                if (data.xp_earned > 0) {
-                    showToast(`🎉 +${data.xp_earned} XP начислено!`);
-                } else {
-                    showToast('Вы уже изучали этот материал.', 'gray');
-                }
-
-                await loadProfile();
-                // После урока сразу грузим следующий (или экран «уровень пройден»)
-                openNextLesson();
-
-            } catch (e) {
-                console.error(e);
-                showToast('Ошибка соединения с сервером.', 'gray');
-                if (btn) { btn.disabled = false; btn.textContent = '✅ Просмотрено (+5 XP)'; }
-            }
-        }
-
-        // ====================== ПРАКТИКА ======================
-        async function loadPracticeTask() {
-            showScreen('screen-practice-task');
-            document.getElementById('practice-feedback').classList.add('hidden');
-            document.getElementById('practice-question-text').textContent = 'Загрузка вопроса...';
-            document.getElementById('practice-options').innerHTML = '';
-
-            try {
-                const res = await fetch(`/api/random_question?user_id=${userId}&type=multiple_choice&level=${currentLevel}`);
-                const q = await res.json();
-
-                if (q.error === 'no_more_questions') {
-                    document.getElementById('practice-question-text').textContent = '🎉 Все вопросы этого уровня пройдены!';
-                    return;
-                }
-
-                currentPracticeQuestionId = q.question_id;
-                correctPracticeOption = q.correct_option;
-
-                document.getElementById('practice-question-text').textContent = q.question;
-                document.getElementById('practice-options').innerHTML = q.options.map((opt, i) => `
-                    <button onclick="checkPracticeAnswer(${i + 1}, this)"
-                        class="w-full text-left px-4 py-3 rounded-xl border border-gray-200 bg-white hover:bg-blue-50 text-sm font-medium transition">
-                        ${opt}
-                    </button>
-                `).join('');
-            } catch (e) {
-                document.getElementById('practice-question-text').textContent = 'Ошибка загрузки вопроса.';
-            }
-        }
-
-        async function checkPracticeAnswer(selected, btnElement) {
-            document.querySelectorAll('#practice-options button').forEach(b => b.disabled = true);
-            const feedback = document.getElementById('practice-feedback');
-            feedback.classList.remove('hidden');
-
-            if (selected === correctPracticeOption) {
-                btnElement.classList.add('border-green-500', 'bg-green-50', 'text-green-700');
-                feedback.className = "p-4 rounded-xl text-center font-bold bg-green-50 text-green-700 border border-green-200";
-                feedback.innerHTML = "✅ Правильно! Отлично!";
-                try {
-                    await fetch('/api/progress/complete', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ user_id: parseInt(userId), content_type: 'practice', content_id: currentPracticeQuestionId })
-                    });
-                    await loadProfile();
-                } catch(e) { console.error(e); }
-            } else {
-                btnElement.classList.add('border-red-500', 'bg-red-50', 'text-red-700');
-                feedback.className = "p-4 rounded-xl text-center font-bold bg-red-50 text-red-700 border border-red-200";
-                feedback.innerHTML = "❌ Ошибка! Это задание отправлено в конец вашей очереди.";
-                try {
-                    await fetch('/api/check_answer', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ user_id: userId, queue_item_id: currentPracticeQuestionId, is_correct: false })
-                    });
-                } catch(e) { console.error(e); }
-            }
-            setTimeout(loadPracticeTask, 2500);
-        }
-
-        // ====================== КЛИКАБЕЛЬНЫЕ СЛОВА ======================
-
-        /**
-         * Оборачивает каждое слово в <span data-word="..."> без onclick в атрибуте,
-         * чтобы избежать проблем с кавычками и спецсимволами в тексте.
-         * Делегирование клика вешается один раз на document (см. ниже).
-         */
-        function makeTextClickable(text, fullSentence) {
-            // Сохраняем исходное предложение как data на контейнере через глобальный реестр
-            const ctxId = 'ctx_' + Math.random().toString(36).slice(2, 8);
-            window._clickCtx = window._clickCtx || {};
-            window._clickCtx[ctxId] = fullSentence;
-
-            const lines = text.split('\n');
-            return `<span data-ctx-id="${ctxId}">` + lines.map(line =>
-                line.replace(/([A-Za-zÀ-ÿ]{2,})/g, (word) => {
-                    // data-word хранит слово — никаких кавычек в onclick
-                    const safe = word.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-                    return `<span class="clickable-word" data-word="${safe}">${safe}</span>`;
-                })
-            ).join('<br>') + '</span>';
-        }
-
-        // Один делегированный обработчик на весь документ
-        document.addEventListener('click', function(e) {
-            const span = e.target.closest('.clickable-word');
-            if (!span) return;
-            const word = span.dataset.word;
-            // Ищем ближайший контейнер с контекстом
-            const ctxSpan = span.closest('[data-ctx-id]');
-            const ctxId = ctxSpan ? ctxSpan.dataset.ctxId : null;
-            const context = (ctxId && window._clickCtx && window._clickCtx[ctxId]) || '';
-            handleWordTap(word, context);
-        });
-
-        /** Состояние попапа */
-        let popupWord = '';
-        let popupContext = '';
-
-        async function handleWordTap(word, context) {
-            popupWord = word;
-            popupContext = context;
-
-            document.getElementById('popup-word').textContent = word;
-            document.getElementById('popup-transcription').textContent = '';
-            document.getElementById('popup-translation').textContent = '⏳ Перевод...';
-            document.getElementById('popup-example').textContent = '';
-            document.getElementById('popup-status').textContent = '';
-
-            const btn = document.getElementById('popup-add-btn');
-            btn.disabled = false;
-            btn.textContent = '+ В мой словарь';
-            btn.classList.remove('bg-green-600');
-            btn.classList.add('bg-blue-600');
-
-            showWordPopup();
-
-            try {
-                // Только перевод — отдельный эндпоинт, не трогает БД
-                const res = await fetch('/api/dictionary/translate', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ user_id: parseInt(userId), word, context_sentence: context.substring(0, 300) })
-                });
-                const data = await res.json();
-
-                if (data.status === 'success') {
-                    document.getElementById('popup-transcription').textContent = data.transcription ? `[${data.transcription}]` : '';
-                    document.getElementById('popup-translation').textContent = data.translation || '—';
-                    document.getElementById('popup-example').textContent = data.context_example ? `"${data.context_example}"` : '';
-                } else {
-                    document.getElementById('popup-translation').textContent = data.message || 'Перевод недоступен';
-                }
-            } catch (e) {
-                console.error(e);
-                document.getElementById('popup-translation').textContent = 'Ошибка соединения';
-            }
-        }
-
-        async function addPopupWordToDict() {
-            if (!popupWord) return;
-            const btn = document.getElementById('popup-add-btn');
-            btn.disabled = true;
-            btn.textContent = '⏳ Сохранение...';
-
-            try {
-                // Сохраняем с реальным user_id
-                const res = await fetch('/api/dictionary/quick_add', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        user_id: parseInt(userId),
-                        word: popupWord,
-                        context_sentence: popupContext.substring(0, 300)
-                    })
-                });
-                const data = await res.json();
-
-                if (data.status === 'success') {
-                    document.getElementById('popup-status').textContent = '✅ Добавлено в словарь!';
-                    btn.textContent = '✓ Добавлено';
-                    btn.classList.remove('bg-blue-600');
-                    btn.classList.add('bg-green-600');
-                } else {
-                    document.getElementById('popup-status').textContent = data.message || 'Ошибка';
-                    btn.disabled = false;
-                    btn.textContent = '+ В мой словарь';
-                }
-            } catch(e) {
-                document.getElementById('popup-status').textContent = 'Ошибка соединения';
-                btn.disabled = false;
-                btn.textContent = '+ В мой словарь';
-            }
-        }
-
-        function showWordPopup() {
-            document.getElementById('word-popup').classList.remove('hidden');
-            document.getElementById('word-popup-overlay').classList.remove('hidden');
-        }
-
-        function hideWordPopup() {
-            document.getElementById('word-popup').classList.add('hidden');
-            document.getElementById('word-popup-overlay').classList.add('hidden');
-            // Сбрасываем цвет кнопки на синий для следующего вызова
-            const btn = document.getElementById('popup-add-btn');
-            if (btn) {
-                btn.classList.remove('bg-green-600');
-                btn.classList.add('bg-blue-600');
-            }
-        }
-
-        // ====================== СИТУАЦИИ ======================
-
-        const SITUATION_HINTS = {
-            shop:        '🛒 Вы — покупатель. Попросите помочь найти товар, узнайте цену, оплатите покупку.',
-            restaurant:  '🍽️ Вы — гость. Попросите столик, изучите меню, сделайте заказ, попросите счёт.',
-            airport:     '✈️ Вы — пассажир. Пройдите регистрацию, уточните информацию о рейсе.',
-            hotel:       '🏨 Вы — гость. Заселитесь в номер, запросите услуги, решите проблему.',
-            doctor:      '🏥 Вы — пациент. Опишите симптомы, задайте вопросы о лечении.',
-            emergency:   '🚨 Вы звоните в экстренную службу. Опишите ситуацию чётко и быстро.',
-        };
-
-        let currentSituation = '';
-        let sitMediaRecorder = null;
-        let sitAudioChunks = [];
-        let sitStreamRef = null;
-
-        function openSituation(situationKey, title, situation) {
-            currentSituation = situation;
-            showScreen('screen-situation-chat');
-
-            document.getElementById('situation-title').textContent = title;
-            document.getElementById('situation-level-badge').textContent = currentLevel;
-            document.getElementById('situation-hint').textContent = SITUATION_HINTS[situation] || '';
-
-            // Очищаем чат и добавляем приветствие AI
-            const box = document.getElementById('situation-chat-box');
-            box.innerHTML = '';
-            appendSituationMessage('ai', '👋 Hello! How can I help you today?');
-        }
-
-        function appendSituationMessage(who, text) {
-            const box = document.getElementById('situation-chat-box');
-            const div = document.createElement('div');
-            if (who === 'ai') {
-                div.className = 'bg-blue-600 text-white p-3 rounded-2xl rounded-tl-none max-w-[85%] text-sm shadow-sm';
-                const clickable = makeTextClickable(text, text);
-                div.innerHTML = `🤖 <b>AI:</b> <span>${clickable}</span>`;
-                setTimeout(() => {
-                    div.querySelectorAll('.clickable-word').forEach(el => {
-                        el.style.borderBottomColor = 'rgba(255,255,255,0.5)';
-                    });
-                }, 0);
-            } else {
-                div.className = 'bg-gray-200 text-gray-800 p-3 rounded-2xl rounded-tr-none max-w-[85%] text-sm shadow-sm ml-auto';
-                div.innerHTML = `👤 <b>You:</b> ${text}`;
-            }
-            box.appendChild(div);
-            box.scrollTop = box.scrollHeight;
-        }
-
-        async function sendSituationMessage() {
-            const input = document.getElementById('situation-input');
-            const text = input.value.trim();
-            if (!text) return;
-            input.value = '';
-            appendSituationMessage('user', text);
-
-            try {
-                const formData = new FormData();
-                formData.append('user_id', userId);
-                formData.append('text', text);
-                formData.append('level', currentLevel);
-                formData.append('situation', currentSituation);
-
-                const res = await fetch('/api/web-club/text', { method: 'POST', body: formData });
-                const data = await res.json();
-                appendSituationMessage('ai', data.ai_text);
-                if (data.audio_url) new Audio(data.audio_url).play().catch(() => {});
-            } catch(e) {
-                appendSituationMessage('ai', 'Sorry, connection error. Please try again.');
-            }
-        }
-
-        async function startSituationRecording(e) {
-            if (e) e.preventDefault();
-            sitAudioChunks = [];
-            const btn = document.getElementById('sit-mic-btn');
-            btn.classList.replace('bg-zinc-900', 'bg-red-600');
-            btn.textContent = '🔴';
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                sitStreamRef = stream;
-                let opts = {};
-                if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) opts = { mimeType: 'audio/webm;codecs=opus' };
-                sitMediaRecorder = new MediaRecorder(stream, opts);
-                sitMediaRecorder.ondataavailable = e => { if (e.data?.size > 0) sitAudioChunks.push(e.data); };
-                sitMediaRecorder.onstop = async () => {
-                    const blob = new Blob(sitAudioChunks, { type: sitMediaRecorder.mimeType });
-                    appendSituationMessage('user', '<i>🎙️ Voice message...</i>');
-                    const fd = new FormData();
-                    fd.append('user_id', userId);
-                    fd.append('file', blob, 'voice');
-                    fd.append('level', currentLevel);
-                    fd.append('situation', currentSituation);
-                    try {
-                        const res = await fetch('/api/web-club/voice', { method: 'POST', body: fd });
-                        const data = await res.json();
-                        const box = document.getElementById('situation-chat-box');
-                        if (box.lastChild) box.removeChild(box.lastChild);
-                        appendSituationMessage('user', data.user_text || '🎤 Voice');
-                        appendSituationMessage('ai', data.ai_text);
-                        if (data.audio_url) new Audio(data.audio_url).play().catch(() => {});
-                    } catch(err) {
-                        appendSituationMessage('ai', 'Could not process voice. Try again!');
-                    }
-                };
-                sitMediaRecorder.start();
-            } catch(err) {
-                btn.classList.replace('bg-red-600', 'bg-zinc-900');
-                btn.textContent = '🎤';
-                alert('Ошибка доступа к микрофону.');
-            }
-        }
-
-        function stopSituationRecording(e) {
-            if (e) e.preventDefault();
-            const btn = document.getElementById('sit-mic-btn');
-            btn.classList.replace('bg-red-600', 'bg-zinc-900');
-            btn.textContent = '🎤';
-            if (sitMediaRecorder?.state !== 'inactive') sitMediaRecorder.stop();
-            sitStreamRef?.getTracks().forEach(t => t.stop());
-            sitStreamRef = null;
-        }
-
-        function appendMessage(sender, text, isAi = false) {
-            const chatBox = document.getElementById('chat-box');
-            const msgDiv = document.createElement('div');
-
-            if (isAi) {
-                msgDiv.className = "bg-blue-600 text-white p-3 rounded-2xl rounded-tl-none max-w-[85%] text-sm shadow-sm";
-                // Для AI-реплик делаем слова кликабельными
-                const clickable = makeTextClickable(text, text);
-                msgDiv.innerHTML = `🤖 <b>AI Tutor:</b> <span class="ai-msg-body">${clickable}</span>`;
-                // Переопределяем цвет подчёркивания для тёмного фона
-                msgDiv.querySelectorAll && setTimeout(() => {
-                    msgDiv.querySelectorAll('.clickable-word').forEach(el => {
-                        el.style.borderBottomColor = 'rgba(255,255,255,0.5)';
-                    });
-                }, 0);
-            } else {
-                msgDiv.className = "bg-gray-200 text-gray-800 p-3 rounded-2xl rounded-tr-none max-w-[85%] text-sm shadow-sm ml-auto";
-                msgDiv.innerHTML = `👤 <b>You:</b> ${text}`;
-            }
-
-            chatBox.appendChild(msgDiv);
-            chatBox.scrollTop = chatBox.scrollHeight;
-        }
-
-        async function sendTextMessage() {
-            const input = document.getElementById('chat-input');
-            const text = input.value.trim();
-            if (!text) return;
-            input.value = "";
-            appendMessage("You", text, false);
-
-            try {
-                const formData = new FormData();
-                formData.append("user_id", userId);
-                formData.append("text", text);
-                formData.append("level", currentLevel);
-
-                const res = await fetch('/api/web-club/text', { method: 'POST', body: formData });
-                const data = await res.json();
-                appendMessage("AI Tutor", data.ai_text, true);
-
-                if (data.audio_url) {
-                    const audio = new Audio(data.audio_url);
-                    audio.play().catch(e => console.log(e));
-                }
-            } catch (e) {
-                console.error(e);
-                appendMessage("AI Tutor", "Sorry, error connecting to server.", true);
-            }
-        }
-
-        async function startRecording(e) {
-            if (e) e.preventDefault();
-            audioChunks = [];
-            const micBtn = document.getElementById('mic-btn');
-            micBtn.classList.replace('bg-zinc-900', 'bg-red-600');
-            micBtn.innerText = "🔴 REC";
-
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                streamRef = stream;
-
-                let options = {};
-                if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
-                    options = { mimeType: 'audio/webm;codecs=opus' };
-                } else if (MediaRecorder.isTypeSupported('audio/ogg;codecs=opus')) {
-                    options = { mimeType: 'audio/ogg;codecs=opus' };
-                } else if (MediaRecorder.isTypeSupported('audio/mp4')) {
-                    options = { mimeType: 'audio/mp4' };
-                }
-
-                mediaRecorder = new MediaRecorder(stream, options);
-                mediaRecorder.ondataavailable = event => {
-                    if (event.data && event.data.size > 0) audioChunks.push(event.data);
-                };
-
-                mediaRecorder.onstop = async () => {
-                    const audioBlob = new Blob(audioChunks, { type: mediaRecorder.mimeType });
-                    appendMessage("You", "<i>Sending voice message... 🎙️</i>", false);
-
-                    const formData = new FormData();
-                    formData.append("user_id", userId);
-                    formData.append("file", audioBlob, "voice_msg");
-                    formData.append("level", currentLevel);
-
-                    try {
-                        const res = await fetch('/api/web-club/voice', { method: 'POST', body: formData });
-                        const data = await res.json();
-                        const chatBox = document.getElementById('chat-box');
-                        if (chatBox.lastChild) chatBox.removeChild(chatBox.lastChild);
-                        appendMessage("You", data.user_text || "🎤 [Voice Message]", false);
-                        appendMessage("AI Tutor", data.ai_text, true);
-                        if (data.audio_url) {
-                            const audio = new Audio(data.audio_url);
-                            audio.play().catch(e => console.log(e));
-                        }
-                    } catch (err) {
-                        console.error(err);
-                        const chatBox = document.getElementById('chat-box');
-                        if (chatBox.lastChild) chatBox.removeChild(chatBox.lastChild);
-                        appendMessage("AI Tutor", "Could not process voice. Try again!", true);
-                    }
-                };
-
-                mediaRecorder.start();
-            } catch (err) {
-                console.error("Ошибка микрофона:", err);
-                alert("Ошибка доступа к микрофону. Убедитесь, что у вас HTTPS и даны разрешения!");
-                micBtn.classList.replace('bg-red-600', 'bg-zinc-900');
-                micBtn.innerText = "🎤 Hold";
-            }
-        }
-
-        function stopRecording(e) {
-            if (e) e.preventDefault();
-            const micBtn = document.getElementById('mic-btn');
-            micBtn.classList.replace('bg-red-600', 'bg-zinc-900');
-            micBtn.innerText = "🎤 Hold";
-            if (mediaRecorder && mediaRecorder.state !== "inactive") mediaRecorder.stop();
-            if (streamRef) { streamRef.getTracks().forEach(t => t.stop()); streamRef = null; }
-        }
-
-        // ====================== ПРОФИЛЬ ЭКРАН ======================
-        async function openProfile() {
-            showScreen('screen-profile');
-            const container = document.getElementById('profile-content');
-            container.innerHTML = "<p class='text-gray-400 text-center py-6'>Загрузка...</p>";
-            try {
-                const res = await fetch(`/api/profile/${userId}`);
-                const p = await res.json();
-                const premiumBadge = p.is_premium
-                    ? '<span class="px-2 py-1 bg-yellow-100 text-yellow-700 text-xs font-bold rounded-full">⭐ Premium</span>'
-                    : '<span class="px-2 py-1 bg-gray-100 text-gray-500 text-xs font-bold rounded-full">Free</span>';
-                const adminBadge = p.is_admin
-                    ? '<span class="px-2 py-1 bg-red-100 text-red-600 text-xs font-bold rounded-full ml-1">⚙️ Admin</span>'
-                    : '';
-                const xpPct = Math.round(p.xp % 100);
-                const xpToNext = 100 - xpPct;
-                container.innerHTML = `
-                    <div class="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl p-5 text-white text-center">
-                        <div class="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center text-3xl mx-auto mb-2">🎓</div>
-                        <div class="font-black text-xl">${p.name || 'Ученик'}</div>
-                        <div class="text-blue-200 text-sm">${p.username ? '@' + p.username : ''}</div>
-                        <div class="flex justify-center gap-2 mt-2">${premiumBadge}${adminBadge}</div>
-                    </div>
-                    <div class="grid grid-cols-2 gap-3">
-                        <div class="bg-orange-50 border border-orange-100 rounded-2xl p-4 text-center">
-                            <div class="text-3xl font-black text-orange-500">${p.streak}</div>
-                            <div class="text-xs text-gray-500 mt-1">🔥 Дней подряд</div>
-                        </div>
-                        <div class="bg-purple-50 border border-purple-100 rounded-2xl p-4 text-center">
-                            <div class="text-3xl font-black text-purple-600">${p.xp}</div>
-                            <div class="text-xs text-gray-500 mt-1">✨ Всего XP</div>
-                        </div>
-                        <div class="bg-blue-50 border border-blue-100 rounded-2xl p-4 text-center">
-                            <div class="text-3xl font-black text-blue-600">${p.lessons_done}</div>
-                            <div class="text-xs text-gray-500 mt-1">📖 Уроков пройдено</div>
-                        </div>
-                        <div class="bg-green-50 border border-green-100 rounded-2xl p-4 text-center">
-                            <div class="text-3xl font-black text-green-600">${p.tasks_done}</div>
-                            <div class="text-xs text-gray-500 mt-1">🎯 Заданий выполнено</div>
-                        </div>
-                    </div>
-                    <div class="bg-gray-50 border border-gray-100 rounded-2xl p-4">
-                        <div class="flex justify-between text-sm font-bold text-gray-700 mb-2">
-                            <span>Уровень ${p.level}</span>
-                            <span>${p.xp} XP</span>
-                        </div>
-                        <div class="w-full bg-gray-200 rounded-full h-2.5">
-                            <div class="bg-blue-600 h-2.5 rounded-full transition-all" style="width: ${xpPct}%"></div>
-                        </div>
-                        <div class="text-xs text-gray-400 mt-1 text-right">+${xpToNext} XP до следующего уровня</div>
-                    </div>
-                `;
-            } catch(e) {
-                container.innerHTML = "<p class='text-red-500'>Ошибка загрузки профиля.</p>";
-            }
-        }
-
-        // ====================== СЛОВАРЬ (VISUAL) ======================
-
-        const TOPIC_ICONS = {
-            'Animals':    '🐾',
-            'Food':       '🍽️',
-            'Transport':  '🚀',
-            'Home':       '🏠',
-            'Nature':     '🌿',
-            'Emotions':   '😊',
-            'Sports':     '⚽',
-            'Technology': '💻',
-        };
-
-        const LEVEL_COLORS = {
-            'A1': 'from-green-400 to-teal-500',
-            'A2': 'from-blue-400 to-indigo-500',
-            'B1': 'from-orange-400 to-amber-500',
-            'B2': 'from-pink-400 to-rose-500',
-            'C1': 'from-red-400 to-purple-500',
-            'C2': 'from-zinc-600 to-gray-800',
-        };
-
-        function emojiUrl(code) {
-            return `https://raw.githubusercontent.com/hfg-gmuend/openmoji/master/color/svg/${code}.svg`;
-        }
-
-        async function showDictionary() {
-            showScreen('screen-dictionary');
-            await loadVocabTopics(null);
-        }
-
-        async function loadVocabTopics(level) {
-            // Подсвечиваем активную кнопку фильтра
-            document.querySelectorAll('.vocab-lvl-btn').forEach(btn => {
-                const isActive = level === null ? btn.dataset.lvl === 'all' : btn.dataset.lvl === level;
-                btn.classList.toggle('bg-blue-600', isActive);
-                btn.classList.toggle('text-white', isActive);
-                btn.classList.toggle('bg-gray-100', !isActive);
-                btn.classList.toggle('text-gray-600', !isActive);
-            });
-
-            const grid = document.getElementById('vocab-topics-list');
-            grid.innerHTML = '<p class="col-span-2 text-gray-400 text-center py-4">Загрузка...</p>';
-
-            try {
-                const url = level ? `/api/vocab/topics?level=${level}` : '/api/vocab/topics';
-                const res = await fetch(url);
-                const topics = await res.json();
-
-                if (!topics.length) {
-                    grid.innerHTML = '<p class="col-span-2 text-gray-400 text-center py-6">Темы пока не добавлены</p>';
-                    return;
-                }
-
-                // Группируем по теме (может быть несколько уровней одной темы)
-                const byTopic = {};
-                topics.forEach(t => {
-                    if (!byTopic[t.topic]) byTopic[t.topic] = { count: 0, levels: [] };
-                    byTopic[t.topic].count += parseInt(t.card_count);
-                    byTopic[t.topic].levels.push(t.level);
-                });
-
-                grid.innerHTML = Object.entries(byTopic).map(([topic, info]) => {
-                    const icon = TOPIC_ICONS[topic] || '📖';
-                    const lvlBadges = [...new Set(info.levels)].sort().map(l =>
-                        `<span class="text-[10px] bg-white/30 px-1.5 py-0.5 rounded-full font-bold">${l}</span>`
-                    ).join('');
-                    const topicLevel = info.levels[0] || 'A1';
-                    const gradient = LEVEL_COLORS[topicLevel] || LEVEL_COLORS['A1'];
-                    return `
-                        <button onclick="openVocabTopic('${topic.replace(/'/g, "\\'")}', '${level || ''}')"
-                            class="bg-gradient-to-br ${gradient} rounded-2xl p-4 text-white text-left active:scale-95 transition shadow-sm">
-                            <div class="text-3xl mb-2">${icon}</div>
-                            <div class="font-extrabold text-base">${topic}</div>
-                            <div class="text-white/70 text-xs mt-1">${info.count} слов</div>
-                            <div class="flex gap-1 mt-2 flex-wrap">${lvlBadges}</div>
-                        </button>
-                    `;
-                }).join('');
-            } catch(e) {
-                grid.innerHTML = '<p class="col-span-2 text-red-400 text-center py-4">Ошибка загрузки</p>';
-            }
-        }
-
-        async function openVocabTopic(topic, level) {
-            showScreen('screen-vocab-cards');
-            document.getElementById('vocab-topic-title').textContent = (TOPIC_ICONS[topic] || '📖') + ' ' + topic;
-            document.getElementById('vocab-topic-count').textContent = '...';
-            const grid = document.getElementById('vocab-cards-grid');
-            grid.innerHTML = '<p class="col-span-2 text-gray-400 text-center py-6">Загрузка...</p>';
-
-            try {
-                const url = level
-                    ? `/api/vocab/cards?topic=${encodeURIComponent(topic)}&level=${level}`
-                    : `/api/vocab/cards?topic=${encodeURIComponent(topic)}`;
-                const res = await fetch(url);
-                const cards = await res.json();
-
-                document.getElementById('vocab-topic-count').textContent = cards.length + ' слов';
-
-                if (!cards.length) {
-                    grid.innerHTML = '<p class="col-span-2 text-gray-400 text-center py-6">Карточки не найдены</p>';
-                    return;
-                }
-
-                grid.innerHTML = cards.map(card => {
-                    const lvlColor = LEVEL_COLORS[card.level] || LEVEL_COLORS['A1'];
-                    // Конвертируем hex-код в Unicode-символ напрямую — надёжно, без сети
-                    let emojiChar = '📖';
-                    try { emojiChar = String.fromCodePoint(parseInt(card.emoji_code, 16)); } catch(e) {}
-                    return `
-                        <div class="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden flex flex-col">
-                            <div class="bg-gradient-to-br ${lvlColor} p-4 flex items-center justify-center" style="min-height:96px">
-                                <span style="font-size:56px;line-height:1">${emojiChar}</span>
-                            </div>
-                            <div class="p-3 flex flex-col gap-1 flex-1">
-                                <div class="font-extrabold text-gray-900 text-base leading-tight">${card.word}</div>
-                                <div class="text-blue-600 font-semibold text-sm">${card.translation}</div>
-                                ${card.definition ? `<div class="text-gray-400 text-xs mt-1 leading-snug">${card.definition}</div>` : ''}
-                                <span class="self-start mt-auto pt-1 text-[10px] font-bold bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">${card.level}</span>
-                            </div>
-                        </div>
-                    `;
-                }).join('');
-            } catch(e) {
-                grid.innerHTML = '<p class="col-span-2 text-red-400 text-center py-4">Ошибка загрузки карточек</p>';
-            }
-        }
-
-        function showAddWordModal() {
-            const word = prompt("Введите слово на английском:");
-            if (!word) return;
-            const translation = prompt("Введите перевод:");
-            if (!translation) return;
-            const transcription = prompt("Транскрипция (необязательно):") || "";
-            const context = prompt("Пример использования (необязательно):") || "";
-
-            fetch('/api/dictionary/add', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ user_id: userId, word, translation, transcription, context_example: context })
-            }).then(r => r.json()).then(data => {
-                if (data.status === 'success') { showToast('✅ Слово добавлено!'); }
-                else showToast(data.message || 'Ошибка', 'gray');
-            }).catch(() => showToast('Ошибка соединения', 'gray'));
-        }
-
-        // ====================== ТОСТ ======================
-        function showToast(msg, color = 'green') {
-            const toast = document.createElement('div');
-            const bg = color === 'green' ? 'bg-green-500' : 'bg-gray-700';
-            toast.className = `fixed bottom-6 left-1/2 -translate-x-1/2 ${bg} text-white px-5 py-3 rounded-2xl text-sm font-bold shadow-lg z-50 transition-all`;
-            toast.textContent = msg;
-            document.body.appendChild(toast);
-            setTimeout(() => toast.remove(), 2800);
-        }
-
-        // ====================== ИНИЦИАЛИЗАЦИЯ ======================
-        window.onload = loadProfile;
-    </script>
+    <!-- ══════════ PRACTICE ══════════ -->
+    <div id="screen-practice-task" class="hidden screen-body px-md pt-lg pb-36 space-y-lg">
+      <section class="bg-surface-container-lowest border border-surface-variant rounded-2xl p-lg shadow-sm">
+        <p class="font-label text-xs text-outline uppercase tracking-wider mb-sm">Вопрос · <span id="practice-level-badge" class="text-primary">A1</span></p>
+        <p id="practice-question-text" class="font-headline font-bold text-on-surface text-xl leading-snug"></p>
+      </section>
+      <div id="practice-options" class="space-y-sm"></div>
+      <div id="practice-feedback" class="hidden rounded-xl p-md text-center font-label font-bold text-sm"></div>
+    </div>
+
+    <!-- ══════════ SITUATIONS LIST ══════════ -->
+    <div id="screen-situations" class="hidden screen-body px-md pt-lg pb-32 space-y-md">
+      <div>
+        <h1 class="font-headline font-extrabold text-on-surface text-2xl">Ситуации</h1>
+        <p class="font-body text-on-surface-variant text-sm mt-xs">Войдите в роль — AI сыграет сотрудника</p>
+      </div>
+      <div class="space-y-sm">
+        <button onclick="openSituation('shop','🛒 В магазине','shop')"
+          class="w-full p-md bg-surface-container-lowest border border-surface-variant rounded-2xl flex items-center gap-md active:scale-[0.99] transition-transform shadow-sm">
+          <div class="w-12 h-12 rounded-xl bg-[#ecfdf5] flex items-center justify-center flex-shrink-0">
+            <span style="font-size:28px">🛒</span>
+          </div>
+          <div class="text-left flex-1">
+            <div class="font-headline font-bold text-on-surface text-sm">В магазине</div>
+            <div class="font-label text-xs text-outline">AI — продавец-консультант</div>
+          </div>
+          <span class="material-symbols-outlined text-outline">chevron_right</span>
+        </button>
+        <button onclick="openSituation('restaurant','🍽️ В ресторане','restaurant')"
+          class="w-full p-md bg-surface-container-lowest border border-surface-variant rounded-2xl flex items-center gap-md active:scale-[0.99] transition-transform shadow-sm">
+          <div class="w-12 h-12 rounded-xl bg-[#fff7ed] flex items-center justify-center flex-shrink-0">
+            <span style="font-size:28px">🍽️</span>
+          </div>
+          <div class="text-left flex-1">
+            <div class="font-headline font-bold text-on-surface text-sm">В ресторане</div>
+            <div class="font-label text-xs text-outline">AI — официант</div>
+          </div>
+          <span class="material-symbols-outlined text-outline">chevron_right</span>
+        </button>
+        <button onclick="openSituation('airport','✈️ Аэропорт','airport')"
+          class="w-full p-md bg-surface-container-lowest border border-surface-variant rounded-2xl flex items-center gap-md active:scale-[0.99] transition-transform shadow-sm">
+          <div class="w-12 h-12 rounded-xl bg-[#eff6ff] flex items-center justify-center flex-shrink-0">
+            <span style="font-size:28px">✈️</span>
+          </div>
+          <div class="text-left flex-1">
+            <div class="font-headline font-bold text-on-surface text-sm">Аэропорт</div>
+            <div class="font-label text-xs text-outline">AI — сотрудник стойки</div>
+          </div>
+          <span class="material-symbols-outlined text-outline">chevron_right</span>
+        </button>
+        <button onclick="openSituation('hotel','🏨 В отеле','hotel')"
+          class="w-full p-md bg-surface-container-lowest border border-surface-variant rounded-2xl flex items-center gap-md active:scale-[0.99] transition-transform shadow-sm">
+          <div class="w-12 h-12 rounded-xl bg-[#fdf4ff] flex items-center justify-center flex-shrink-0">
+            <span style="font-size:28px">🏨</span>
+          </div>
+          <div class="text-left flex-1">
+            <div class="font-headline font-bold text-on-surface text-sm">В отеле</div>
+            <div class="font-label text-xs text-outline">AI — администратор</div>
+          </div>
+          <span class="material-symbols-outlined text-outline">chevron_right</span>
+        </button>
+        <button onclick="openSituation('doctor','🏥 У врача','doctor')"
+          class="w-full p-md bg-surface-container-lowest border border-surface-variant rounded-2xl flex items-center gap-md active:scale-[0.99] transition-transform shadow-sm">
+          <div class="w-12 h-12 rounded-xl bg-[#fff1f2] flex items-center justify-center flex-shrink-0">
+            <span style="font-size:28px">🏥</span>
+          </div>
+          <div class="text-left flex-1">
+            <div class="font-headline font-bold text-on-surface text-sm">У врача</div>
+            <div class="font-label text-xs text-outline">AI — терапевт</div>
+          </div>
+          <span class="material-symbols-outlined text-outline">chevron_right</span>
+        </button>
+        <button onclick="openSituation('emergency','🚨 Экстренный вызов','emergency')"
+          class="w-full p-md bg-surface-container-lowest border border-surface-variant rounded-2xl flex items-center gap-md active:scale-[0.99] transition-transform shadow-sm">
+          <div class="w-12 h-12 rounded-xl bg-[#fef2f2] flex items-center justify-center flex-shrink-0">
+            <span style="font-size:28px">🚨</span>
+          </div>
+          <div class="text-left flex-1">
+            <div class="font-headline font-bold text-on-surface text-sm">Экстренный вызов</div>
+            <div class="font-label text-xs text-outline">AI — диспетчер 911</div>
+          </div>
+          <span class="material-symbols-outlined text-outline">chevron_right</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- ══════════ SITUATION CHAT ══════════ -->
+    <div id="screen-situation-chat" class="hidden flex flex-col" style="height:calc(100dvh - 52px)">
+      <div id="situation-hint-bar" class="px-md py-sm bg-[#fffbeb] border-b border-[#fde68a] text-xs text-[#92400e] font-label"></div>
+      <div id="situation-chat-box" class="flex-1 overflow-y-auto p-md space-y-sm bg-surface"></div>
+      <!-- Input -->
+      <div class="border-t border-surface-variant bg-surface-container-lowest px-md py-sm flex items-center gap-sm">
+        <input id="situation-input" type="text" placeholder="Type your message..."
+          class="flex-1 h-touch rounded-xl bg-surface-container px-md text-sm text-on-surface placeholder:text-outline font-body focus:outline-none focus:ring-2 focus:ring-primary-container"
+          onkeydown="if(event.key==='Enter') sendSituationMessage()">
+        <button onclick="sendSituationMessage()" class="w-touch h-touch flex items-center justify-center rounded-xl bg-primary-container active:scale-90 transition-transform">
+          <span class="material-symbols-outlined text-on-primary">send</span>
+        </button>
+        <button id="sit-mic-btn"
+          onmousedown="startSituationRecording(event)" onmouseup="stopSituationRecording(event)"
+          ontouchstart="startSituationRecording(event)" ontouchend="stopSituationRecording(event)"
+          class="w-touch h-touch flex items-center justify-center rounded-xl bg-on-surface active:scale-90 transition-transform select-none touch-none">
+          <span class="material-symbols-outlined filled text-surface">mic</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- ══════════ SPEAKING CLUB ══════════ -->
+    <div id="screen-club" class="hidden flex flex-col" style="height:calc(100dvh - 52px)">
+      <div class="px-md py-sm bg-surface-container-low border-b border-surface-variant flex items-center gap-sm">
+        <div class="w-8 h-8 rounded-full bg-primary-container flex items-center justify-center">
+          <span class="material-symbols-outlined filled text-on-primary text-sm">smart_toy</span>
+        </div>
+        <div>
+          <div class="font-headline font-bold text-on-surface text-sm">AI Tutor</div>
+          <div class="flex items-center gap-xs">
+            <div class="w-2 h-2 bg-tertiary-container rounded-full"></div>
+            <span class="font-label text-xs text-outline">Online · Level <span id="club-level-badge">A1</span></span>
+          </div>
+        </div>
+        <span class="font-label text-xs text-outline ml-auto">Нажми на слово для перевода</span>
+      </div>
+      <div id="chat-box" class="flex-1 overflow-y-auto p-md space-y-sm bg-surface"></div>
+      <div class="border-t border-surface-variant bg-surface-container-lowest px-md py-sm flex items-center gap-sm">
+        <input id="chat-input" type="text" placeholder="Type a message..."
+          class="flex-1 h-touch rounded-xl bg-surface-container px-md text-sm text-on-surface placeholder:text-outline font-body focus:outline-none focus:ring-2 focus:ring-primary-container"
+          onkeydown="if(event.key==='Enter') sendTextMessage()">
+        <button onclick="sendTextMessage()" class="w-touch h-touch flex items-center justify-center rounded-xl bg-primary-container active:scale-90 transition-transform">
+          <span class="material-symbols-outlined text-on-primary">send</span>
+        </button>
+        <button id="mic-btn"
+          onmousedown="startRecording(event)" onmouseup="stopRecording(event)"
+          ontouchstart="startRecording(event)" ontouchend="stopRecording(event)"
+          class="w-touch h-touch flex items-center justify-center rounded-xl bg-on-surface active:scale-90 transition-transform select-none touch-none">
+          <span class="material-symbols-outlined filled text-surface">mic</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- ══════════ PROFILE ══════════ -->
+    <div id="screen-profile" class="hidden screen-body px-md pt-lg pb-32">
+      <h1 class="font-headline font-extrabold text-on-surface text-2xl mb-lg">Мой профиль</h1>
+      <div id="profile-content"><p class="text-outline text-center py-xl">Загрузка...</p></div>
+    </div>
+
+    <!-- ══════════ DICTIONARY TOPICS ══════════ -->
+    <div id="screen-dictionary" class="hidden screen-body px-md pt-lg pb-32 space-y-md">
+      <h1 class="font-headline font-extrabold text-on-surface text-2xl">Словарь</h1>
+      <!-- Level filter chips -->
+      <div class="flex gap-xs flex-wrap" id="vocab-level-filter">
+        <button onclick="loadVocabTopics(null)" data-lvl="all" class="vocab-lvl-btn px-md py-xs rounded-full text-xs font-label font-bold bg-primary-container text-on-primary transition-all">Все</button>
+        <button onclick="loadVocabTopics('A1')" data-lvl="A1" class="vocab-lvl-btn px-md py-xs rounded-full text-xs font-label font-bold bg-surface-container text-on-surface-variant transition-all">A1</button>
+        <button onclick="loadVocabTopics('A2')" data-lvl="A2" class="vocab-lvl-btn px-md py-xs rounded-full text-xs font-label font-bold bg-surface-container text-on-surface-variant transition-all">A2</button>
+        <button onclick="loadVocabTopics('B1')" data-lvl="B1" class="vocab-lvl-btn px-md py-xs rounded-full text-xs font-label font-bold bg-surface-container text-on-surface-variant transition-all">B1</button>
+        <button onclick="loadVocabTopics('B2')" data-lvl="B2" class="vocab-lvl-btn px-md py-xs rounded-full text-xs font-label font-bold bg-surface-container text-on-surface-variant transition-all">B2</button>
+        <button onclick="loadVocabTopics('C1')" data-lvl="C1" class="vocab-lvl-btn px-md py-xs rounded-full text-xs font-label font-bold bg-surface-container text-on-surface-variant transition-all">C1</button>
+      </div>
+      <div id="vocab-topics-list" class="grid grid-cols-2 gap-sm"></div>
+    </div>
+
+    <!-- ══════════ VOCAB CARDS ══════════ -->
+    <div id="screen-vocab-cards" class="hidden screen-body px-md pt-lg pb-32">
+      <div class="flex items-center justify-between mb-lg">
+        <h1 id="vocab-topic-title" class="font-headline font-extrabold text-on-surface text-2xl"></h1>
+        <span id="vocab-topic-count" class="font-label text-xs text-outline bg-surface-container px-sm py-xs rounded-full"></span>
+      </div>
+      <div id="vocab-cards-grid" class="grid grid-cols-2 gap-sm"></div>
+    </div>
+
+    <!-- ══════════ PERSONAL DICTIONARY ══════════ -->
+    <div id="screen-personal-dict" class="hidden screen-body px-md pt-lg pb-32 space-y-md">
+      <div class="flex items-center justify-between">
+        <h1 class="font-headline font-extrabold text-on-surface text-2xl">📒 Мой блокнот</h1>
+        <span id="dict-count" class="font-label text-xs text-outline bg-surface-container px-sm py-xs rounded-full">0 слов</span>
+      </div>
+      <div id="personal-dict-list" class="space-y-sm"></div>
+    </div>
+
+  </main>
+
+  <!-- ── BOTTOM NAV (main screen only) ── -->
+  <div id="bottom-nav" class="hidden fixed bottom-0 w-full max-w-[512px] bg-surface-container-lowest border-t border-surface-variant z-20">
+    <div class="flex">
+      <button onclick="showScreen('screen-main')" class="flex-1 py-sm flex flex-col items-center gap-xs active:bg-surface-container transition-colors">
+        <span class="material-symbols-outlined filled text-primary-container">home</span>
+        <span class="font-label text-[10px] text-primary">Главная</span>
+      </button>
+      <button onclick="showDictionary()" class="flex-1 py-sm flex flex-col items-center gap-xs active:bg-surface-container transition-colors">
+        <span class="material-symbols-outlined text-on-surface-variant">book_2</span>
+        <span class="font-label text-[10px] text-outline">Словарь</span>
+      </button>
+      <button onclick="showScreen('screen-club')" class="flex-1 py-sm flex flex-col items-center gap-xs active:bg-surface-container transition-colors">
+        <span class="material-symbols-outlined text-on-surface-variant">mic</span>
+        <span class="font-label text-[10px] text-outline">Клуб</span>
+      </button>
+      <button onclick="openProfile()" class="flex-1 py-sm flex flex-col items-center gap-xs active:bg-surface-container transition-colors">
+        <span class="material-symbols-outlined text-on-surface-variant">person</span>
+        <span class="font-label text-[10px] text-outline">Профиль</span>
+      </button>
+    </div>
+  </div>
+
+</div><!-- /container -->
+
+<script>
+// ─────────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────────
+const tg = window.Telegram.WebApp;
+tg.ready(); tg.expand();
+const userId = tg.initDataUnsafe?.user?.id || 0;
+let currentLevel = "A1";
+let currentCategory = "lessons";
+let correctPracticeOption = null;
+let currentPracticeQuestionId = null;
+let mediaRecorder = null, audioChunks = [], streamRef = null;
+let popupWord = '', popupContext = '';
+
+const LEVELS = ['A1','A2','B1','B2','C1','C2'];
+const LEVEL_GRADIENTS = {
+  'A1': 'from-green-400 to-teal-500',
+  'A2': 'from-blue-400 to-indigo-500',
+  'B1': 'from-orange-400 to-amber-500',
+  'B2': 'from-pink-400 to-rose-500',
+  'C1': 'from-red-400 to-purple-500',
+  'C2': 'from-zinc-600 to-gray-800',
+};
+
+const SCREENS = [
+  'screen-main','screen-levels','screen-personal-dict',
+  'screen-lesson','screen-level-complete',
+  'screen-practice-task','screen-situations','screen-situation-chat',
+  'screen-club','screen-profile','screen-dictionary','screen-vocab-cards'
+];
+
+// Header back-button stack
+let backStack = [];
+
+function showScreen(screenId, pushBack = null) {
+  SCREENS.forEach(s => {
+    const el = document.getElementById(s);
+    if (el) el.classList.add('hidden');
+  });
+  document.getElementById(screenId)?.classList.remove('hidden');
+  hideWordPopup();
+  updateHeader(screenId, pushBack);
+  // Bottom nav only on main
+  document.getElementById('bottom-nav').classList.toggle('hidden', screenId !== 'screen-main');
+}
+
+function updateHeader(screenId, backTarget) {
+  const backBtn = document.getElementById('header-back');
+  const avatarEl = document.getElementById('header-avatar');
+  const userInfo = document.getElementById('header-user-info');
+  const titleBlock = document.getElementById('header-title-block');
+  const progressEl = document.getElementById('header-progress');
+  const adminBadge = document.getElementById('admin-badge');
+
+  // Reset
+  backBtn.classList.add('hidden');
+  avatarEl.classList.remove('hidden');
+  userInfo.classList.remove('hidden');
+  titleBlock.classList.add('hidden');
+  progressEl.classList.add('hidden');
+
+  if (screenId === 'screen-main') {
+    backStack = [];
+  } else {
+    backBtn.classList.remove('hidden');
+    if (backTarget) backStack.push(backTarget);
+  }
+
+  // Screen-specific header tweaks
+  if (screenId === 'screen-lesson' || screenId === 'screen-practice-task') {
+    progressEl.classList.remove('hidden');
+  }
+}
+
+function headerBack() {
+  if (backStack.length) {
+    const prev = backStack.pop();
+    showScreen(prev);
+  } else {
+    showScreen('screen-main');
+  }
+}
+
+// ─────────────────────────────────────────────
+// PROFILE LOAD
+// ─────────────────────────────────────────────
+async function loadProfile() {
+  try {
+    const tgUser = tg.initDataUnsafe?.user;
+    document.getElementById('user-name').textContent = tgUser?.first_name || 'Ученик';
+    document.getElementById('header-avatar').textContent = (tgUser?.first_name || 'TL')[0].toUpperCase();
+
+    await fetch('/api/register_user', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ user_id: userId, name: tgUser?.first_name || '', username: tgUser?.username || '' })
+    });
+
+    const res = await fetch(`/api/dashboard/${userId}`);
+    const data = await res.json();
+    const p = data.user || data;
+    if (p) {
+      document.getElementById('user-streak').textContent = p.streak ?? 0;
+      document.getElementById('user-xp').textContent = p.xp ?? 0;
+      const xpPct = Math.min(100, Math.round((p.xp || 0) % 100));
+      document.getElementById('header-progress-fill').style.width = xpPct + '%';
+      if (p.is_admin || data.is_admin) {
+        document.getElementById('admin-badge').classList.remove('hidden');
+      }
+    }
+  } catch(e) { console.error(e); }
+}
+
+// ─────────────────────────────────────────────
+// CATEGORY / LEVEL
+// ─────────────────────────────────────────────
+function chooseCategory(category) {
+  currentCategory = category;
+  document.getElementById('levels-grid').innerHTML = LEVELS.map(lvl => {
+    const g = LEVEL_GRADIENTS[lvl] || LEVEL_GRADIENTS['A1'];
+    return `<button onclick="selectLevel('${lvl}')"
+      class="bg-gradient-to-br ${g} rounded-2xl p-lg text-white text-left active:scale-95 transition-transform shadow-sm">
+      <span class="font-label text-xs text-white/70 uppercase tracking-wider block mb-xs">Уровень</span>
+      <span class="font-headline font-extrabold text-3xl block">${lvl}</span>
+    </button>`;
+  }).join('');
+  showScreen('screen-levels', 'screen-main');
+}
+
+function selectLevel(level) {
+  currentLevel = level;
+  document.getElementById('club-level-badge').textContent = level;
+  document.getElementById('practice-level-badge').textContent = level;
+  if (currentCategory === 'practice') loadPracticeTask();
+  else openNextLesson();
+}
+
+// ─────────────────────────────────────────────
+// LESSONS
+// ─────────────────────────────────────────────
+async function openNextLesson() {
+  showScreen('screen-lesson', 'screen-levels');
+  const dataDiv = document.getElementById('lesson-data');
+  dataDiv.innerHTML = `<div class="flex items-center gap-sm text-outline py-xl justify-center">
+    <span class="material-symbols-outlined animate-spin">progress_activity</span> Загрузка...
+  </div>`;
+  const typeMap = { lessons:'lesson', grammar:'grammar', vocabulary:'vocabulary' };
+  const contentType = typeMap[currentCategory] || 'lesson';
+  try {
+    const res = await fetch(`/api/lessons/next/${currentLevel}?user_id=${userId}&content_type=${contentType}`);
+    const lesson = await res.json();
+    if (lesson.completed) { showLevelComplete(); return; }
+    renderLesson(lesson);
+  } catch(e) {
+    dataDiv.innerHTML = `<p class="text-error text-center py-lg">Ошибка загрузки</p>`;
+  }
+}
+
+function renderLesson(lesson) {
+  const dataDiv = document.getElementById('lesson-data');
+  const iconMap = { grammar:'edit_note', vocabulary:'psychology', lesson:'menu_book' };
+  const icon = iconMap[lesson.type] || 'menu_book';
+  const rawText = lesson.lesson_text || 'Текст урока пуст.';
+  const clickableBody = makeTextClickable(rawText, rawText);
+
+  dataDiv.innerHTML = `
+    <div class="flex items-center gap-sm mb-md">
+      <span class="material-symbols-outlined filled text-primary-container">${icon}</span>
+      <span class="font-label text-xs text-outline uppercase tracking-wider">${lesson.type || 'урок'} · ${currentLevel}</span>
+    </div>
+    <h1 class="font-headline font-extrabold text-on-surface text-2xl mb-lg leading-tight">${lesson.title}</h1>
+    <p class="font-label text-xs text-outline mb-sm">💡 Нажмите на слово для перевода</p>
+    <div class="bg-surface-container-lowest border border-surface-variant rounded-2xl p-lg text-on-surface-variant leading-loose text-base font-body lesson-text-body mb-xl">
+      ${clickableBody}
+    </div>
+    <button id="complete-lesson-btn" onclick="submitProgress('${lesson.type||'lesson'}', ${lesson.id})"
+      class="w-full h-touch rounded-xl bg-tertiary-container text-on-tertiary font-label font-bold uppercase tracking-wider text-sm active:scale-[0.98] transition-transform shadow-md">
+      ✅ Просмотрено · +5 XP
+    </button>
+  `;
+}
+
+// ─────────────────────────────────────────────
+// LEVEL COMPLETE
+// ─────────────────────────────────────────────
+function showLevelComplete() {
+  const idx = LEVELS.indexOf(currentLevel);
+  const hasNext = idx < LEVELS.length - 1;
+  const nextBtn = document.getElementById('btn-next-level');
+  const msg = document.getElementById('level-complete-msg');
+  if (hasNext) {
+    nextBtn.classList.remove('hidden');
+    nextBtn.textContent = `Следующий уровень: ${LEVELS[idx+1]} →`;
+    msg.textContent = `Вы прошли все материалы уровня ${currentLevel}. Отличная работа!`;
+  } else {
+    nextBtn.classList.add('hidden');
+    msg.textContent = 'Поздравляем! Вы прошли все уровни. Вы — настоящий мастер!';
+  }
+  showScreen('screen-level-complete');
+}
+
+function goNextLevel() {
+  const idx = LEVELS.indexOf(currentLevel);
+  if (idx < LEVELS.length - 1) {
+    currentLevel = LEVELS[idx+1];
+    document.getElementById('club-level-badge').textContent = currentLevel;
+    openNextLesson();
+  }
+}
+
+// ─────────────────────────────────────────────
+// PROGRESS
+// ─────────────────────────────────────────────
+async function submitProgress(contentType, contentId) {
+  const btn = document.getElementById('complete-lesson-btn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Сохранение...'; }
+  try {
+    const res = await fetch('/api/progress/complete', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ user_id: parseInt(userId), content_type: contentType, content_id: parseInt(contentId) })
+    });
+    if (!res.ok) { showToast('Ошибка сервера'); if(btn){btn.disabled=false;btn.textContent='✅ Просмотрено · +5 XP';} return; }
+    const data = await res.json();
+    if (data.xp_earned > 0) showToast(`🎉 +${data.xp_earned} XP!`);
+    else showToast('Уже изучено ранее', 'neutral');
+    await loadProfile();
+    openNextLesson();
+  } catch(e) {
+    showToast('Ошибка соединения','neutral');
+    if(btn){btn.disabled=false;btn.textContent='✅ Просмотрено · +5 XP';}
+  }
+}
+
+// ─────────────────────────────────────────────
+// PRACTICE
+// ─────────────────────────────────────────────
+async function loadPracticeTask() {
+  showScreen('screen-practice-task', 'screen-levels');
+  document.getElementById('practice-feedback').classList.add('hidden');
+  document.getElementById('practice-question-text').textContent = 'Загрузка...';
+  document.getElementById('practice-options').innerHTML = '';
+  try {
+    const res = await fetch(`/api/random_question?user_id=${userId}&type=multiple_choice&level=${currentLevel}`);
+    const q = await res.json();
+    if (q.error === 'no_more_questions') {
+      document.getElementById('practice-question-text').textContent = '🎉 Все вопросы уровня пройдены!';
+      return;
+    }
+    currentPracticeQuestionId = q.question_id;
+    correctPracticeOption = q.correct_option;
+    document.getElementById('practice-question-text').textContent = q.question;
+    document.getElementById('practice-options').innerHTML = q.options.map((opt, i) => `
+      <button onclick="checkPracticeAnswer(${i+1}, this)"
+        class="w-full text-left px-lg py-md bg-surface-container-lowest border-2 border-surface-variant rounded-xl font-body text-on-surface text-sm chip-shadow active:scale-[0.98] transition-all">
+        <span class="font-label text-outline mr-sm">${String.fromCharCode(65+i)}.</span> ${opt}
+      </button>`).join('');
+  } catch(e) {
+    document.getElementById('practice-question-text').textContent = 'Ошибка загрузки вопроса.';
+  }
+}
+
+async function checkPracticeAnswer(selected, btnElement) {
+  document.querySelectorAll('#practice-options button').forEach(b => b.disabled = true);
+  const feedback = document.getElementById('practice-feedback');
+  feedback.classList.remove('hidden');
+  if (selected === correctPracticeOption) {
+    btnElement.classList.add('border-[#007f36]','bg-[#f0fdf4]','text-[#006329]');
+    feedback.className = 'rounded-xl p-md text-center font-label font-bold text-sm bg-[#f0fdf4] text-[#006329] border border-[#86efac]';
+    feedback.textContent = '✅ Правильно!';
+    try {
+      await fetch('/api/progress/complete',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({user_id:parseInt(userId),content_type:'practice',content_id:currentPracticeQuestionId})});
+      await loadProfile();
+    } catch(e){}
+  } else {
+    btnElement.classList.add('border-[#ba1a1a]','bg-[#fff1f2]','text-[#ba1a1a]');
+    feedback.className = 'rounded-xl p-md text-center font-label font-bold text-sm bg-[#fff1f2] text-[#ba1a1a] border border-[#fca5a5]';
+    feedback.textContent = '❌ Неверно';
+    try { await fetch('/api/check_answer',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({user_id:userId,queue_item_id:currentPracticeQuestionId,is_correct:false})}); } catch(e){}
+  }
+  setTimeout(loadPracticeTask, 2200);
+}
+
+// ─────────────────────────────────────────────
+// CLICKABLE WORDS
+// ─────────────────────────────────────────────
+function makeTextClickable(text, fullSentence) {
+  const ctxId = 'ctx_' + Math.random().toString(36).slice(2, 8);
+  window._clickCtx = window._clickCtx || {};
+  window._clickCtx[ctxId] = fullSentence;
+  const lines = text.split('\n');
+  return `<span data-ctx-id="${ctxId}">` + lines.map(line =>
+    line.replace(/([A-Za-zÀ-ÿ]{2,})/g, (word) => {
+      const safe = word.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+      return `<span class="clickable-word" data-word="${safe}">${safe}</span>`;
+    })
+  ).join('<br>') + '</span>';
+}
+
+document.addEventListener('click', function(e) {
+  const span = e.target.closest('.clickable-word');
+  if (!span) return;
+  const word = span.dataset.word;
+  const ctxSpan = span.closest('[data-ctx-id]');
+  const ctxId = ctxSpan?.dataset.ctxId;
+  const context = (ctxId && window._clickCtx?.[ctxId]) || '';
+  handleWordTap(word, context);
+});
+
+async function handleWordTap(word, context) {
+  popupWord = word; popupContext = context;
+  document.getElementById('popup-word').textContent = word;
+  document.getElementById('popup-transcription').textContent = '';
+  document.getElementById('popup-translation').textContent = '⏳ Перевод...';
+  document.getElementById('popup-example').textContent = '';
+  document.getElementById('popup-status').textContent = '';
+  const btn = document.getElementById('popup-add-btn');
+  btn.disabled = false;
+  btn.textContent = '+ В мой словарь';
+  btn.className = 'w-full h-touch rounded-xl bg-secondary-container text-on-secondary font-label font-bold text-sm uppercase tracking-wider active:scale-[0.98] transition-transform';
+  showWordPopup();
+  try {
+    const res = await fetch('/api/dictionary/translate', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({user_id:parseInt(userId), word, context_sentence: context.substring(0,300)})
+    });
+    const data = await res.json();
+    if (data.status === 'success') {
+      document.getElementById('popup-transcription').textContent = data.transcription ? `${data.transcription}` : '';
+      document.getElementById('popup-translation').textContent = data.translation || '—';
+      document.getElementById('popup-example').textContent = data.context_example ? `"${data.context_example}"` : '';
+    } else {
+      document.getElementById('popup-translation').textContent = data.message || 'Перевод недоступен';
+    }
+  } catch(e) {
+    document.getElementById('popup-translation').textContent = 'Ошибка соединения';
+  }
+}
+
+async function addPopupWordToDict() {
+  if (!popupWord) return;
+  const btn = document.getElementById('popup-add-btn');
+  btn.disabled = true; btn.textContent = 'Сохранение...';
+  try {
+    const res = await fetch('/api/dictionary/quick_add',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({user_id:parseInt(userId),word:popupWord,context_sentence:popupContext.substring(0,300)})});
+    const data = await res.json();
+    if (data.status === 'success') {
+      document.getElementById('popup-status').textContent = '✅ Добавлено!';
+      btn.textContent = '✓ В словаре';
+      btn.className = 'w-full h-touch rounded-xl bg-tertiary-container text-on-tertiary font-label font-bold text-sm uppercase tracking-wider active:scale-[0.98] transition-transform';
+    } else {
+      document.getElementById('popup-status').textContent = data.message || 'Ошибка';
+      btn.disabled = false; btn.textContent = '+ В мой словарь';
+    }
+  } catch(e) {
+    document.getElementById('popup-status').textContent = 'Ошибка соединения';
+    btn.disabled = false; btn.textContent = '+ В мой словарь';
+  }
+}
+
+function showWordPopup() {
+  document.getElementById('word-popup-overlay').classList.remove('hidden');
+  document.getElementById('word-popup').classList.remove('sheet-hidden');
+}
+function hideWordPopup() {
+  document.getElementById('word-popup-overlay').classList.add('hidden');
+  document.getElementById('word-popup').classList.add('sheet-hidden');
+}
+
+// ─────────────────────────────────────────────
+// SITUATIONS
+// ─────────────────────────────────────────────
+const SITUATION_HINTS = {
+  shop:'🛒 Вы покупатель. Попросите найти товар, узнайте цену.',
+  restaurant:'🍽️ Вы гость. Закажите блюдо, попросите счёт.',
+  airport:'✈️ Вы пассажир. Пройдите регистрацию на рейс.',
+  hotel:'🏨 Вы гость. Заселитесь и запросите услуги.',
+  doctor:'🏥 Вы пациент. Опишите симптомы врачу.',
+  emergency:'🚨 Срочно опишите ситуацию диспетчеру.',
+};
+let currentSituation = '';
+let sitMediaRecorder = null, sitAudioChunks = [], sitStreamRef = null;
+
+function openSituation(situationKey, title, situation) {
+  currentSituation = situation;
+  showScreen('screen-situation-chat', 'screen-situations');
+  document.getElementById('header-title').textContent = title;
+  document.getElementById('situation-hint-bar').textContent = SITUATION_HINTS[situation] || '';
+  const box = document.getElementById('situation-chat-box');
+  box.innerHTML = '';
+  appendSituationMessage('ai', 'Hello! How can I help you today?');
+}
+
+function appendSituationMessage(who, text) {
+  const box = document.getElementById('situation-chat-box');
+  const div = document.createElement('div');
+  if (who === 'ai') {
+    div.className = 'bg-primary-container text-on-primary p-md rounded-2xl rounded-tl-none max-w-[85%] text-sm shadow-sm';
+    div.innerHTML = makeTextClickable(text, text);
+    setTimeout(() => div.querySelectorAll('.clickable-word').forEach(el => el.style.borderBottomColor='rgba(255,255,255,0.4)'), 0);
+  } else {
+    div.className = 'bg-surface-container text-on-surface p-md rounded-2xl rounded-tr-none max-w-[85%] text-sm shadow-sm ml-auto';
+    div.textContent = text;
+  }
+  box.appendChild(div);
+  box.scrollTop = box.scrollHeight;
+}
+
+async function sendSituationMessage() {
+  const input = document.getElementById('situation-input');
+  const text = input.value.trim(); if (!text) return;
+  input.value = ''; appendSituationMessage('user', text);
+  try {
+    const fd = new FormData();
+    fd.append('user_id', userId); fd.append('text', text);
+    fd.append('level', currentLevel); fd.append('situation', currentSituation);
+    const res = await fetch('/api/web-club/text',{method:'POST',body:fd});
+    const data = await res.json();
+    appendSituationMessage('ai', data.ai_text);
+    if (data.audio_url) new Audio(data.audio_url).play().catch(()=>{});
+  } catch(e) { appendSituationMessage('ai','Sorry, connection error.'); }
+}
+
+async function startSituationRecording(e) {
+  if(e)e.preventDefault(); sitAudioChunks=[];
+  const btn = document.getElementById('sit-mic-btn');
+  btn.querySelector('.material-symbols-outlined').style.color='#ef4444';
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({audio:true});
+    sitStreamRef = stream;
+    let opts = {}; if(MediaRecorder.isTypeSupported('audio/webm;codecs=opus'))opts={mimeType:'audio/webm;codecs=opus'};
+    sitMediaRecorder = new MediaRecorder(stream, opts);
+    sitMediaRecorder.ondataavailable = e => { if(e.data?.size>0)sitAudioChunks.push(e.data); };
+    sitMediaRecorder.onstop = async () => {
+      const blob = new Blob(sitAudioChunks,{type:sitMediaRecorder.mimeType});
+      appendSituationMessage('user','🎙️ Voice...');
+      const fd = new FormData();
+      fd.append('user_id',userId); fd.append('file',blob,'voice');
+      fd.append('level',currentLevel); fd.append('situation',currentSituation);
+      try {
+        const res = await fetch('/api/web-club/voice',{method:'POST',body:fd});
+        const data = await res.json();
+        const box = document.getElementById('situation-chat-box');
+        if(box.lastChild)box.removeChild(box.lastChild);
+        appendSituationMessage('user', data.user_text||'🎤');
+        appendSituationMessage('ai', data.ai_text);
+        if(data.audio_url)new Audio(data.audio_url).play().catch(()=>{});
+      } catch(err){ appendSituationMessage('ai','Could not process voice.'); }
+    };
+    sitMediaRecorder.start();
+  } catch(err){
+    btn.querySelector('.material-symbols-outlined').style.color='';
+    alert('Ошибка микрофона');
+  }
+}
+function stopSituationRecording(e) {
+  if(e)e.preventDefault();
+  const btn = document.getElementById('sit-mic-btn');
+  btn.querySelector('.material-symbols-outlined').style.color='';
+  if(sitMediaRecorder?.state!=='inactive')sitMediaRecorder.stop();
+  sitStreamRef?.getTracks().forEach(t=>t.stop()); sitStreamRef=null;
+}
+
+// ─────────────────────────────────────────────
+// SPEAKING CLUB
+// ─────────────────────────────────────────────
+function appendMessage(sender, text, isAi=false) {
+  const chatBox = document.getElementById('chat-box');
+  const div = document.createElement('div');
+  if (isAi) {
+    div.className = 'bg-primary-container text-on-primary p-md rounded-2xl rounded-tl-none max-w-[85%] text-sm shadow-sm';
+    div.innerHTML = makeTextClickable(text, text);
+    setTimeout(()=>div.querySelectorAll('.clickable-word').forEach(el=>el.style.borderBottomColor='rgba(255,255,255,0.4)'),0);
+  } else {
+    div.className = 'bg-surface-container text-on-surface p-md rounded-2xl rounded-tr-none max-w-[85%] text-sm shadow-sm ml-auto';
+    div.textContent = text;
+  }
+  chatBox.appendChild(div);
+  chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+async function sendTextMessage() {
+  const input = document.getElementById('chat-input');
+  const text = input.value.trim(); if(!text)return;
+  input.value=''; appendMessage('You',text,false);
+  try {
+    const fd = new FormData();
+    fd.append('user_id',userId); fd.append('text',text); fd.append('level',currentLevel);
+    const res = await fetch('/api/web-club/text',{method:'POST',body:fd});
+    const data = await res.json();
+    appendMessage('AI',data.ai_text,true);
+    if(data.audio_url)new Audio(data.audio_url).play().catch(()=>{});
+  } catch(e){ appendMessage('AI','Sorry, error connecting.',true); }
+}
+
+async function startRecording(e) {
+  if(e)e.preventDefault(); audioChunks=[];
+  const micBtn=document.getElementById('mic-btn');
+  micBtn.querySelector('.material-symbols-outlined').style.color='#ef4444';
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({audio:true});
+    streamRef=stream;
+    let options={}; if(MediaRecorder.isTypeSupported('audio/webm;codecs=opus'))options={mimeType:'audio/webm;codecs=opus'};
+    mediaRecorder = new MediaRecorder(stream,options);
+    mediaRecorder.ondataavailable = event => { if(event.data&&event.data.size>0)audioChunks.push(event.data); };
+    mediaRecorder.onstop = async () => {
+      const audioBlob = new Blob(audioChunks,{type:mediaRecorder.mimeType});
+      appendMessage('You','<i>🎙️ Sending voice...</i>',false);
+      const fd=new FormData();
+      fd.append('user_id',userId); fd.append('file',audioBlob,'voice_msg'); fd.append('level',currentLevel);
+      try {
+        const res=await fetch('/api/web-club/voice',{method:'POST',body:fd});
+        const data=await res.json();
+        const chatBox=document.getElementById('chat-box');
+        if(chatBox.lastChild)chatBox.removeChild(chatBox.lastChild);
+        appendMessage('You',data.user_text||'🎤',false);
+        appendMessage('AI',data.ai_text,true);
+        if(data.audio_url)new Audio(data.audio_url).play().catch(()=>{});
+      } catch(err){ appendMessage('AI','Could not process voice.',true); }
+    };
+    mediaRecorder.start();
+  } catch(err){
+    micBtn.querySelector('.material-symbols-outlined').style.color='';
+    alert('Ошибка микрофона. Нужен HTTPS и разрешения.');
+  }
+}
+function stopRecording(e) {
+  if(e)e.preventDefault();
+  document.getElementById('mic-btn').querySelector('.material-symbols-outlined').style.color='';
+  if(mediaRecorder&&mediaRecorder.state!=='inactive')mediaRecorder.stop();
+  if(streamRef){streamRef.getTracks().forEach(t=>t.stop());streamRef=null;}
+}
+
+// ─────────────────────────────────────────────
+// PROFILE SCREEN
+// ─────────────────────────────────────────────
+async function openProfile() {
+  showScreen('screen-profile','screen-main');
+  const container = document.getElementById('profile-content');
+  container.innerHTML = '<p class="text-outline text-center py-xl">Загрузка...</p>';
+  try {
+    const res = await fetch(`/api/profile/${userId}`);
+    const p = await res.json();
+    const xpPct = Math.min(100, Math.round((p.xp||0) % 100));
+    container.innerHTML = `
+      <div class="bg-gradient-to-br from-primary to-primary-container rounded-2xl p-lg text-white text-center mb-lg">
+        <div class="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-sm">
+          <span class="material-symbols-outlined filled text-4xl text-white">school</span>
+        </div>
+        <div class="font-headline font-extrabold text-2xl">${p.name||'Ученик'}</div>
+        <div class="text-white/70 text-sm">${p.username?'@'+p.username:''}</div>
+        <div class="flex justify-center gap-sm mt-sm">
+          ${p.is_premium?'<span class="px-sm py-xs bg-[#f59e0b] text-white text-xs font-label font-bold rounded-full">⭐ Premium</span>':''}
+          ${p.is_admin?'<span class="px-sm py-xs bg-error text-on-error text-xs font-label font-bold rounded-full">⚙ Admin</span>':''}
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-sm mb-md">
+        <div class="bg-surface-container-lowest border border-surface-variant rounded-2xl p-md text-center">
+          <div class="font-headline font-extrabold text-3xl text-secondary-container">${p.streak}</div>
+          <div class="font-label text-xs text-outline mt-xs">🔥 Дней подряд</div>
+        </div>
+        <div class="bg-surface-container-lowest border border-surface-variant rounded-2xl p-md text-center">
+          <div class="font-headline font-extrabold text-3xl text-[#f59e0b]">${p.xp}</div>
+          <div class="font-label text-xs text-outline mt-xs">⭐ Всего XP</div>
+        </div>
+        <div class="bg-surface-container-lowest border border-surface-variant rounded-2xl p-md text-center">
+          <div class="font-headline font-extrabold text-3xl text-primary-container">${p.lessons_done}</div>
+          <div class="font-label text-xs text-outline mt-xs">📖 Уроков</div>
+        </div>
+        <div class="bg-surface-container-lowest border border-surface-variant rounded-2xl p-md text-center">
+          <div class="font-headline font-extrabold text-3xl text-tertiary-container">${p.tasks_done}</div>
+          <div class="font-label text-xs text-outline mt-xs">🎯 Заданий</div>
+        </div>
+      </div>
+      <div class="bg-surface-container-lowest border border-surface-variant rounded-2xl p-md">
+        <div class="flex justify-between font-label text-xs text-on-surface-variant mb-sm">
+          <span class="font-bold">Уровень ${p.level}</span>
+          <span>${p.xp} XP</span>
+        </div>
+        <div class="h-2 w-full bg-surface-container-high rounded-full overflow-hidden">
+          <div class="h-full bg-primary-container rounded-full transition-all" style="width:${xpPct}%"></div>
+        </div>
+        <div class="font-label text-xs text-outline mt-xs text-right">+${100-xpPct} XP до следующего</div>
+      </div>`;
+  } catch(e) {
+    container.innerHTML = '<p class="text-error text-center py-lg">Ошибка загрузки</p>';
+  }
+}
+
+// ─────────────────────────────────────────────
+// PERSONAL DICTIONARY
+// ─────────────────────────────────────────────
+async function openPersonalDictionary() {
+  showScreen('screen-personal-dict','screen-main');
+  const listDiv = document.getElementById('personal-dict-list');
+  const countSpan = document.getElementById('dict-count');
+  listDiv.innerHTML = '<p class="text-outline text-center py-xl">Загрузка...</p>';
+  try {
+    const res = await fetch(`/api/dictionary/${userId}`);
+    const words = await res.json();
+    countSpan.textContent = words.length + ' слов';
+    if (!words.length) {
+      listDiv.innerHTML = `<div class="text-center py-xl bg-surface-container rounded-2xl border border-dashed border-outline-variant">
+        <span class="material-symbols-outlined text-outline text-4xl">book_2</span>
+        <p class="text-outline text-sm mt-sm">Нажмите на слово в уроке — оно появится здесь</p>
+      </div>`; return;
+    }
+    listDiv.innerHTML = words.map(w => `
+      <div class="bg-surface-container-lowest border border-surface-variant rounded-2xl p-md shadow-sm">
+        <div class="flex justify-between items-start">
+          <div>
+            <div class="font-headline font-bold text-on-surface text-lg">${w.word}</div>
+            ${w.transcription?`<div class="font-label text-xs text-outline">${w.transcription}</div>`:''}
+            <div class="text-primary font-body font-bold mt-xs">${w.translation}</div>
+          </div>
+          <span class="font-label text-xs px-sm py-xs rounded-full bg-surface-container text-on-surface-variant">${w.status}</span>
+        </div>
+        ${w.context_example?`<div class="mt-sm font-body text-sm text-on-surface-variant italic border-t border-surface-variant pt-sm">"${w.context_example}"</div>`:''}
+      </div>`).join('');
+  } catch(e) {
+    listDiv.innerHTML = '<p class="text-error text-center py-lg">Ошибка загрузки</p>';
+  }
+}
+
+// ─────────────────────────────────────────────
+// VISUAL DICTIONARY
+// ─────────────────────────────────────────────
+const TOPIC_ICONS = {
+  'Animals':'🐾','Food':'🍽️','Transport':'🚀','Home':'🏠',
+  'Nature':'🌿','Emotions':'😊','Sports':'⚽','Technology':'💻',
+};
+const LEVEL_COLORS = {
+  'A1':'from-green-400 to-teal-500','A2':'from-blue-400 to-indigo-500',
+  'B1':'from-orange-400 to-amber-500','B2':'from-pink-400 to-rose-500',
+  'C1':'from-red-400 to-purple-500','C2':'from-zinc-600 to-gray-800',
+};
+
+async function showDictionary() {
+  showScreen('screen-dictionary','screen-main');
+  await loadVocabTopics(null);
+}
+
+async function loadVocabTopics(level) {
+  document.querySelectorAll('.vocab-lvl-btn').forEach(btn => {
+    const isActive = level===null ? btn.dataset.lvl==='all' : btn.dataset.lvl===level;
+    btn.className = `vocab-lvl-btn px-md py-xs rounded-full text-xs font-label font-bold transition-all ${isActive?'bg-primary-container text-on-primary':'bg-surface-container text-on-surface-variant'}`;
+  });
+  const grid = document.getElementById('vocab-topics-list');
+  grid.innerHTML = '<p class="col-span-2 text-outline text-center py-lg">Загрузка...</p>';
+  try {
+    const url = level ? `/api/vocab/topics?level=${level}` : '/api/vocab/topics';
+    const res = await fetch(url);
+    const topics = await res.json();
+    if (!topics.length) { grid.innerHTML = '<p class="col-span-2 text-outline text-center py-lg">Темы не добавлены</p>'; return; }
+    const byTopic = {};
+    topics.forEach(t => {
+      if (!byTopic[t.topic]) byTopic[t.topic] = {count:0,levels:[]};
+      byTopic[t.topic].count += parseInt(t.card_count);
+      byTopic[t.topic].levels.push(t.level);
+    });
+    grid.innerHTML = Object.entries(byTopic).map(([topic, info]) => {
+      const icon = TOPIC_ICONS[topic] || '📖';
+      const lvl = info.levels[0] || 'A1';
+      const g = LEVEL_COLORS[lvl] || LEVEL_COLORS['A1'];
+      const badges = [...new Set(info.levels)].sort().map(l=>`<span class="text-[10px] bg-white/25 px-xs py-[2px] rounded-full font-label">${l}</span>`).join('');
+      return `<button onclick="openVocabTopic('${topic.replace(/'/g,"\\'")}','${level||''}')"
+        class="bg-gradient-to-br ${g} rounded-2xl p-md text-white text-left active:scale-95 transition-transform shadow-sm">
+        <span class="text-3xl block mb-xs">${icon}</span>
+        <span class="font-headline font-extrabold text-sm block">${topic}</span>
+        <span class="font-label text-xs text-white/70">${info.count} слов</span>
+        <div class="flex gap-xs mt-xs flex-wrap">${badges}</div>
+      </button>`;
+    }).join('');
+  } catch(e) { grid.innerHTML = '<p class="col-span-2 text-error text-center py-lg">Ошибка</p>'; }
+}
+
+async function openVocabTopic(topic, level) {
+  showScreen('screen-vocab-cards','screen-dictionary');
+  document.getElementById('vocab-topic-title').textContent = (TOPIC_ICONS[topic]||'📖') + ' ' + topic;
+  document.getElementById('vocab-topic-count').textContent = '...';
+  const grid = document.getElementById('vocab-cards-grid');
+  grid.innerHTML = '<p class="col-span-2 text-outline text-center py-lg">Загрузка...</p>';
+  try {
+    const url = level ? `/api/vocab/cards?topic=${encodeURIComponent(topic)}&level=${level}` : `/api/vocab/cards?topic=${encodeURIComponent(topic)}`;
+    const res = await fetch(url);
+    const cards = await res.json();
+    document.getElementById('vocab-topic-count').textContent = cards.length + ' слов';
+    if (!cards.length) { grid.innerHTML='<p class="col-span-2 text-outline text-center py-lg">Нет карточек</p>'; return; }
+    grid.innerHTML = cards.map(card => {
+      const g = LEVEL_COLORS[card.level] || LEVEL_COLORS['A1'];
+      let emojiChar='📖'; try{ emojiChar=String.fromCodePoint(parseInt(card.emoji_code,16)); }catch(e){}
+      return `<div class="bg-surface-container-lowest border border-surface-variant rounded-2xl overflow-hidden flex flex-col shadow-sm">
+        <div class="bg-gradient-to-br ${g} flex items-center justify-center" style="min-height:96px">
+          <span style="font-size:56px;line-height:1">${emojiChar}</span>
+        </div>
+        <div class="p-md flex flex-col gap-xs flex-1">
+          <span class="font-headline font-extrabold text-on-surface text-base leading-tight">${card.word}</span>
+          <span class="text-primary font-body font-bold text-sm">${card.translation}</span>
+          ${card.definition?`<span class="text-outline text-xs leading-snug">${card.definition}</span>`:''}
+          <span class="self-start mt-auto font-label text-[10px] font-bold bg-surface-container text-on-surface-variant px-xs py-[2px] rounded-full">${card.level}</span>
+        </div>
+      </div>`;
+    }).join('');
+  } catch(e) { grid.innerHTML='<p class="col-span-2 text-error text-center py-lg">Ошибка</p>'; }
+}
+
+// ─────────────────────────────────────────────
+// TOAST
+// ─────────────────────────────────────────────
+function showToast(msg, type='success') {
+  const toast = document.createElement('div');
+  const bg = type==='success' ? 'bg-tertiary-container text-on-tertiary' : 'bg-on-surface text-surface';
+  toast.className = `fixed bottom-24 left-1/2 -translate-x-1/2 ${bg} px-lg py-sm rounded-xl text-sm font-label font-bold shadow-lg z-50 whitespace-nowrap max-w-[90vw]`;
+  toast.textContent = msg;
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 2800);
+}
+
+// ─────────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────────
+// Initial AI greeting in club
+document.getElementById('chat-box').innerHTML = `
+  <div class="bg-primary-container text-on-primary p-md rounded-2xl rounded-tl-none max-w-[85%] text-sm shadow-sm">
+    Hello! Welcome to the Speaking Club. How are you doing today? Feel free to type or hold the mic to talk!
+  </div>`;
+
+window.onload = () => {
+  loadProfile();
+  showScreen('screen-main');
+};
+</script>
 </body>
 </html>
