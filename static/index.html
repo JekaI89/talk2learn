@@ -381,7 +381,78 @@ tailwind.config = {
       </div>
     </div>
 
-    <!-- ══════════ PRACTICE ══════════ -->
+    <!-- ══════════ SENTENCE BUILDER ══════════ -->
+    <div id="screen-sentence-builder" class="hidden flex flex-col" style="height:calc(100dvh - 52px)">
+      <!-- Исходное предложение -->
+      <div class="px-md pt-lg pb-sm flex-shrink-0">
+        <div class="flex items-center justify-between mb-md">
+          <p class="font-label text-xs text-outline uppercase tracking-wider">Переведите предложение</p>
+          <span id="sb-level-badge" class="font-label text-xs font-bold text-primary-container bg-surface-container px-sm py-xs rounded-full">A1</span>
+        </div>
+        <div class="bg-surface-container-lowest border border-surface-variant rounded-2xl p-lg flex items-start gap-md shadow-sm">
+          <div class="w-11 h-11 bg-primary-container rounded-xl flex items-center justify-center flex-shrink-0">
+            <span class="material-symbols-outlined filled text-on-primary">volume_up</span>
+          </div>
+          <div>
+            <p id="sb-source-text" class="font-headline font-bold text-on-surface text-lg leading-snug"></p>
+            <p class="font-label text-xs text-outline mt-xs uppercase tracking-wider">Russian</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Зона сборки -->
+      <div class="px-md flex-shrink-0">
+        <div id="sb-drop-zone"
+          class="min-h-[80px] flex flex-wrap gap-sm content-start p-md border-b-2 border-surface-container-high transition-colors duration-200 relative">
+          <div id="sb-empty-hint" class="absolute inset-0 flex items-center justify-center">
+            <p class="font-body text-outline text-sm opacity-60">Нажимайте слова, чтобы составить фразу</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Фидбек -->
+      <div id="sb-feedback" class="hidden mx-md mt-sm px-md py-sm rounded-xl font-label font-bold text-sm text-center"></div>
+
+      <!-- Банк слов -->
+      <div class="px-md mt-md flex-1">
+        <div id="sb-word-bank" class="flex flex-wrap justify-center gap-sm"></div>
+      </div>
+
+      <!-- Кнопка проверки (фиксированная снизу) -->
+      <div class="px-md py-md flex-shrink-0 border-t border-surface-variant bg-surface-container-lowest">
+        <button id="sb-check-btn" onclick="checkSentence()" disabled
+          class="w-full h-touch rounded-xl font-label font-bold uppercase tracking-wider text-sm transition-all active:scale-[0.98]
+                 bg-surface-container text-outline cursor-not-allowed">
+          Проверить
+        </button>
+      </div>
+    </div>
+
+    <!-- ══════════ ПРАКТИКА — ВЫБОР РЕЖИМА ══════════ -->
+    <div id="screen-practice-mode" class="hidden screen-body px-md pt-lg pb-32 space-y-md">
+      <h1 class="font-headline font-extrabold text-on-surface text-2xl">Практика · <span id="pm-level-badge">A1</span></h1>
+      <p class="font-body text-on-surface-variant text-sm">Выберите тип задания:</p>
+      <button onclick="startPracticeMode('multiple_choice')"
+        class="w-full p-md bg-surface-container-lowest border border-surface-variant rounded-2xl flex items-center gap-md active:scale-[0.99] transition-transform shadow-sm">
+        <div class="w-12 h-12 rounded-xl bg-primary-container flex items-center justify-center flex-shrink-0">
+          <span class="material-symbols-outlined filled text-on-primary">quiz</span>
+        </div>
+        <div class="text-left">
+          <div class="font-headline font-bold text-on-surface text-sm">Выбор ответа</div>
+          <div class="font-label text-xs text-outline">Выберите правильный вариант из трёх</div>
+        </div>
+      </button>
+      <button onclick="startPracticeMode('sentence_builder')"
+        class="w-full p-md bg-surface-container-lowest border border-surface-variant rounded-2xl flex items-center gap-md active:scale-[0.99] transition-transform shadow-sm">
+        <div class="w-12 h-12 rounded-xl bg-secondary-container flex items-center justify-center flex-shrink-0">
+          <span class="material-symbols-outlined filled text-on-secondary">sort</span>
+        </div>
+        <div class="text-left">
+          <div class="font-headline font-bold text-on-surface text-sm">Составить предложение</div>
+          <div class="font-label text-xs text-outline">Расставьте слова в правильном порядке</div>
+        </div>
+      </button>
+    </div>
     <div id="screen-practice-task" class="hidden screen-body px-md pt-lg pb-36 space-y-lg">
       <section class="bg-surface-container-lowest border border-surface-variant rounded-2xl p-lg shadow-sm">
         <p class="font-label text-xs text-outline uppercase tracking-wider mb-sm">Вопрос · <span id="practice-level-badge" class="text-primary">A1</span></p>
@@ -613,7 +684,9 @@ const SCREENS = [
   'screen-onboarding','screen-no-content',
   'screen-main','screen-levels','screen-personal-dict',
   'screen-lesson','screen-level-complete',
-  'screen-practice-task','screen-situations','screen-situation-chat',
+  'screen-practice-task','screen-practice-mode',
+  'screen-sentence-builder',
+  'screen-situations','screen-situation-chat',
   'screen-club','screen-profile','screen-dictionary','screen-vocab-cards'
 ];
 
@@ -719,8 +792,23 @@ function selectLevel(level) {
   currentLevel = level;
   document.getElementById('club-level-badge').textContent = level;
   document.getElementById('practice-level-badge').textContent = level;
-  if (currentCategory === 'practice') loadPracticeTask();
-  else openNextLesson();
+  document.getElementById('sb-level-badge').textContent = level;
+  document.getElementById('pm-level-badge').textContent = level;
+  if (currentCategory === 'practice') {
+    showScreen('screen-practice-mode', 'screen-levels');
+  } else {
+    openNextLesson();
+  }
+}
+
+let currentPracticeMode = 'multiple_choice';
+function startPracticeMode(mode) {
+  currentPracticeMode = mode;
+  if (mode === 'sentence_builder') {
+    loadSentenceBuilder();
+  } else {
+    loadPracticeTask();
+  }
 }
 
 // ─────────────────────────────────────────────
@@ -1462,6 +1550,150 @@ async function toggleWordStatus(word, currentStatus) {
     await openPersonalDictionary(); // перерисовываем список
   } catch(e) {
     showToast('Ошибка обновления', 'neutral');
+  }
+}
+
+// ─────────────────────────────────────────────
+// SENTENCE BUILDER
+// ─────────────────────────────────────────────
+let sbCorrectSentence = '';
+let sbQuestionId = null;
+let sbSelectedWords = [];  // порядок слов в зоне сборки
+
+async function loadSentenceBuilder() {
+  showScreen('screen-sentence-builder', 'screen-practice-mode');
+  document.getElementById('sb-feedback').classList.add('hidden');
+  document.getElementById('sb-source-text').textContent = '⏳ Загрузка...';
+  document.getElementById('sb-word-bank').innerHTML = '';
+  document.getElementById('sb-drop-zone').innerHTML =
+    '<div id="sb-empty-hint" class="absolute inset-0 flex items-center justify-center"><p class="font-body text-outline text-sm opacity-60">Нажимайте слова, чтобы составить фразу</p></div>';
+  sbSelectedWords = [];
+  updateSbButton();
+
+  try {
+    const res = await fetch(`/api/random_question?user_id=${userId}&level=${currentLevel}&type=sentence_builder`);
+    const q = await res.json();
+
+    if (q.error === 'no_more_questions') {
+      document.getElementById('sb-source-text').textContent = '🎉 Все предложения уровня пройдены!';
+      document.getElementById('sb-word-bank').innerHTML = `
+        <button onclick="showScreen('screen-practice-mode')"
+          class="mt-lg px-lg py-md bg-primary-container text-on-primary font-label font-bold rounded-xl active:scale-95 transition-transform">
+          ← К выбору режима
+        </button>`;
+      return;
+    }
+
+    sbCorrectSentence = q.correct_sentence;
+    sbQuestionId = q.question_id;
+    document.getElementById('sb-source-text').textContent = q.question;
+    renderSbWordBank(q.word_bank);
+  } catch(e) {
+    document.getElementById('sb-source-text').textContent = 'Ошибка загрузки задания';
+  }
+}
+
+function renderSbWordBank(words) {
+  const bank = document.getElementById('sb-word-bank');
+  bank.innerHTML = words.map((word, i) =>
+    `<button
+      class="sb-chip px-md py-sm bg-surface-container-lowest border border-surface-variant rounded-xl
+             font-body text-on-surface text-base chip-shadow active:scale-95 transition-all"
+      data-word="${word.replace(/"/g,'&quot;')}"
+      data-idx="${i}"
+      onclick="sbMoveToZone(this)">
+      ${word}
+    </button>`
+  ).join('');
+}
+
+function sbMoveToZone(btn) {
+  const word = btn.dataset.word;
+  const idx = btn.dataset.idx;
+
+  // Скрываем из банка
+  btn.classList.add('opacity-0', 'pointer-events-none');
+  setTimeout(() => btn.classList.add('hidden'), 100);
+
+  // Прячем hint
+  const hint = document.getElementById('sb-empty-hint');
+  if (hint) hint.remove();
+
+  // Создаём чип в зоне
+  sbSelectedWords.push({ word, bankIdx: idx });
+  const zone = document.getElementById('sb-drop-zone');
+  const chip = document.createElement('button');
+  chip.className = 'sb-zone-chip px-md py-sm bg-surface-container-lowest border-2 border-primary-container rounded-xl font-body text-primary text-base active:scale-95 transition-all';
+  chip.textContent = word;
+  chip.dataset.bankIdx = idx;
+  chip.onclick = () => sbReturnToBank(chip, idx);
+  zone.appendChild(chip);
+
+  updateSbButton();
+}
+
+function sbReturnToBank(chip, bankIdx) {
+  // Убираем из зоны
+  chip.remove();
+  sbSelectedWords = sbSelectedWords.filter(w => w.bankIdx !== bankIdx);
+
+  // Возвращаем в банк
+  const bankBtn = document.querySelector(`#sb-word-bank button[data-idx="${bankIdx}"]`);
+  if (bankBtn) {
+    bankBtn.classList.remove('hidden', 'opacity-0', 'pointer-events-none');
+  }
+
+  // Возвращаем hint если зона пустая
+  const zone = document.getElementById('sb-drop-zone');
+  if (sbSelectedWords.length === 0) {
+    zone.innerHTML =
+      '<div id="sb-empty-hint" class="absolute inset-0 flex items-center justify-center"><p class="font-body text-outline text-sm opacity-60">Нажимайте слова, чтобы составить фразу</p></div>';
+  }
+
+  updateSbButton();
+}
+
+function updateSbButton() {
+  const btn = document.getElementById('sb-check-btn');
+  const hasWords = sbSelectedWords.length > 0;
+  if (hasWords) {
+    btn.disabled = false;
+    btn.className = 'w-full h-touch rounded-xl font-label font-bold uppercase tracking-wider text-sm transition-all active:scale-[0.98] bg-primary-container text-on-primary shadow-md';
+  } else {
+    btn.disabled = true;
+    btn.className = 'w-full h-touch rounded-xl font-label font-bold uppercase tracking-wider text-sm transition-all bg-surface-container text-outline cursor-not-allowed';
+  }
+}
+
+async function checkSentence() {
+  const userSentence = sbSelectedWords.map(w => w.word).join(' ');
+  const correct = sbCorrectSentence.trim();
+  const feedback = document.getElementById('sb-feedback');
+  feedback.classList.remove('hidden');
+
+  // Нормализуем для сравнения (без регистра, без лишних пробелов)
+  const normalize = s => s.toLowerCase().replace(/[.!?,]/g, '').trim().replace(/\s+/g, ' ');
+  const isCorrect = normalize(userSentence) === normalize(correct);
+
+  // Блокируем кнопки в зоне и банке
+  document.querySelectorAll('.sb-zone-chip, .sb-chip:not(.hidden)').forEach(b => b.disabled = true);
+  document.getElementById('sb-check-btn').disabled = true;
+
+  if (isCorrect) {
+    feedback.className = 'mx-md mt-sm px-md py-sm rounded-xl font-label font-bold text-sm text-center bg-[#f0fdf4] text-[#006329] border border-[#86efac]';
+    feedback.textContent = '✅ Правильно! Отлично!';
+    try {
+      await fetch('/api/progress/complete', {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ user_id: parseInt(userId), content_type: 'practice', content_id: sbQuestionId })
+      });
+      await loadProfile();
+    } catch(e) {}
+    setTimeout(loadSentenceBuilder, 2000);
+  } else {
+    feedback.className = 'mx-md mt-sm px-md py-sm rounded-xl font-label font-bold text-sm text-center bg-[#fff1f2] text-[#ba1a1a] border border-[#fca5a5]';
+    feedback.textContent = `❌ Не совсем. Правильно: «${correct}»`;
+    setTimeout(loadSentenceBuilder, 3000);
   }
 }
 
