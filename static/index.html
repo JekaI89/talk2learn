@@ -638,8 +638,52 @@ tailwind.config = {
 
     <!-- ══════════ PROFILE ══════════ -->
     <div id="screen-profile" class="hidden screen-body px-md pt-lg pb-32">
-      <h1 class="font-headline font-extrabold text-on-surface text-2xl mb-lg">Мой профиль</h1>
+      <div class="flex items-center justify-between mb-lg">
+        <h1 class="font-headline font-extrabold text-on-surface text-2xl">Мой профиль</h1>
+        <button onclick="showLangSettings()"
+          class="flex items-center gap-xs px-md py-sm bg-surface-container rounded-xl font-label text-xs font-bold text-on-surface-variant active:scale-95 transition-transform">
+          <span id="profile-lang-flag" class="text-base">🇬🇧</span>
+          <span class="material-symbols-outlined text-sm">language</span>
+        </button>
+      </div>
       <div id="profile-content"><p class="text-outline text-center py-xl">Загрузка...</p></div>
+    </div>
+
+    <!-- ══════════ НАСТРОЙКИ ЯЗЫКА ══════════ -->
+    <div id="screen-lang-settings" class="hidden screen-body px-md pt-lg pb-32 space-y-lg">
+      <h1 class="font-headline font-extrabold text-on-surface text-2xl">🌍 Языки</h1>
+
+      <div>
+        <p class="font-label text-xs text-outline uppercase tracking-wider mb-sm">Изучаю язык</p>
+        <div class="grid grid-cols-2 gap-sm" id="ls-target-grid">
+          <button onclick="setLang('target','en')" data-lang="en" class="ls-target-btn p-md bg-surface-container-lowest border-2 border-surface-variant rounded-2xl text-center active:scale-95 transition-all"><div class="text-2xl mb-xs">🇬🇧</div><div class="font-headline font-bold text-sm">Английский</div></button>
+          <button onclick="setLang('target','de')" data-lang="de" class="ls-target-btn p-md bg-surface-container-lowest border-2 border-surface-variant rounded-2xl text-center active:scale-95 transition-all"><div class="text-2xl mb-xs">🇩🇪</div><div class="font-headline font-bold text-sm">Немецкий</div></button>
+          <button onclick="setLang('target','fr')" data-lang="fr" class="ls-target-btn p-md bg-surface-container-lowest border-2 border-surface-variant rounded-2xl text-center active:scale-95 transition-all"><div class="text-2xl mb-xs">🇫🇷</div><div class="font-headline font-bold text-sm">Французский</div></button>
+          <button onclick="setLang('target','es')" data-lang="es" class="ls-target-btn p-md bg-surface-container-lowest border-2 border-surface-variant rounded-2xl text-center active:scale-95 transition-all"><div class="text-2xl mb-xs">🇪🇸</div><div class="font-headline font-bold text-sm">Испанский</div></button>
+          <button onclick="setLang('target','it')" data-lang="it" class="ls-target-btn p-md bg-surface-container-lowest border-2 border-surface-variant rounded-2xl text-center active:scale-95 transition-all"><div class="text-2xl mb-xs">🇮🇹</div><div class="font-headline font-bold text-sm">Итальянский</div></button>
+          <button onclick="setLang('target','zh')" data-lang="zh" class="ls-target-btn p-md bg-surface-container-lowest border-2 border-surface-variant rounded-2xl text-center active:scale-95 transition-all"><div class="text-2xl mb-xs">🇨🇳</div><div class="font-headline font-bold text-sm">Китайский</div></button>
+          <button onclick="setLang('target','ja')" data-lang="ja" class="ls-target-btn p-md bg-surface-container-lowest border-2 border-surface-variant rounded-2xl text-center active:scale-95 transition-all"><div class="text-2xl mb-xs">🇯🇵</div><div class="font-headline font-bold text-sm">Японский</div></button>
+          <button onclick="setLang('target','pt')" data-lang="pt" class="ls-target-btn p-md bg-surface-container-lowest border-2 border-surface-variant rounded-2xl text-center active:scale-95 transition-all"><div class="text-2xl mb-xs">🇵🇹</div><div class="font-headline font-bold text-sm">Португальский</div></button>
+        </div>
+      </div>
+
+      <div>
+        <p class="font-label text-xs text-outline uppercase tracking-wider mb-sm">Мой язык (для переводов)</p>
+        <div class="grid grid-cols-2 gap-sm" id="ls-native-grid">
+          <button onclick="setLang('native','ru')" data-lang="ru" class="ls-native-btn p-md bg-surface-container-lowest border-2 border-surface-variant rounded-2xl text-center active:scale-95 transition-all"><div class="text-2xl mb-xs">🇷🇺</div><div class="font-headline font-bold text-sm">Русский</div></button>
+          <button onclick="setLang('native','en')" data-lang="en" class="ls-native-btn p-md bg-surface-container-lowest border-2 border-surface-variant rounded-2xl text-center active:scale-95 transition-all"><div class="text-2xl mb-xs">🇬🇧</div><div class="font-headline font-bold text-sm">Английский</div></button>
+          <button onclick="setLang('native','de')" data-lang="de" class="ls-native-btn p-md bg-surface-container-lowest border-2 border-surface-variant rounded-2xl text-center active:scale-95 transition-all"><div class="text-2xl mb-xs">🇩🇪</div><div class="font-headline font-bold text-sm">Немецкий</div></button>
+          <button onclick="setLang('native','fr')" data-lang="fr" class="ls-native-btn p-md bg-surface-container-lowest border-2 border-surface-variant rounded-2xl text-center active:scale-95 transition-all"><div class="text-2xl mb-xs">🇫🇷</div><div class="font-headline font-bold text-sm">Французский</div></button>
+          <button onclick="setLang('native','es')" data-lang="es" class="ls-native-btn p-md bg-surface-container-lowest border-2 border-surface-variant rounded-2xl text-center active:scale-95 transition-all"><div class="text-2xl mb-xs">🇪🇸</div><div class="font-headline font-bold text-sm">Испанский</div></button>
+          <button onclick="setLang('native','zh')" data-lang="zh" class="ls-native-btn p-md bg-surface-container-lowest border-2 border-surface-variant rounded-2xl text-center active:scale-95 transition-all"><div class="text-2xl mb-xs">🇨🇳</div><div class="font-headline font-bold text-sm">Китайский</div></button>
+        </div>
+      </div>
+
+      <button id="ls-save-btn" onclick="saveLangSettings()"
+        class="w-full h-touch rounded-xl bg-primary-container text-on-primary font-label font-bold uppercase tracking-wider text-sm active:scale-[0.98] transition-transform shadow-md">
+        Сохранить
+      </button>
+      <div id="ls-status" class="text-center font-label text-sm text-outline min-h-[20px]"></div>
     </div>
 
     <!-- ══════════ DICTIONARY TOPICS ══════════ -->
@@ -859,7 +903,8 @@ const SCREENS = [
   'screen-practice-task','screen-practice-mode',
   'screen-sentence-builder',
   'screen-situations','screen-situation-chat',
-  'screen-club','screen-profile','screen-dictionary','screen-vocab-cards'
+  'screen-club','screen-profile','screen-lang-settings',
+  'screen-dictionary','screen-vocab-cards'
 ];
 
 // Header back-button stack
@@ -2173,13 +2218,91 @@ function showToast(msg, type='success') {
 // ─────────────────────────────────────────────
 function updateLangUI() {
   const tFlag = LANG_FLAGS[userTargetLang] || '🌍';
-  const nFlag = LANG_FLAGS[userNativeLang] || '🏳️';
-  const tName = LANG_NAMES_RU[userTargetLang] || userTargetLang;
-  // Обновляем бейдж уровня клуба
+  // Обновляем флаг в профиле
+  const profileFlag = document.getElementById('profile-lang-flag');
+  if (profileFlag) profileFlag.textContent = tFlag;
   const clubBadge = document.getElementById('club-level-badge');
   if (clubBadge) clubBadge.textContent = currentLevel;
-  // Можно добавить язык в хедер - пока просто консоль
-  console.log(`🌍 Языки: ${nFlag}→${tFlag} (${tName}), уровень ${currentLevel}`);
+}
+
+// ─────────────────────────────────────────────
+// НАСТРОЙКИ ЯЗЫКА
+// ─────────────────────────────────────────────
+let lsTargetLang = '';
+let lsNativeLang = '';
+
+function showLangSettings() {
+  lsTargetLang = userTargetLang;
+  lsNativeLang = userNativeLang;
+  showScreen('screen-lang-settings', 'screen-profile');
+  document.getElementById('ls-status').textContent = '';
+
+  // Подсвечиваем текущие языки
+  document.querySelectorAll('.ls-target-btn').forEach(b => {
+    const active = b.dataset.lang === lsTargetLang;
+    b.classList.toggle('border-primary-container', active);
+    b.classList.toggle('bg-surface-container-low', active);
+    b.classList.toggle('border-surface-variant', !active);
+  });
+  document.querySelectorAll('.ls-native-btn').forEach(b => {
+    const active = b.dataset.lang === lsNativeLang;
+    b.classList.toggle('border-primary-container', active);
+    b.classList.toggle('bg-surface-container-low', active);
+    b.classList.toggle('border-surface-variant', !active);
+  });
+}
+
+function setLang(type, lang) {
+  if (type === 'target') {
+    lsTargetLang = lang;
+    document.querySelectorAll('.ls-target-btn').forEach(b => {
+      const active = b.dataset.lang === lang;
+      b.classList.toggle('border-primary-container', active);
+      b.classList.toggle('bg-surface-container-low', active);
+      b.classList.toggle('border-surface-variant', !active);
+    });
+    // Скрываем родной = целевому
+    document.querySelectorAll('.ls-native-btn').forEach(b => {
+      b.classList.toggle('opacity-30 pointer-events-none', b.dataset.lang === lang);
+    });
+  } else {
+    lsNativeLang = lang;
+    document.querySelectorAll('.ls-native-btn').forEach(b => {
+      const active = b.dataset.lang === lang;
+      b.classList.toggle('border-primary-container', active);
+      b.classList.toggle('bg-surface-container-low', active);
+      b.classList.toggle('border-surface-variant', !active);
+    });
+  }
+}
+
+async function saveLangSettings() {
+  if (!lsTargetLang || !lsNativeLang) {
+    document.getElementById('ls-status').textContent = 'Выберите оба языка';
+    return;
+  }
+  if (lsTargetLang === lsNativeLang) {
+    document.getElementById('ls-status').textContent = '⚠️ Язык изучения и родной не могут совпадать';
+    return;
+  }
+  const btn = document.getElementById('ls-save-btn');
+  btn.disabled = true; btn.textContent = 'Сохранение...';
+  try {
+    await fetch('/api/user/languages', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ user_id: parseInt(userId), native_language: lsNativeLang, target_language: lsTargetLang })
+    });
+    userNativeLang = lsNativeLang;
+    userTargetLang = lsTargetLang;
+    updateLangUI();
+    document.getElementById('ls-status').textContent = '✅ Сохранено!';
+    btn.textContent = 'Сохранить';
+    btn.disabled = false;
+    setTimeout(() => showScreen('screen-profile'), 1200);
+  } catch(e) {
+    document.getElementById('ls-status').textContent = 'Ошибка сохранения';
+    btn.disabled = false; btn.textContent = 'Сохранить';
+  }
 }
 
 // ─────────────────────────────────────────────
