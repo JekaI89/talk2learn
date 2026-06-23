@@ -1350,23 +1350,35 @@ async function openProfile() {
       const catRes = await fetch(`/api/stats/categories/${userId}`);
       const cats = await catRes.json();
       const catLabels = {
-        lesson:'📖 Уроки', grammar:'✍️ Грамматика',
-        vocabulary:'🧠 Словарный', practice:'🎯 Практика', words:'💾 Личный словарь',
+        lesson:      { icon:'📖', name:'Уроки' },
+        grammar:     { icon:'✍️', name:'Грамматика' },
+        vocabulary:  { icon:'💬', name:'Лексика (уроки)' },
+        practice:    { icon:'🎯', name:'Практика' },
+        vocab_cards: { icon:'🃏', name:'Словарь (карточки)' },
+        words:       { icon:'📒', name:'Личный блокнот' },
       };
-      catHtml = Object.entries(catLabels).map(([key, label]) => {
+      catHtml = Object.entries(catLabels).map(([key, {icon, name}]) => {
         const s = cats[key] || {completed:0, total:0};
         const pct = s.total > 0 ? Math.min(100, Math.round(s.completed / s.total * 100)) : 0;
-        let rightLabel = s.total > 0 ? s.completed + ' / ' + s.total : String(s.completed);
+
+        let rightLabel, barColor = 'bg-primary-container';
         if (key === 'words') {
-          rightLabel = s.total === 0 ? 'нет слов' : 'знаю ' + s.completed + ' из ' + s.total;
+          if (s.total === 0) rightLabel = 'пусто';
+          else { rightLabel = 'знаю ' + s.completed + ' из ' + s.total; barColor = 'bg-tertiary-container'; }
+        } else {
+          if (s.total === 0) rightLabel = 'нет контента';
+          else rightLabel = s.completed + ' / ' + s.total;
         }
-        return `<div class="mb-sm">
-          <div class="flex justify-between font-label text-xs text-on-surface-variant mb-xs">
-            <span>${label}</span>
-            <span class="text-outline">${rightLabel}</span>
+
+        return `<div class="mb-md">
+          <div class="flex justify-between items-center mb-xs">
+            <span class="font-label text-xs text-on-surface-variant flex items-center gap-xs">
+              <span>${icon}</span> ${name}
+            </span>
+            <span class="font-label text-xs ${s.total===0?'text-outline italic':pct===100?'text-tertiary-container font-bold':'text-outline'}">${rightLabel}</span>
           </div>
           <div class="h-1.5 w-full bg-surface-container-high rounded-full overflow-hidden">
-            <div class="h-full bg-primary-container rounded-full" style="width:${pct}%"></div>
+            <div class="h-full ${barColor} rounded-full transition-all" style="width:${pct}%"></div>
           </div>
         </div>`;
       }).join('');
@@ -1633,9 +1645,21 @@ function rateCard(rating) {
 
   if (rating === 'known') {
     vfKnownCards.push(vfCurrentCard);
+    // Сохраняем прогресс — карточка изучена
+    if (userId > 0 && vfCurrentCard) {
+      fetch('/api/progress/complete', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({
+          user_id: parseInt(userId),
+          content_type: 'vocab_card',
+          content_id: vfCurrentCard.id
+        })
+      }).catch(() => {});
+    }
   } else {
     vfLearningCards.push(vfCurrentCard);
-    // Незнакомое слово → автоматически в личный блокнот для изучения
+    // Незнакомое слово → в личный блокнот для изучения
     if (userId > 0 && vfCurrentCard) {
       fetch('/api/dictionary/quick_add', {
         method: 'POST',
