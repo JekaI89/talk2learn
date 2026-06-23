@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Talk2Learn | Curriculum</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;700;800&family=Be+Vietnam+Pro:wght@400;500;700&family=Hanken+Grotesk:wght@500;700&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script id="tw-config">
+tailwind.config = {
+  darkMode: "class",
+  theme: { extend: {
+    colors: {
+      "surface":"#f7f9fb","surface-dim":"#d8dadc","surface-bright":"#f7f9fb",
+      "surface-container-lowest":"#ffffff","surface-container-low":"#f2f4f6",
+      "surface-container":"#eceef0","surface-container-high":"#e6e8ea",
+      "surface-container-highest":"#e0e3e5","on-surface":"#191c1e",
+      "on-surface-variant":"#434655","inverse-surface":"#2d3133",
+      "inverse-on-surface":"#eff1f3","outline":"#737686","outline-variant":"#c3c6d7",
+      "surface-tint":"#0053db","surface-variant":"#e0e3e5",
+      "primary":"#004ac6","on-primary":"#ffffff","primary-container":"#2563eb",
+      "on-primary-container":"#eeefff","inverse-primary":"#b4c5ff",
+      "primary-fixed":"#dbe1ff","primary-fixed-dim":"#b4c5ff",
+      "on-primary-fixed":"#00174b","on-primary-fixed-variant":"#003ea8",
+      "secondary":"#9d4300","on-secondary":"#ffffff","secondary-container":"#fd761a",
+      "on-secondary-container":"#5c2400","secondary-fixed":"#ffdbca",
+      "secondary-fixed-dim":"#ffb690","on-secondary-fixed":"#341100",
+      "on-secondary-fixed-variant":"#783200",
+      "tertiary":"#006329","on-tertiary":"#ffffff","tertiary-container":"#007f36",
+      "on-tertiary-container":"#c7ffca","tertiary-fixed":"#7ffc97",
+      "tertiary-fixed-dim":"#62df7d","on-tertiary-fixed":"#002109",
+      "on-tertiary-fixed-variant":"#005320",
+      "error":"#ba1a1a","on-error":"#ffffff","error-container":"#ffdad6",
+      "on-error-container":"#93000a","background":"#f7f9fb","on-background":"#191c1e"
+    },
+    borderRadius: { "DEFAULT":"0.5rem","sm":"0.25rem","md":"0.75rem","lg":"1rem","xl":"1.5rem","full":"9999px" },
+    spacing: { "xs":"4px","sm":"8px","md":"16px","lg":"24px","xl":"32px","touch-target-min":"52px","gutter":"16px" },
+    fontFamily: {
+      "display-hero":["Plus Jakarta Sans"],"headline-lg":["Plus Jakarta Sans"],
+      "headline-md":["Plus Jakarta Sans"],"body-lg":["Be Vietnam Pro"],
+      "body-base":["Be Vietnam Pro"],"body-loose":["Be Vietnam Pro"],
+      "label-caps":["Hanken Grotesk"],"caption":["Hanken Grotesk"]
+    },
+    fontSize: {
+      "display-hero":["48px",{lineHeight:"56px",letterSpacing:"-0.02em",fontWeight:"800"}],
+      "headline-lg":["32px",{lineHeight:"40px",letterSpacing:"-0.01em",fontWeight:"800"}],
+      "headline-md":["24px",{lineHeight:"32px",fontWeight:"700"}],
+      "body-lg":["18px",{lineHeight:"28px",fontWeight:"400"}],
+      "body-base":["16px",{lineHeight:"24px",fontWeight:"400"}],
+      "body-loose":["16px",{lineHeight:"30px",fontWeight:"400"}],
+      "label-caps":["12px",{lineHeight:"16px",letterSpacing:"0.05em",fontWeight:"700"}],
+      "caption":["10px",{lineHeight:"14px",fontWeight:"500"}]
+    }
+  }}
+}
+</script>
+<style>
+  .material-symbols-outlined { font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24; }
+  .icon-fill { font-variation-settings:'FILL' 1,'wght' 400,'GRAD' 0,'opsz' 24; }
+  ::-webkit-scrollbar { width:6px; }
+  ::-webkit-scrollbar-track { background:#f7f9fb; }
+  ::-webkit-scrollbar-thumb { background:#c3c6d7; border-radius:6px; }
+  ::-webkit-scrollbar-thumb:hover { background:#737686; }
+  .card-press { transition: transform 150ms cubic-bezier(.4,0,.2,1), box-shadow 150ms; }
+  .card-press:active { transform: scale(0.985); }
+</style>
+</head>
+<body class="bg-surface text-on-surface font-body-base antialiased">
+
+<!-- Sidebar -->
+<aside class="h-screen w-64 fixed left-0 top-0 bg-surface-container-low flex flex-col p-md gap-md z-40 border-r border-outline-variant/40">
+  <div class="mb-lg px-sm pt-sm">
+    <h1 class="font-headline-md text-headline-md text-primary">Talk2Learn</h1>
+    <p class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-widest mt-xs">Personal Tutor</p>
+  </div>
+  <nav class="flex-grow flex flex-col gap-xs">
+    <a href="index.html" class="flex items-center gap-md px-md py-sm rounded-xl bg-primary-container text-on-primary-container shadow-sm transition-all">
+      <span class="material-symbols-outlined icon-fill">school</span>
+      <span class="font-label-caps text-label-caps font-bold">Lessons</span>
+    </a>
+    <a href="dictionary.html" class="flex items-center gap-md px-md py-sm rounded-xl text-on-surface-variant hover:bg-surface-variant transition-all active:scale-95 duration-150">
+      <span class="material-symbols-outlined">book</span>
+      <span class="font-label-caps text-label-caps">Dictionary</span>
+    </a>
+    <a href="profile.html" class="flex items-center gap-md px-md py-sm rounded-xl text-on-surface-variant hover:bg-surface-variant transition-all active:scale-95 duration-150">
+      <span class="material-symbols-outlined">person</span>
+      <span class="font-label-caps text-label-caps">Profile</span>
+    </a>
+  </nav>
+  <button class="mb-md w-full h-touch-target-min bg-primary text-on-primary rounded-xl font-bold flex items-center justify-center gap-sm hover:opacity-90 active:scale-95 transition-all">
+    <span class="material-symbols-outlined icon-fill">play_arrow</span>
+    Start Practice
+  </button>
+  <footer class="flex flex-col gap-xs pt-md border-t border-outline-variant/40">
+    <a href="#" class="flex items-center gap-md px-md py-xs rounded-lg text-on-surface-variant hover:bg-surface-variant transition-all">
+      <span class="material-symbols-outlined text-[20px]">settings</span>
+      <span class="font-caption text-caption">Settings</span>
+    </a>
+    <a href="#" class="flex items-center gap-md px-md py-xs rounded-lg text-on-surface-variant hover:bg-surface-variant transition-all">
+      <span class="material-symbols-outlined text-[20px]">help</span>
+      <span class="font-caption text-caption">Help</span>
+    </a>
+  </footer>
+</aside>
+
+<!-- Main -->
+<main class="ml-64 min-h-screen p-xl">
+  <!-- Header -->
+  <header class="flex justify-between items-end mb-xl">
+    <div>
+      <h2 class="font-headline-lg text-headline-lg text-on-surface">Curriculum</h2>
+      <p class="font-body-lg text-body-lg text-on-surface-variant mt-xs">Continue your daily streak to master new skills.</p>
+    </div>
+    <div class="flex items-center gap-md">
+      <div class="flex items-center gap-xs px-md py-sm bg-surface-container-high rounded-full">
+        <span class="material-symbols-outlined text-secondary icon-fill">local_fire_department</span>
+        <span class="font-bold text-on-surface">12 Day Streak</span>
+      </div>
+      <button class="p-sm rounded-full bg-surface-container-high hover:bg-surface-variant transition-colors">
+        <span class="material-symbols-outlined">notifications</span>
+      </button>
+      <div class="w-9 h-9 rounded-full bg-primary-container flex items-center justify-center">
+        <span class="material-symbols-outlined text-on-primary-container text-[20px]">person</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Bento Grid -->
+  <section class="grid grid-cols-4 gap-lg mb-xl">
+
+    <!-- Speaking — wide -->
+    <div data-card class="card-press col-span-2 group relative overflow-hidden bg-white rounded-[2rem] border border-outline-variant/30 shadow-[0px_4px_20px_rgba(0,0,0,0.05)] p-xl cursor-pointer hover:shadow-lg transition-all">
+      <div class="flex justify-between items-start">
+        <div class="space-y-sm">
+          <span class="px-sm py-xs bg-primary-fixed text-on-primary-fixed-variant font-label-caps text-caption rounded-full">INTERMEDIATE B1</span>
+          <h3 class="font-headline-md text-headline-md text-on-surface">Speaking</h3>
+          <p class="font-body-base text-body-base text-on-surface-variant max-w-[200px]">Perfect your pronunciation and conversational flow.</p>
+        </div>
+        <div class="w-16 h-16 rounded-2xl bg-primary-container flex items-center justify-center text-on-primary-container shadow-sm group-hover:rotate-12 transition-transform duration-300">
+          <span class="material-symbols-outlined text-[32px]">record_voice_over</span>
+        </div>
+      </div>
+      <div class="mt-xl">
+        <div class="flex justify-between items-end mb-xs">
+          <span class="font-label-caps text-caption text-primary">Progress: 65%</span>
+          <span class="font-label-caps text-caption text-on-surface-variant">12/20 Lessons</span>
+        </div>
+        <div class="w-full h-3 bg-surface-container-high rounded-full overflow-hidden">
+          <div class="h-full bg-primary rounded-full transition-all duration-1000" style="width:65%"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Vocabulary -->
+    <div data-card class="card-press group relative overflow-hidden bg-white rounded-[2rem] border border-outline-variant/30 shadow-[0px_4px_20px_rgba(0,0,0,0.05)] p-xl cursor-pointer hover:shadow-lg transition-all">
+      <div class="flex flex-col h-full">
+        <div class="flex justify-between items-start mb-lg">
+          <div class="w-12 h-12 rounded-xl bg-secondary-container flex items-center justify-center text-on-secondary-container group-hover:-translate-y-1 transition-transform">
+            <span class="material-symbols-outlined text-[24px]">translate</span>
+          </div>
+          <span class="px-sm py-xs bg-secondary-fixed text-on-secondary-fixed-variant font-label-caps text-caption rounded-full">DAILY MIX</span>
+        </div>
+        <h3 class="font-headline-md text-headline-md text-on-surface mb-xs">Vocabulary</h3>
+        <p class="font-caption text-caption text-on-surface-variant mb-auto">Expand your lexicon with 500+ daily words.</p>
+        <div class="mt-md">
+          <div class="w-full h-2 bg-surface-container-high rounded-full overflow-hidden">
+            <div class="h-full bg-secondary-container rounded-full" style="width:40%"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Grammar -->
+    <div data-card class="card-press group relative overflow-hidden bg-white rounded-[2rem] border border-outline-variant/30 shadow-[0px_4px_20px_rgba(0,0,0,0.05)] p-xl cursor-pointer hover:shadow-lg transition-all">
+      <div class="flex flex-col h-full">
+        <div class="flex justify-between items-start mb-lg">
+          <div class="w-12 h-12 rounded-xl bg-tertiary-container flex items-center justify-center text-on-tertiary-container group-hover:-translate-y-1 transition-transform">
+            <span class="material-symbols-outlined text-[24px]">extension</span>
+          </div>
+          <span class="px-sm py-xs bg-tertiary-fixed text-on-tertiary-fixed-variant font-label-caps text-caption rounded-full">CORE</span>
+        </div>
+        <h3 class="font-headline-md text-headline-md text-on-surface mb-xs">Grammar</h3>
+        <p class="font-caption text-caption text-on-surface-variant mb-auto">Master the structural foundation of the language.</p>
+        <div class="mt-md">
+          <div class="w-full h-2 bg-surface-container-high rounded-full overflow-hidden">
+            <div class="h-full bg-tertiary-container rounded-full" style="width:85%"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Listening — full width -->
+    <div data-card class="card-press col-span-4 bg-primary-container/10 rounded-[2rem] border-2 border-dashed border-primary/20 p-lg flex items-center gap-xl relative overflow-hidden cursor-pointer hover:bg-primary-container/15 transition-all">
+      <div class="w-24 h-24 shrink-0 rounded-full bg-white flex items-center justify-center shadow-md">
+        <span class="material-symbols-outlined text-primary text-[48px]">headphones</span>
+      </div>
+      <div class="flex-grow">
+        <div class="flex justify-between items-center mb-sm">
+          <h3 class="font-headline-md text-headline-md text-on-surface">Listening Immersion</h3>
+          <span class="font-label-caps text-label-caps text-primary bg-white px-md py-sm rounded-full shadow-sm">NEW EPISODES AVAILABLE</span>
+        </div>
+        <p class="font-body-base text-body-base text-on-surface-variant mb-md max-w-2xl">Dive into real-world audio scenarios. From casual coffee shop chats to professional boardroom presentations.</p>
+        <div class="flex items-center gap-lg">
+          <div class="flex-grow h-2 bg-surface-container-high rounded-full">
+            <div class="h-full bg-primary rounded-full" style="width:30%"></div>
+          </div>
+          <button class="bg-primary text-on-primary px-lg py-sm rounded-xl font-bold flex items-center gap-sm active:scale-95 transition-all">
+            Listen Now <span class="material-symbols-outlined">arrow_forward</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Quick Start Scenarios -->
+  <section>
+    <div class="flex items-center justify-between mb-lg">
+      <h3 class="font-headline-md text-headline-md text-on-surface">Quick Start Scenarios</h3>
+      <a href="#" class="text-primary font-bold hover:underline flex items-center gap-xs">View All <span class="material-symbols-outlined text-[18px]">arrow_forward</span></a>
+    </div>
+    <div class="grid grid-cols-3 gap-lg">
+
+      <!-- Card 1 -->
+      <div data-card class="card-press bg-white rounded-xl overflow-hidden border border-outline-variant/30 hover:shadow-md transition-all group cursor-pointer">
+        <div class="h-40 bg-gradient-to-br from-orange-400 to-amber-600 relative flex items-center justify-center">
+          <span class="material-symbols-outlined text-white text-[64px] icon-fill opacity-80">local_cafe</span>
+          <div class="absolute top-md left-md">
+            <span class="bg-white/90 backdrop-blur-md px-sm py-xs rounded-lg font-label-caps text-caption text-on-surface flex items-center gap-xs">
+              <span class="material-symbols-outlined text-[14px]">schedule</span> 5 min
+            </span>
+          </div>
+        </div>
+        <div class="p-lg">
+          <h4 class="font-headline-md text-[18px] text-on-surface mb-xs">Ordering Coffee</h4>
+          <p class="font-body-base text-[14px] text-on-surface-variant mb-lg">Learn essential phrases for ordering your favorite beverage in a local cafe setting.</p>
+          <div class="flex items-center justify-between">
+            <span class="font-label-caps text-caption text-secondary uppercase">Level A1</span>
+            <button class="p-sm rounded-full text-primary hover:bg-primary-container/10 transition-colors">
+              <span class="material-symbols-outlined icon-fill">play_circle</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 2 -->
+      <div data-card class="card-press bg-white rounded-xl overflow-hidden border border-outline-variant/30 hover:shadow-md transition-all group cursor-pointer">
+        <div class="h-40 bg-gradient-to-br from-blue-500 to-indigo-700 relative flex items-center justify-center">
+          <span class="material-symbols-outlined text-white text-[64px] icon-fill opacity-80">flight</span>
+          <div class="absolute top-md left-md">
+            <span class="bg-white/90 backdrop-blur-md px-sm py-xs rounded-lg font-label-caps text-caption text-on-surface flex items-center gap-xs">
+              <span class="material-symbols-outlined text-[14px]">schedule</span> 8 min
+            </span>
+          </div>
+        </div>
+        <div class="p-lg">
+          <h4 class="font-headline-md text-[18px] text-on-surface mb-xs">Airport Check-in</h4>
+          <p class="font-body-base text-[14px] text-on-surface-variant mb-lg">Navigate international travel conversations, from baggage drop to finding your gate.</p>
+          <div class="flex items-center justify-between">
+            <span class="font-label-caps text-caption text-primary uppercase">Level B1</span>
+            <button class="p-sm rounded-full text-primary hover:bg-primary-container/10 transition-colors">
+              <span class="material-symbols-outlined icon-fill">play_circle</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 3 -->
+      <div data-card class="card-press bg-white rounded-xl overflow-hidden border border-outline-variant/30 hover:shadow-md transition-all group cursor-pointer">
+        <div class="h-40 bg-gradient-to-br from-purple-600 to-red-600 relative flex items-center justify-center">
+          <span class="material-symbols-outlined text-white text-[64px] icon-fill opacity-80">business_center</span>
+          <div class="absolute top-md left-md">
+            <span class="bg-white/90 backdrop-blur-md px-sm py-xs rounded-lg font-label-caps text-caption text-on-surface flex items-center gap-xs">
+              <span class="material-symbols-outlined text-[14px]">schedule</span> 12 min
+            </span>
+          </div>
+        </div>
+        <div class="p-lg">
+          <h4 class="font-headline-md text-[18px] text-on-surface mb-xs">Business Pitch</h4>
+          <p class="font-body-base text-[14px] text-on-surface-variant mb-lg">Master professional language and persuasive techniques for your next big presentation.</p>
+          <div class="flex items-center justify-between">
+            <span class="font-label-caps text-caption text-tertiary uppercase">Level C1</span>
+            <button class="p-sm rounded-full text-primary hover:bg-primary-container/10 transition-colors">
+              <span class="material-symbols-outlined icon-fill">play_circle</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+</main>
+
+<!-- Footer -->
+<footer class="ml-64 bg-surface-container-highest border-t border-outline-variant/30 flex flex-col md:flex-row justify-between items-center px-xl py-lg">
+  <div>
+    <span class="font-label-caps text-label-caps text-primary uppercase">Talk2Learn AI</span>
+    <p class="font-caption text-caption text-on-surface-variant mt-xs">© 2025 Talk2Learn AI. Master languages with ease.</p>
+  </div>
+  <div class="flex flex-wrap gap-lg mt-md md:mt-0">
+    <a href="#" class="font-caption text-caption text-on-surface-variant hover:text-secondary transition-colors">Language Settings</a>
+    <a href="#" class="font-caption text-caption text-on-surface-variant hover:text-secondary transition-colors">Privacy Policy</a>
+    <a href="#" class="font-caption text-caption text-on-surface-variant hover:text-secondary transition-colors">Terms of Service</a>
+    <a href="#" class="font-caption text-caption text-on-surface-variant hover:text-secondary transition-colors">Contact Support</a>
+  </div>
+</footer>
+
+<script src="_shared.js"></script>
+</body>
+</html>
