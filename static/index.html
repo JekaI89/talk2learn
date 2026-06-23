@@ -331,39 +331,39 @@ tailwind.config = {
     <!-- ══════════ MAIN MENU ══════════ -->
     <div id="screen-main" class="screen-body px-md pt-lg pb-32 space-y-lg">
       <section>
-        <p class="font-label text-xs uppercase tracking-wider text-outline mb-sm">Занятия</p>
+        <p class="font-label text-xs uppercase tracking-wider text-outline mb-sm" data-i18n="sec_study">Занятия</p>
         <div class="grid grid-cols-2 gap-sm">
           <button onclick="chooseCategory('lessons')" class="p-md bg-surface-container-lowest rounded-2xl text-left border border-surface-variant active:scale-95 transition-transform shadow-sm">
             <span class="material-symbols-outlined filled text-primary-container text-3xl block mb-xs">menu_book</span>
-            <span class="font-headline font-bold text-on-surface block text-sm">Уроки</span>
+            <span class="font-headline font-bold text-on-surface block text-sm" data-i18n="btn_lessons">Уроки</span>
             <span class="font-label text-xs text-outline">Теория курса</span>
           </button>
           <button onclick="chooseCategory('grammar')" class="p-md bg-surface-container-lowest rounded-2xl text-left border border-surface-variant active:scale-95 transition-transform shadow-sm">
             <span class="material-symbols-outlined filled text-[#7c3aed] text-3xl block mb-xs">edit_note</span>
-            <span class="font-headline font-bold text-on-surface block text-sm">Грамматика</span>
+            <span class="font-headline font-bold text-on-surface block text-sm" data-i18n="btn_grammar">Грамматика</span>
             <span class="font-label text-xs text-outline">Правила</span>
           </button>
           <button onclick="showDictionary()" class="p-md bg-surface-container-lowest rounded-2xl text-left border border-surface-variant active:scale-95 transition-transform shadow-sm">
             <span class="material-symbols-outlined filled text-secondary-container text-3xl block mb-xs">psychology</span>
-            <span class="font-headline font-bold text-on-surface block text-sm">Словарь</span>
+            <span class="font-headline font-bold text-on-surface block text-sm" data-i18n="btn_vocab" data-i18n="nav_vocab">Словарь</span>
             <span class="font-label text-xs text-outline">Лексика</span>
           </button>
           <button onclick="chooseCategory('practice')" class="p-md bg-surface-container-lowest rounded-2xl text-left border border-surface-variant active:scale-95 transition-transform shadow-sm">
             <span class="material-symbols-outlined filled text-tertiary-container text-3xl block mb-xs">target</span>
-            <span class="font-headline font-bold text-on-surface block text-sm">Практика</span>
+            <span class="font-headline font-bold text-on-surface block text-sm" data-i18n="btn_practice">Практика</span>
             <span class="font-label text-xs text-outline">Тесты</span>
           </button>
         </div>
       </section>
 
       <section>
-        <p class="font-label text-xs uppercase tracking-wider text-outline mb-sm">Интерактив</p>
+        <p class="font-label text-xs uppercase tracking-wider text-outline mb-sm" data-i18n="sec_interactive">Интерактив</p>
         <div class="space-y-sm">
           <button onclick="showScreen('screen-situations')" class="w-full p-md bg-surface-container-lowest border border-surface-variant rounded-2xl flex items-center justify-between active:scale-[0.99] transition-transform shadow-sm">
             <div class="flex items-center gap-md">
               <span class="material-symbols-outlined filled text-[#0891b2] text-2xl">map</span>
               <div class="text-left">
-                <div class="font-headline font-bold text-on-surface text-sm">Ситуации</div>
+                <div class="font-headline font-bold text-on-surface text-sm" data-i18n="btn_situations">Ситуации</div>
                 <div class="font-label text-xs text-outline">В магазине, ресторане...</div>
               </div>
             </div>
@@ -373,7 +373,7 @@ tailwind.config = {
             <div class="flex items-center gap-md">
               <span class="material-symbols-outlined filled text-inverse-primary text-2xl">mic</span>
               <div class="text-left">
-                <div class="font-headline font-bold text-surface text-sm">Разговорный клуб</div>
+                <div class="font-headline font-bold text-surface text-sm" data-i18n="btn_club">Разговорный клуб</div>
                 <div class="font-label text-xs text-outline-variant">AI-репетитор</div>
               </div>
             </div>
@@ -386,7 +386,7 @@ tailwind.config = {
       <button onclick="openPersonalDictionary()" class="w-full p-md bg-gradient-to-r from-secondary to-secondary-container rounded-2xl flex items-center gap-md active:scale-[0.99] transition-transform">
         <span class="material-symbols-outlined filled text-white text-2xl">book_2</span>
         <div class="text-left">
-          <div class="font-headline font-bold text-white text-sm">Мой блокнот слов</div>
+          <div class="font-headline font-bold text-white text-sm" data-i18n="btn_notebook">Мой блокнот слов</div>
           <div class="font-label text-xs text-white/70">Слова, которые вы сохранили</div>
         </div>
         <span class="material-symbols-outlined text-white ml-auto">chevron_right</span>
@@ -395,7 +395,7 @@ tailwind.config = {
 
     <!-- ══════════ LEVELS ══════════ -->
     <div id="screen-levels" class="hidden screen-body px-md pt-lg pb-32 space-y-md">
-      <h1 class="font-headline font-extrabold text-on-surface text-2xl">Выберите уровень</h1>
+      <h1 class="font-headline font-extrabold text-on-surface text-2xl" data-i18n="title_choose_level"><span data-i18n="title_choose_level">Выберите уровень</span></h1>
       <div id="levels-grid" class="grid grid-cols-2 gap-sm"></div>
     </div>
 
@@ -411,7 +411,7 @@ tailwind.config = {
           <span class="material-symbols-outlined filled text-white" style="font-size:48px">emoji_events</span>
         </div>
         <div>
-          <h1 class="font-headline font-extrabold text-on-surface text-3xl mb-sm">Уровень пройден!</h1>
+          <h1 class="font-headline font-extrabold text-on-surface text-3xl mb-sm" data-i18n="title_level_done">Уровень пройден!</h1>
           <p id="level-complete-msg" class="font-body text-on-surface-variant text-base"></p>
         </div>
         <div class="w-full space-y-sm mt-sm">
@@ -621,7 +621,7 @@ tailwind.config = {
       </div>
       <div id="chat-box" class="flex-1 overflow-y-auto p-md space-y-sm bg-surface"></div>
       <div class="border-t border-surface-variant bg-surface-container-lowest px-md py-sm flex items-center gap-sm">
-        <input id="chat-input" type="text" placeholder="Type a message..."
+        <input id="chat-input" type="text" placeholder="Type a message..." data-i18n-placeholder="placeholder_club"
           class="flex-1 h-touch rounded-xl bg-surface-container px-md text-sm text-on-surface placeholder:text-outline font-body focus:outline-none focus:ring-2 focus:ring-primary-container"
           onkeydown="if(event.key==='Enter') sendTextMessage()">
         <button onclick="sendTextMessage()" class="w-touch h-touch flex items-center justify-center rounded-xl bg-primary-container active:scale-90 transition-transform">
@@ -840,19 +840,19 @@ tailwind.config = {
     <div class="flex">
       <button onclick="showScreen('screen-main')" class="flex-1 py-sm flex flex-col items-center gap-xs active:bg-surface-container transition-colors">
         <span class="material-symbols-outlined filled text-primary-container">home</span>
-        <span class="font-label text-[10px] text-primary">Главная</span>
+        <span class="font-label text-[10px] text-primary" data-i18n="nav_home" data-i18n="nav_home">Главная</span>
       </button>
       <button onclick="showDictionary()" class="flex-1 py-sm flex flex-col items-center gap-xs active:bg-surface-container transition-colors">
         <span class="material-symbols-outlined text-on-surface-variant">book_2</span>
-        <span class="font-label text-[10px] text-outline">Словарь</span>
+        <span class="font-label text-[10px] text-outline" data-i18n="nav_vocab">Словарь</span>
       </button>
       <button onclick="showScreen('screen-club')" class="flex-1 py-sm flex flex-col items-center gap-xs active:bg-surface-container transition-colors">
         <span class="material-symbols-outlined text-on-surface-variant">mic</span>
-        <span class="font-label text-[10px] text-outline">Клуб</span>
+        <span class="font-label text-[10px] text-outline" data-i18n="nav_club" data-i18n="nav_club">Клуб</span>
       </button>
       <button onclick="openProfile()" class="flex-1 py-sm flex flex-col items-center gap-xs active:bg-surface-container transition-colors">
         <span class="material-symbols-outlined text-on-surface-variant">person</span>
-        <span class="font-label text-[10px] text-outline">Профиль</span>
+        <span class="font-label text-[10px] text-outline" data-i18n="nav_profile" data-i18n="nav_profile">Профиль</span>
       </button>
     </div>
   </div>
@@ -1068,7 +1068,7 @@ function renderLesson(lesson) {
     </div>
     <button id="complete-lesson-btn" onclick="submitProgress('${lesson.type||'lesson'}', ${lesson.id})"
       class="w-full h-touch rounded-xl bg-tertiary-container text-on-tertiary font-label font-bold uppercase tracking-wider text-sm active:scale-[0.98] transition-transform shadow-md">
-      ✅ Просмотрено · +5 XP
+      <span data-i18n="btn_complete">✅ Просмотрено · +5 XP</span>
     </button>
   `;
 }
@@ -1276,14 +1276,40 @@ const SITUATION_HINTS = {
 let currentSituation = '';
 let sitMediaRecorder = null, sitAudioChunks = [], sitStreamRef = null;
 
+function initClubGreeting() {
+  const chatBox = document.getElementById('chat-box');
+  if (!chatBox) return;
+  chatBox.innerHTML = '';
+  const greeting = AI_GREETINGS[userTargetLang] || AI_GREETINGS['en'];
+  const div = document.createElement('div');
+  div.className = 'bg-primary-container text-on-primary p-md rounded-2xl rounded-tl-none max-w-[85%] text-sm shadow-sm';
+  div.innerHTML = makeTextClickable(greeting, greeting);
+  setTimeout(() => div.querySelectorAll('.clickable-word').forEach(el => el.style.borderBottomColor='rgba(255,255,255,0.4)'), 0);
+  chatBox.appendChild(div);
+}
+
 function openSituation(situationKey, title, situation) {
   currentSituation = situation;
   showScreen('screen-situation-chat', 'screen-situations');
   document.getElementById('header-title').textContent = title;
-  document.getElementById('situation-hint-bar').textContent = SITUATION_HINTS[situation] || '';
+
+  const t = UI_TRANSLATIONS[userNativeLang] || UI_TRANSLATIONS['ru'];
+  const HINTS_I18N = {
+    ru: { shop:'🛒 Вы покупатель. Попросите найти товар, узнайте цену.', restaurant:'🍽️ Вы гость. Закажите блюдо, попросите счёт.', airport:'✈️ Вы пассажир. Пройдите регистрацию на рейс.', hotel:'🏨 Вы гость. Заселитесь и запросите услуги.', doctor:'🏥 Вы пациент. Опишите симптомы врачу.', emergency:'🚨 Срочно опишите ситуацию диспетчеру.' },
+    en: { shop:'🛒 You are a customer. Ask for a product, check the price.', restaurant:'🍽️ You are a guest. Order a dish, ask for the bill.', airport:'✈️ You are a passenger. Check in for your flight.', hotel:'🏨 You are a guest. Check in and request services.', doctor:'🏥 You are a patient. Describe your symptoms.', emergency:'🚨 Urgently describe the situation to the dispatcher.' },
+    de: { shop:'🛒 Sie sind ein Kunde. Fragen Sie nach einem Produkt.', restaurant:'🍽️ Sie sind ein Gast. Bestellen Sie ein Gericht.', airport:'✈️ Sie sind ein Passagier. Checken Sie ein.', hotel:'🏨 Sie sind ein Gast. Melden Sie sich an.', doctor:'🏥 Sie sind ein Patient. Beschreiben Sie Ihre Symptome.', emergency:'🚨 Beschreiben Sie die Situation dem Disponenten.' },
+    fr: { shop:'🛒 Vous êtes un client. Demandez un produit.', restaurant:'🍽️ Vous êtes un invité. Commandez un plat.', airport:'✈️ Vous êtes passager. Enregistrez-vous.', hotel:'🏨 Vous êtes un client. Enregistrez-vous.', doctor:'🏥 Vous êtes patient. Décrivez vos symptômes.', emergency:'🚨 Décrivez la situation au répartiteur.' },
+    es: { shop:'🛒 Eres un cliente. Pide un producto.', restaurant:'🍽️ Eres un comensal. Pide un plato.', airport:'✈️ Eres pasajero. Factura tu equipaje.', hotel:'🏨 Eres huésped. Regístrate.', doctor:'🏥 Eres paciente. Describe tus síntomas.', emergency:'🚨 Describe la situación al despachador.' },
+  };
+  const hints = HINTS_I18N[userNativeLang] || HINTS_I18N['ru'];
+  document.getElementById('situation-hint-bar').textContent = hints[situation] || '';
+
   const box = document.getElementById('situation-chat-box');
   box.innerHTML = '';
-  appendSituationMessage('ai', 'Hello! How can I help you today?');
+  // Приветствие на языке изучения
+  const greetings = SITUATION_GREETINGS[situation] || {};
+  const greeting = greetings[userTargetLang] || greetings['en'] || 'Hello! How can I help you today?';
+  appendSituationMessage('ai', greeting);
 }
 
 function appendSituationMessage(who, text) {
@@ -2214,15 +2240,189 @@ function showToast(msg, type='success') {
 }
 
 // ─────────────────────────────────────────────
+// I18N — переводы интерфейса
+// ─────────────────────────────────────────────
+const UI_TRANSLATIONS = {
+  ru: {
+    sec_study:         'Занятия',
+    sec_interactive:   'Интерактив',
+    btn_lessons:       'Уроки',       btn_lessons_sub:    'Теория курса',
+    btn_grammar:       'Грамматика',  btn_grammar_sub:    'Правила',
+    btn_vocab:         'Словарь',     btn_vocab_sub:      'Лексика',
+    btn_practice:      'Практика',    btn_practice_sub:   'Тесты',
+    btn_situations:    'Ситуации',    btn_situations_sub: 'В магазине, ресторане...',
+    btn_club:          'Разговорный клуб', btn_club_sub:  'AI-репетитор',
+    btn_notebook:      'Мой блокнот слов', btn_notebook_sub: 'Слова, которые вы сохранили',
+    title_choose_level:'Выберите уровень',
+    title_level_done:  'Уровень пройден!',
+    title_profile:     'Мой профиль',
+    btn_complete:      '✅ Просмотрено · +5 XP',
+    placeholder_club:  'Напишите сообщение...',
+    nav_home:          'Главная', nav_vocab: 'Словарь',
+    nav_club:          'Клуб',   nav_profile: 'Профиль',
+  },
+  en: {
+    sec_study:         'Study',
+    sec_interactive:   'Interactive',
+    btn_lessons:       'Lessons',       btn_lessons_sub:    'Course theory',
+    btn_grammar:       'Grammar',       btn_grammar_sub:    'Rules & usage',
+    btn_vocab:         'Vocabulary',    btn_vocab_sub:      'Lexicon',
+    btn_practice:      'Practice',      btn_practice_sub:   'Quizzes',
+    btn_situations:    'Situations',    btn_situations_sub: 'Shop, restaurant...',
+    btn_club:          'Speaking Club', btn_club_sub:       'AI tutor',
+    btn_notebook:      'My Word Book',  btn_notebook_sub:   'Words you saved',
+    title_choose_level:'Choose Level',
+    title_level_done:  'Level Complete!',
+    title_profile:     'My Profile',
+    btn_complete:      '✅ Done · +5 XP',
+    placeholder_club:  'Type a message...',
+    nav_home:          'Home',  nav_vocab: 'Vocab',
+    nav_club:          'Club',  nav_profile: 'Profile',
+  },
+  de: {
+    sec_study:         'Lernen',
+    sec_interactive:   'Interaktiv',
+    btn_lessons:       'Lektionen',     btn_lessons_sub:    'Kurstheorie',
+    btn_grammar:       'Grammatik',     btn_grammar_sub:    'Regeln',
+    btn_vocab:         'Wörterbuch',    btn_vocab_sub:      'Lexik',
+    btn_practice:      'Übungen',       btn_practice_sub:   'Tests',
+    btn_situations:    'Situationen',   btn_situations_sub: 'Im Laden, Restaurant...',
+    btn_club:          'Sprechclub',    btn_club_sub:       'KI-Tutor',
+    btn_notebook:      'Mein Vokabular',btn_notebook_sub:   'Gespeicherte Wörter',
+    title_choose_level:'Niveau wählen',
+    title_level_done:  'Niveau geschafft!',
+    title_profile:     'Mein Profil',
+    btn_complete:      '✅ Erledigt · +5 XP',
+    placeholder_club:  'Nachricht eingeben...',
+    nav_home:          'Startseite', nav_vocab: 'Wörter',
+    nav_club:          'Club',       nav_profile: 'Profil',
+  },
+  fr: {
+    sec_study:         'Cours',
+    sec_interactive:   'Interactif',
+    btn_lessons:       'Leçons',        btn_lessons_sub:    'Théorie',
+    btn_grammar:       'Grammaire',     btn_grammar_sub:    'Règles',
+    btn_vocab:         'Vocabulaire',   btn_vocab_sub:      'Lexique',
+    btn_practice:      'Pratique',      btn_practice_sub:   'Exercices',
+    btn_situations:    'Situations',    btn_situations_sub: 'Magasin, restaurant...',
+    btn_club:          'Club de parole',btn_club_sub:       'Tuteur IA',
+    btn_notebook:      'Mon carnet',    btn_notebook_sub:   'Mots enregistrés',
+    title_choose_level:'Choisir le niveau',
+    title_level_done:  'Niveau terminé !',
+    title_profile:     'Mon profil',
+    btn_complete:      '✅ Vu · +5 XP',
+    placeholder_club:  'Écrire un message...',
+    nav_home:          'Accueil', nav_vocab: 'Vocab',
+    nav_club:          'Club',    nav_profile: 'Profil',
+  },
+  es: {
+    sec_study:         'Clases',
+    sec_interactive:   'Interactivo',
+    btn_lessons:       'Lecciones',     btn_lessons_sub:    'Teoría del curso',
+    btn_grammar:       'Gramática',     btn_grammar_sub:    'Reglas',
+    btn_vocab:         'Vocabulario',   btn_vocab_sub:      'Léxico',
+    btn_practice:      'Práctica',      btn_practice_sub:   'Ejercicios',
+    btn_situations:    'Situaciones',   btn_situations_sub: 'Tienda, restaurante...',
+    btn_club:          'Club de habla', btn_club_sub:       'Tutor IA',
+    btn_notebook:      'Mi libreta',    btn_notebook_sub:   'Palabras guardadas',
+    title_choose_level:'Elige el nivel',
+    title_level_done:  '¡Nivel completado!',
+    title_profile:     'Mi perfil',
+    btn_complete:      '✅ Visto · +5 XP',
+    placeholder_club:  'Escribe un mensaje...',
+    nav_home:          'Inicio',  nav_vocab: 'Vocab',
+    nav_club:          'Club',    nav_profile: 'Perfil',
+  },
+  it: {
+    sec_study:         'Studio',
+    sec_interactive:   'Interattivo',
+    btn_lessons:       'Lezioni',       btn_lessons_sub:    'Teoria del corso',
+    btn_grammar:       'Grammatica',    btn_grammar_sub:    'Regole',
+    btn_vocab:         'Vocabolario',   btn_vocab_sub:      'Lessico',
+    btn_practice:      'Pratica',       btn_practice_sub:   'Esercizi',
+    btn_situations:    'Situazioni',    btn_situations_sub: 'Negozio, ristorante...',
+    btn_club:          'Club di parola',btn_club_sub:       'Tutor AI',
+    btn_notebook:      'Il mio taccuino', btn_notebook_sub: 'Parole salvate',
+    title_choose_level:'Scegli il livello',
+    title_level_done:  'Livello completato!',
+    title_profile:     'Il mio profilo',
+    btn_complete:      '✅ Visto · +5 XP',
+    placeholder_club:  'Scrivi un messaggio...',
+    nav_home:          'Home',   nav_vocab: 'Vocab',
+    nav_club:          'Club',   nav_profile: 'Profilo',
+  },
+  zh: {
+    sec_study:         '学习',
+    sec_interactive:   '互动',
+    btn_lessons:       '课程',    btn_lessons_sub:    '课程理论',
+    btn_grammar:       '语法',    btn_grammar_sub:    '规则',
+    btn_vocab:         '词汇',    btn_vocab_sub:      '词汇表',
+    btn_practice:      '练习',    btn_practice_sub:   '测验',
+    btn_situations:    '情景对话', btn_situations_sub: '商店、餐厅...',
+    btn_club:          'AI对话俱乐部', btn_club_sub:   'AI导师',
+    btn_notebook:      '我的单词本', btn_notebook_sub: '已保存的单词',
+    title_choose_level:'选择级别',
+    title_level_done:  '关卡完成！',
+    title_profile:     '我的资料',
+    btn_complete:      '✅ 已看 · +5 XP',
+    placeholder_club:  '输入消息...',
+    nav_home:          '首页',  nav_vocab: '词汇',
+    nav_club:          '俱乐部', nav_profile: '我的',
+  },
+};
+
+// Приветствия AI на языке изучения
+const AI_GREETINGS = {
+  en: "Hello! How can I help you today? Feel free to type or use the microphone!",
+  de: "Hallo! Wie kann ich Ihnen heute helfen? Schreiben Sie oder nutzen Sie das Mikrofon!",
+  fr: "Bonjour ! Comment puis-je vous aider aujourd'hui ? Écrivez ou utilisez le microphone !",
+  es: "¡Hola! ¿En qué puedo ayudarte hoy? ¡Escribe o usa el micrófono!",
+  it: "Ciao! Come posso aiutarti oggi? Scrivi o usa il microfono!",
+  zh: "你好！今天我能帮你什么？请输入文字或使用麦克风！",
+  ja: "こんにちは！今日はどのようにお手伝いできますか？",
+  pt: "Olá! Como posso ajudá-lo hoje? Escreva ou use o microfone!",
+  ru: "Привет! Чем могу помочь? Пишите или говорите в микрофон!",
+};
+
+const SITUATION_GREETINGS = {
+  shop:        { en:"Welcome! How can I help you today?", de:"Willkommen! Wie kann ich Ihnen helfen?", fr:"Bienvenue ! Comment puis-je vous aider ?", es:"¡Bienvenido! ¿En qué le puedo ayudar?", it:"Benvenuto! Come posso aiutarla?", zh:"欢迎光临！有什么可以帮您？", ja:"いらっしゃいませ！何かお手伝いできますか？", pt:"Bem-vindo! Como posso ajudá-lo?", ru:"Добро пожаловать! Чем могу помочь?" },
+  restaurant:  { en:"Good evening! Do you have a reservation?", de:"Guten Abend! Haben Sie eine Reservierung?", fr:"Bonsoir ! Avez-vous une réservation ?", es:"¡Buenas noches! ¿Tienen reserva?", it:"Buonasera! Avete una prenotazione?", zh:"晚上好！请问有预订吗？", ja:"いらっしゃいませ！ご予約はございますか？", pt:"Boa noite! Tem reserva?", ru:"Добрый вечер! У вас есть бронь?" },
+  airport:     { en:"Good morning! May I see your passport and ticket?", de:"Guten Morgen! Darf ich Ihren Pass und Ihr Ticket sehen?", fr:"Bonjour ! Puis-je voir votre passeport et votre billet ?", es:"¡Buenos días! ¿Me puede mostrar su pasaporte y billete?", it:"Buongiorno! Posso vedere il suo passaporto e il biglietto?", zh:"早上好！请出示您的护照和机票。", ja:"おはようございます！パスポートとチケットをお見せください。", pt:"Bom dia! Posso ver o seu passaporte e bilhete?", ru:"Доброе утро! Могу я увидеть ваш паспорт и билет?" },
+  hotel:       { en:"Welcome to our hotel! Do you have a reservation?", de:"Willkommen in unserem Hotel! Haben Sie eine Reservierung?", fr:"Bienvenue dans notre hôtel ! Avez-vous une réservation ?", es:"¡Bienvenido a nuestro hotel! ¿Tiene reserva?", it:"Benvenuto nel nostro hotel! Ha una prenotazione?", zh:"欢迎来到我们的酒店！请问有预订吗？", ja:"ご来館ありがとうございます！ご予約はございますか？", pt:"Bem-vindo ao nosso hotel! Tem reserva?", ru:"Добро пожаловать! Есть ли у вас бронь?" },
+  doctor:      { en:"Hello! Please take a seat. What brings you in today?", de:"Hallo! Bitte setzen Sie sich. Was führt Sie heute zu mir?", fr:"Bonjour ! Asseyez-vous. Qu'est-ce qui vous amène aujourd'hui ?", es:"¡Hola! Siéntese. ¿Qué le trae hoy?", it:"Salve! Si accomodi. Cosa la porta da me oggi?", zh:"你好！请坐。今天有什么不舒服吗？", ja:"こんにちは！どうぞお座りください。今日はどうされましたか？", pt:"Olá! Por favor sente-se. O que o traz hoje?", ru:"Здравствуйте! Присаживайтесь. Что вас беспокоит?" },
+  emergency:   { en:"Emergency services, what is your emergency?", de:"Notruf, was ist Ihr Notfall?", fr:"Services d'urgence, quelle est votre urgence ?", es:"Servicios de emergencia, ¿cuál es su emergencia?", it:"Pronto intervento, qual è la sua emergenza?", zh:"紧急服务，请说明您的紧急情况！", ja:"緊急サービスです。緊急事態を教えてください。", pt:"Serviços de emergência, qual é a sua emergência?", ru:"Служба спасения, что случилось?" },
+};
+
+function applyTranslations() {
+  const t = UI_TRANSLATIONS[userNativeLang] || UI_TRANSLATIONS['ru'];
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.dataset.i18n;
+    if (t[key]) el.textContent = t[key];
+  });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    const key = el.dataset.i18nPlaceholder;
+    if (t[key]) el.placeholder = t[key];
+  });
+}
+
+// ─────────────────────────────────────────────
 // ЯЗЫКИ — вспомогательные функции
 // ─────────────────────────────────────────────
 function updateLangUI() {
   const tFlag = LANG_FLAGS[userTargetLang] || '🌍';
-  // Обновляем флаг в профиле
   const profileFlag = document.getElementById('profile-lang-flag');
   if (profileFlag) profileFlag.textContent = tFlag;
   const clubBadge = document.getElementById('club-level-badge');
   if (clubBadge) clubBadge.textContent = currentLevel;
+
+  // Применяем переводы UI
+  applyTranslations();
+
+  // Обновляем приветствие в разговорном клубе
+  const chatBox = document.getElementById('chat-box');
+  if (chatBox && chatBox.children.length === 0) {
+    initClubGreeting();
+  }
 }
 
 // ─────────────────────────────────────────────
@@ -2294,7 +2494,9 @@ async function saveLangSettings() {
     });
     userNativeLang = lsNativeLang;
     userTargetLang = lsTargetLang;
+    applyTranslations();
     updateLangUI();
+    initClubGreeting();
     document.getElementById('ls-status').textContent = '✅ Сохранено!';
     btn.textContent = 'Сохранить';
     btn.disabled = false;
@@ -2318,9 +2520,13 @@ window.onload = async () => {
       const langs = await res.json();
       userNativeLang = langs.native || 'ru';
       userTargetLang = langs.target || 'en';
-      updateLangUI();
     } catch(e) {}
   }
+
+  // Применяем переводы и инициализируем UI
+  applyTranslations();
+  updateLangUI();
+  initClubGreeting();
 
   // Проверяем онбординг
   try {
