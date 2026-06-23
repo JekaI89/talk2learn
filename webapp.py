@@ -360,8 +360,23 @@ async def random_question(
         if not row:
             return {"error": "no_more_questions"}
 
+        if task_type == "sentence_builder":
+            import random as _random
+            correct_sentence = row["option_1"] or ""
+            distractors = [w.strip() for w in (row["option_2"] or "").split(",") if w.strip()]
+            word_bank = correct_sentence.split() + distractors
+            _random.shuffle(word_bank)
+            return {
+                "question_id": row["id"],
+                "task_type": "sentence_builder",
+                "question": row["question_text"],
+                "correct_sentence": correct_sentence,
+                "word_bank": word_bank,
+            }
+
         return {
             "question_id": row["id"],
+            "task_type": "multiple_choice",
             "question": row["question_text"],
             "options": [row["option_1"], row["option_2"], row["option_3"]],
             "correct_option": row["correct_option"]
