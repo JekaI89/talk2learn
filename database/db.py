@@ -270,25 +270,55 @@ async def get_user_category_stats(user_id: int):
 # ==================== УРОКИ ====================
 
 async def add_lesson(level: str, title: str, lesson_text: str = "",
-                     content_type: str = "lesson", order_num: int = 0):
+                     content_type: str = "lesson", order_num: int = 0,
+                     language: str = "en") -> int:
+    pool = await get_pool()
+    async with pool.acquire() as db:
+        row = await db.fetchrow("""
+            INSERT INTO lessons (level, title, lesson_text, content_type, order_num, language)
+            VALUES ($1, $2, $3, $4, $5, $6)
+            RETURNING id
+        """, level, title, lesson_text, content_type, order_num, language)
+        return row["id"]
+
+
+async def get_all_lessons(language: str = None):
+    pool = await get_pool()
+    async with pool.acquire() as db:
+        if language:
+            rows = await db.fetch("""
+                SELECT id, level, title, content_type, order_num, language, lesson_text
+                FROM lessons WHERE is_active = TRUE AND language = $1
+                ORDER BY language, level, content_type, order_num, id
+            """, language)
+        else:
+            rows = await db.fetch("""
+                SELECT id, level, title, content_type, order_num, language, lesson_text
+                FROM lessons WHERE is_active = TRUE
+                ORDER BY language, level, content_type, order_num, id
+            """)
+        return rows
+
+
+async def get_lesson_by_id(lesson_id: int):
+    pool = await get_pool()
+    async with pool.acquire() as db:
+        return await db.fetchrow("""
+            SELECT id, level, title, lesson_text, content_type, order_num, language
+            FROM lessons WHERE id = $1
+        """, lesson_id)
+
+
+async def update_lesson(lesson_id: int, title: str, lesson_text: str,
+                        level: str, content_type: str, order_num: int, language: str):
     pool = await get_pool()
     async with pool.acquire() as db:
         await db.execute("""
-            INSERT INTO lessons (level, title, lesson_text, content_type, order_num)
-            VALUES ($1, $2, $3, $4, $5)
-        """, level, title, lesson_text, content_type, order_num)
-
-
-async def get_all_lessons():
-    pool = await get_pool()
-    async with pool.acquire() as db:
-        rows = await db.fetch("""
-            SELECT id, level, title, content_type, order_num
-            FROM lessons
-            WHERE is_active = TRUE
-            ORDER BY level, order_num, id
-        """)
-        return rows
+            UPDATE lessons
+            SET title = $1, lesson_text = $2, level = $3,
+                content_type = $4, order_num = $5, language = $6
+            WHERE id = $7
+        """, title, lesson_text, level, content_type, order_num, language, lesson_id)
 
 
 async def delete_lesson(lesson_id: int):
