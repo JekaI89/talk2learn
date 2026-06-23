@@ -17,6 +17,8 @@ from database.db import (
     close_pool,
     register_or_get_user,
     get_all_lessons,
+    get_lesson_by_id,
+    update_lesson,
     get_admin_statistics,
     add_lesson,
     delete_lesson,
@@ -138,6 +140,18 @@ class AddLessonRequest(BaseModel):
     title: str
     lesson_text: str = ""
     content_type: str = "lesson"
+    order_num: int = 0
+    language: str = "en"
+
+
+class UpdateLessonRequest(BaseModel):
+    id: int
+    level: str
+    title: str
+    lesson_text: str = ""
+    content_type: str = "lesson"
+    order_num: int = 0
+    language: str = "en"
 
 
 class RegisterUserRequest(BaseModel):
@@ -437,15 +451,18 @@ async def admin_stats():
 
 
 @app.get("/api/admin/lessons")
-async def admin_lessons():
+async def admin_lessons(language: Optional[str] = Query(None)):
     try:
-        rows = await get_all_lessons()
+        rows = await get_all_lessons(language=language)
         return [
             {
                 "id": r["id"],
                 "level": r["level"],
                 "title": r["title"],
-                "type": r["content_type"]
+                "type": r["content_type"],
+                "language": r.get("language", "en"),
+                "order_num": r.get("order_num", 0),
+                "lesson_text": r.get("lesson_text", "")
             } for r in rows
         ]
     except Exception as e:
@@ -457,28 +474,48 @@ async def admin_lessons():
 async def admin_lessons_for_questions():
     try:
         rows = await get_all_lessons()
-        return [
-            {
-                "id": r["id"],
-                "level": r["level"],
-                "title": r["title"]
-            } for r in rows
-        ]
+        return [{"id": r["id"], "level": r["level"], "title": r["title"]} for r in rows]
     except Exception as e:
         traceback.print_exc()
         return []
 
 
+@app.get("/api/admin/lesson/{lesson_id}")
+async def admin_get_lesson(lesson_id: int):
+    try:
+        row = await get_lesson_by_id(lesson_id)
+        if not row:
+            raise HTTPException(404, "Урок не найден")
+        return dict(row)
+    except HTTPException:
+        raise
+    except Exception as e:
+        traceback.print_exc()
+        raise HTTPException(500, str(e))
+
+
 @app.post("/api/admin/add_lesson")
 async def admin_add_lesson(data: AddLessonRequest):
     try:
-        await add_lesson(
-            level=data.level,
-            title=data.title,
-            lesson_text=data.lesson_text,
-            content_type=data.content_type
+        lesson_id = await add_lesson(
+            level=data.level, title=data.title, lesson_text=data.lesson_text,
+            content_type=data.content_type, order_num=data.order_num, language=data.language
         )
-        return {"status": "success", "message": "Урок добавлен"}
+        return {"status": "success", "id": lesson_id, "message": "Урок добавлен"}
+    except Exception as e:
+        traceback.print_exc()
+        raise HTTPException(500, str(e))
+
+
+@app.put("/api/admin/update_lesson")
+async def admin_update_lesson(data: UpdateLessonRequest):
+    try:
+        await update_lesson(
+            lesson_id=data.id, title=data.title, lesson_text=data.lesson_text,
+            level=data.level, content_type=data.content_type,
+            order_num=data.order_num, language=data.language
+        )
+        return {"status": "success", "message": "Урок обновлён"}
     except Exception as e:
         traceback.print_exc()
         raise HTTPException(500, str(e))
@@ -488,7 +525,7 @@ async def admin_add_lesson(data: AddLessonRequest):
 async def admin_delete_lesson(lesson_id: int):
     try:
         await delete_lesson(lesson_id)
-        return {"status": "success", "message": f"Урок {lesson_id} скрыт"}
+        return {"status": "success", "message": f"Урок {lesson_id} удалён"}
     except Exception as e:
         traceback.print_exc()
         raise HTTPException(500, str(e))
