@@ -684,6 +684,23 @@ async def translate_word_only(data: QuickAddWordRequest):
         traceback.print_exc()
         raise HTTPException(500, str(e))
 
+@app.get("/api/tts/word")
+async def tts_word(word: str = Query(...)):
+    """Синтез речи для одного слова через gTTS. Возвращает MP3."""
+    try:
+        session_id = f"word_{uuid.uuid4().hex[:8]}"
+        output_path = os.path.join(AUDIO_DIR, f"{session_id}.mp3")
+        await generate_voice(word, output_path)
+        return FileResponse(
+            output_path,
+            media_type="audio/mpeg",
+            headers={"Cache-Control": "public, max-age=3600"}
+        )
+    except Exception as e:
+        traceback.print_exc()
+        raise HTTPException(500, str(e))
+
+
 # ====================== VOCABULARY CARDS ======================
 
 class VocabCardCreate(BaseModel):
