@@ -1349,14 +1349,21 @@ async function openProfile() {
     try {
       const catRes = await fetch(`/api/stats/categories/${userId}`);
       const cats = await catRes.json();
-      const catLabels = { lesson:'📖 Уроки', grammar:'✍️ Грамматика', vocabulary:'🧠 Словарный', practice:'🎯 Практика', words:'💾 Слов сохранено' };
+      const catLabels = {
+        lesson:'📖 Уроки', grammar:'✍️ Грамматика',
+        vocabulary:'🧠 Словарный', practice:'🎯 Практика', words:'💾 Личный словарь',
+      };
       catHtml = Object.entries(catLabels).map(([key, label]) => {
         const s = cats[key] || {completed:0, total:0};
         const pct = s.total > 0 ? Math.min(100, Math.round(s.completed / s.total * 100)) : 0;
+        let rightLabel = s.total > 0 ? s.completed + ' / ' + s.total : String(s.completed);
+        if (key === 'words') {
+          rightLabel = s.total === 0 ? 'нет слов' : 'знаю ' + s.completed + ' из ' + s.total;
+        }
         return `<div class="mb-sm">
           <div class="flex justify-between font-label text-xs text-on-surface-variant mb-xs">
             <span>${label}</span>
-            <span class="text-outline">${s.completed}${s.total>0?' / '+s.total:''}</span>
+            <span class="text-outline">${rightLabel}</span>
           </div>
           <div class="h-1.5 w-full bg-surface-container-high rounded-full overflow-hidden">
             <div class="h-full bg-primary-container rounded-full" style="width:${pct}%"></div>
@@ -1624,8 +1631,23 @@ function flipCard() {
 function rateCard(rating) {
   if (!vfFlipped) { flipCard(); return; }
 
-  if (rating === 'known') vfKnownCards.push(vfCurrentCard);
-  else vfLearningCards.push(vfCurrentCard);
+  if (rating === 'known') {
+    vfKnownCards.push(vfCurrentCard);
+  } else {
+    vfLearningCards.push(vfCurrentCard);
+    // Незнакомое слово → автоматически в личный блокнот для изучения
+    if (userId > 0 && vfCurrentCard) {
+      fetch('/api/dictionary/quick_add', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({
+          user_id: parseInt(userId),
+          word: vfCurrentCard.word,
+          context_sentence: vfCurrentCard.definition || ''
+        })
+      }).catch(() => {});
+    }
+  }
 
   // Анимация выхода
   const card_el = document.getElementById('vf-card');
