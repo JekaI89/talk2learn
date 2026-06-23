@@ -64,6 +64,14 @@ tailwind.config = {
   .material-symbols-outlined { font-variation-settings: 'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24; vertical-align: middle; }
   .filled { font-variation-settings: 'FILL' 1,'wght' 400,'GRAD' 0,'opsz' 24; }
 
+  /* Flashcard swipe animations */
+  @keyframes slideOutLeft  { to { transform: translateX(-110%) rotate(-8deg); opacity: 0; } }
+  @keyframes slideOutRight { to { transform: translateX(110%) rotate(8deg); opacity: 0; } }
+  @keyframes slideInUp     { from { transform: translateY(40px); opacity: 0; } to { transform: none; opacity: 1; } }
+  .card-exit-left  { animation: slideOutLeft  0.28s ease forwards; }
+  .card-exit-right { animation: slideOutRight 0.28s ease forwards; }
+  .card-enter      { animation: slideInUp     0.3s ease forwards; }
+
   /* Clickable words */
   .clickable-word {
     cursor: pointer;
@@ -612,13 +620,127 @@ tailwind.config = {
       <div id="vocab-topics-list" class="grid grid-cols-2 gap-sm"></div>
     </div>
 
-    <!-- ══════════ VOCAB CARDS ══════════ -->
-    <div id="screen-vocab-cards" class="hidden screen-body px-md pt-lg pb-32">
-      <div class="flex items-center justify-between mb-lg">
-        <h1 id="vocab-topic-title" class="font-headline font-extrabold text-on-surface text-2xl"></h1>
-        <span id="vocab-topic-count" class="font-label text-xs text-outline bg-surface-container px-sm py-xs rounded-full"></span>
+    <!-- ══════════ VOCABULARY FLASHCARDS ══════════ -->
+    <div id="screen-vocab-cards" class="hidden flex flex-col" style="height:calc(100dvh - 52px)">
+
+      <!-- Прогресс-хедер -->
+      <div class="px-md pt-md pb-sm flex-shrink-0 border-b border-surface-variant">
+        <div class="flex items-center justify-between mb-sm">
+          <span id="vf-topic-name" class="font-headline font-bold text-on-surface text-sm truncate max-w-[60%]"></span>
+          <span id="vf-counter" class="font-label text-xs text-outline bg-surface-container px-sm py-xs rounded-full flex-shrink-0">1 / 10</span>
+        </div>
+        <div class="h-1.5 w-full bg-surface-container-high rounded-full overflow-hidden">
+          <div id="vf-progress-bar" class="h-full bg-primary-container rounded-full transition-all duration-500" style="width:0%"></div>
+        </div>
+        <div class="flex justify-between mt-xs">
+          <span class="font-label text-xs text-tertiary-container font-bold" id="vf-known-count">0 знаю</span>
+          <span class="font-label text-xs text-secondary-container font-bold" id="vf-learning-count">0 учу</span>
+        </div>
       </div>
-      <div id="vocab-cards-grid" class="grid grid-cols-2 gap-sm"></div>
+
+      <!-- Карточка -->
+      <div class="flex-1 flex flex-col items-center justify-center px-md py-md overflow-hidden">
+        <div id="vf-card"
+          class="w-full max-w-sm cursor-pointer select-none"
+          onclick="flipCard()"
+          style="transition: transform 0.25s ease, opacity 0.2s ease">
+
+          <div class="bg-surface-container-lowest border-2 border-surface-variant rounded-3xl p-lg text-center shadow-sm"
+            id="vf-card-inner" style="transition: border-color 0.2s ease, background 0.2s ease">
+
+            <!-- Градиент уровня как фон для эмодзи -->
+            <div id="vf-emoji-bg" class="rounded-2xl mb-lg flex items-center justify-center mx-auto" style="width:120px;height:120px">
+              <span id="vf-emoji" style="font-size:72px;line-height:1"></span>
+            </div>
+
+            <!-- Слово + кнопка озвучки -->
+            <div class="flex items-center justify-center gap-sm mb-xs">
+              <h1 id="vf-word" class="font-headline font-extrabold text-on-surface text-3xl"></h1>
+              <button id="vf-speak-btn" onclick="event.stopPropagation(); speakWord()"
+                class="w-9 h-9 flex items-center justify-center rounded-full bg-surface-container active:scale-90 transition-transform flex-shrink-0">
+                <span class="material-symbols-outlined text-on-surface-variant" style="font-size:20px">volume_up</span>
+              </button>
+            </div>
+
+            <!-- Уровень -->
+            <span id="vf-level-badge" class="inline-block font-label text-xs font-bold bg-surface-container text-on-surface-variant px-sm py-xs rounded-full mb-md"></span>
+
+            <!-- Описание (лицевая сторона) -->
+            <p id="vf-definition" class="font-body text-on-surface-variant text-base leading-relaxed mb-lg min-h-[48px]"></p>
+
+            <!-- Перевод (скрытый до тапа) -->
+            <div id="vf-back" class="hidden">
+              <div class="border-t border-surface-variant pt-md mb-sm">
+                <div id="vf-translation" class="font-headline font-extrabold text-2xl text-primary mb-xs"></div>
+                <div id="vf-example" class="font-body text-sm text-on-surface-variant italic"></div>
+              </div>
+              <button onclick="event.stopPropagation(); addCurrentWordToDict()"
+                class="text-xs font-label font-bold text-secondary-container active:scale-95 transition-transform mt-xs">
+                + В личный блокнот
+              </button>
+            </div>
+
+            <!-- Подсказка (лицо) -->
+            <p id="vf-tap-hint" class="font-label text-xs text-outline mt-sm">👆 Нажмите, чтобы увидеть перевод</p>
+          </div>
+        </div>
+
+        <!-- Свайп-подсказка -->
+        <div id="vf-swipe-hint" class="mt-md flex items-center gap-lg font-label text-xs text-outline opacity-60">
+          <span>⬅️ Учу</span><span>·</span><span>Знаю ➡️</span>
+        </div>
+      </div>
+
+      <!-- Кнопки оценки (появляются после тапа) -->
+      <div id="vf-action-btns" class="hidden px-md pb-md flex-shrink-0">
+        <div class="grid grid-cols-2 gap-sm">
+          <button onclick="rateCard('learning')"
+            class="h-touch rounded-xl bg-[#fd761a] text-white font-label font-bold uppercase tracking-wider text-sm active:scale-[0.98] transition-transform shadow-sm">
+            ↩ Учу
+          </button>
+          <button onclick="rateCard('known')"
+            class="h-touch rounded-xl bg-tertiary-container text-on-tertiary font-label font-bold uppercase tracking-wider text-sm active:scale-[0.98] transition-transform shadow-sm">
+            ✓ Знаю
+          </button>
+        </div>
+      </div>
+
+      <!-- Финальный экран (поверх карточки) -->
+      <div id="vf-completion" class="hidden absolute inset-0 flex flex-col items-center justify-center px-md bg-surface z-10">
+        <div class="text-center space-y-md">
+          <div class="text-7xl animate-bounce">🏆</div>
+          <h1 class="font-headline font-extrabold text-on-surface text-2xl">Поздравляем!</h1>
+          <p class="font-body text-on-surface-variant text-sm" id="vf-completion-msg"></p>
+
+          <!-- Статистика -->
+          <div class="grid grid-cols-2 gap-sm w-full max-w-xs mx-auto">
+            <div class="bg-[#e1f5ee] rounded-2xl p-md text-center">
+              <div id="vf-final-known" class="font-headline font-extrabold text-2xl text-[#006329]"></div>
+              <div class="font-label text-xs text-[#0f6e56] mt-xs">✓ Знаю</div>
+            </div>
+            <div class="bg-[#fff7ed] rounded-2xl p-md text-center">
+              <div id="vf-final-learning" class="font-headline font-extrabold text-2xl text-[#9d4300]"></div>
+              <div class="font-label text-xs text-[#783200] mt-xs">↩ Учу</div>
+            </div>
+          </div>
+
+          <!-- Кнопки завершения -->
+          <div class="w-full max-w-xs mx-auto space-y-sm">
+            <button id="vf-repeat-learning-btn" onclick="repeatLearning()"
+              class="w-full h-touch rounded-xl bg-[#fd761a] text-white font-label font-bold uppercase tracking-wider text-sm active:scale-[0.98] transition-transform">
+              ↩ Повторить непройденные
+            </button>
+            <button onclick="repeatAll()"
+              class="w-full h-touch rounded-xl bg-primary-container text-on-primary font-label font-bold uppercase tracking-wider text-sm active:scale-[0.98] transition-transform">
+              🔁 Повторить всё
+            </button>
+            <button onclick="showScreen('screen-dictionary')"
+              class="w-full h-touch rounded-xl bg-surface-container text-on-surface-variant font-label font-bold uppercase tracking-wider text-sm active:scale-[0.98] transition-transform">
+              ← К темам
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- ══════════ PERSONAL DICTIONARY ══════════ -->
@@ -1383,34 +1505,227 @@ async function loadVocabTopics(level) {
 }
 
 async function openVocabTopic(topic, level) {
-  showScreen('screen-vocab-cards','screen-dictionary');
-  document.getElementById('vocab-topic-title').textContent = (TOPIC_ICONS[topic]||'📖') + ' ' + topic;
-  document.getElementById('vocab-topic-count').textContent = '...';
-  const grid = document.getElementById('vocab-cards-grid');
-  grid.innerHTML = '<p class="col-span-2 text-outline text-center py-lg">Загрузка...</p>';
+  showScreen('screen-vocab-cards', 'screen-dictionary');
+  document.getElementById('vf-topic-name').textContent = (TOPIC_ICONS[topic]||'📖') + ' ' + topic;
+  document.getElementById('vf-completion').classList.add('hidden');
+  document.getElementById('vf-counter').textContent = 'Загрузка...';
+
   try {
-    const url = level ? `/api/vocab/cards?topic=${encodeURIComponent(topic)}&level=${level}` : `/api/vocab/cards?topic=${encodeURIComponent(topic)}`;
+    const url = level
+      ? `/api/vocab/cards?topic=${encodeURIComponent(topic)}&level=${level}`
+      : `/api/vocab/cards?topic=${encodeURIComponent(topic)}`;
     const res = await fetch(url);
     const cards = await res.json();
-    document.getElementById('vocab-topic-count').textContent = cards.length + ' слов';
-    if (!cards.length) { grid.innerHTML='<p class="col-span-2 text-outline text-center py-lg">Нет карточек</p>'; return; }
-    grid.innerHTML = cards.map(card => {
-      const g = LEVEL_COLORS[card.level] || LEVEL_COLORS['A1'];
-      let emojiChar='📖'; try{ emojiChar=String.fromCodePoint(parseInt(card.emoji_code,16)); }catch(e){}
-      return `<div class="bg-surface-container-lowest border border-surface-variant rounded-2xl overflow-hidden flex flex-col shadow-sm">
-        <div class="bg-gradient-to-br ${g} flex items-center justify-center" style="min-height:96px">
-          <span style="font-size:56px;line-height:1">${emojiChar}</span>
-        </div>
-        <div class="p-md flex flex-col gap-xs flex-1">
-          <span class="font-headline font-extrabold text-on-surface text-base leading-tight">${card.word}</span>
-          <span class="text-primary font-body font-bold text-sm">${card.translation}</span>
-          ${card.definition?`<span class="text-outline text-xs leading-snug">${card.definition}</span>`:''}
-          <span class="self-start mt-auto font-label text-[10px] font-bold bg-surface-container text-on-surface-variant px-xs py-[2px] rounded-full">${card.level}</span>
-        </div>
-      </div>`;
-    }).join('');
-  } catch(e) { grid.innerHTML='<p class="col-span-2 text-error text-center py-lg">Ошибка</p>'; }
+    if (!cards.length) {
+      document.getElementById('vf-counter').textContent = '0 карточек';
+      return;
+    }
+    startFlashcards(cards);
+  } catch(e) {
+    document.getElementById('vf-counter').textContent = 'Ошибка загрузки';
+  }
 }
+
+// ─────────────────────────────────────────────
+// ФЛЭШ-КАРТОЧКИ
+// ─────────────────────────────────────────────
+let vfAllCards   = [];   // все уникальные карточки темы
+let vfCurrentIdx = 0;   // текущая позиция в колоде
+let vfKnownCards = [];  // оценены «Знаю»
+let vfLearningCards = []; // оценены «Учу»
+let vfFlipped    = false;
+let vfCurrentCard= null;
+
+// Свайп
+let vfTouchStartX = 0;
+let vfTouchStartY = 0;
+
+function startFlashcards(cards) {
+  vfAllCards = shuffleArray([...cards]);
+  vfCurrentIdx = 0;
+  vfKnownCards = [];
+  vfLearningCards = [];
+  document.getElementById('vf-swipe-hint').classList.remove('hidden');
+  document.getElementById('vf-completion').classList.add('hidden');
+  showVfCard(vfAllCards[0]);
+  updateVfProgress();
+}
+
+function shuffleArray(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function showVfCard(card) {
+  vfCurrentCard = card;
+  vfFlipped = false;
+
+  // Emoji
+  let emoji = '📖';
+  try { emoji = String.fromCodePoint(parseInt(card.emoji_code, 16)); } catch(e) {}
+  document.getElementById('vf-emoji').textContent = emoji;
+
+  // Градиент фона эмодзи по уровню
+  const gradMap = {
+    'A1':'linear-gradient(135deg,#4ade80,#2dd4bf)',
+    'A2':'linear-gradient(135deg,#60a5fa,#818cf8)',
+    'B1':'linear-gradient(135deg,#fb923c,#f59e0b)',
+    'B2':'linear-gradient(135deg,#f472b6,#fb7185)',
+    'C1':'linear-gradient(135deg,#f87171,#a855f7)',
+    'C2':'linear-gradient(135deg,#71717a,#374151)',
+  };
+  document.getElementById('vf-emoji-bg').style.background = gradMap[card.level] || gradMap['A1'];
+
+  document.getElementById('vf-word').textContent = card.word;
+  document.getElementById('vf-level-badge').textContent = card.level;
+  document.getElementById('vf-definition').textContent = card.definition || '';
+  document.getElementById('vf-translation').textContent = card.translation || '';
+  document.getElementById('vf-example').textContent = '';
+
+  // Сбрасываем в лицо
+  const inner = document.getElementById('vf-card-inner');
+  inner.classList.remove('border-primary-container', 'bg-surface-container-low');
+  inner.classList.add('border-surface-variant');
+  document.getElementById('vf-back').classList.add('hidden');
+  document.getElementById('vf-tap-hint').classList.remove('hidden');
+  document.getElementById('vf-action-btns').classList.add('hidden');
+
+  // Анимация появления
+  const card_el = document.getElementById('vf-card');
+  card_el.classList.remove('card-exit-left','card-exit-right');
+  card_el.classList.add('card-enter');
+  setTimeout(() => card_el.classList.remove('card-enter'), 320);
+}
+
+function flipCard() {
+  if (vfFlipped) return;
+  vfFlipped = true;
+
+  // Скрываем подсказку свайпа после первой карточки
+  document.getElementById('vf-swipe-hint').classList.add('hidden');
+
+  // Показываем перевод
+  const inner = document.getElementById('vf-card-inner');
+  inner.classList.add('border-primary-container', 'bg-surface-container-low');
+  inner.classList.remove('border-surface-variant');
+  document.getElementById('vf-back').classList.remove('hidden');
+  document.getElementById('vf-tap-hint').classList.add('hidden');
+  document.getElementById('vf-action-btns').classList.remove('hidden');
+
+  // Маленький «пульс» карточки
+  const card_el = document.getElementById('vf-card');
+  card_el.style.transform = 'scale(0.97)';
+  setTimeout(() => { card_el.style.transform = ''; }, 120);
+}
+
+function rateCard(rating) {
+  if (!vfFlipped) { flipCard(); return; }
+
+  if (rating === 'known') vfKnownCards.push(vfCurrentCard);
+  else vfLearningCards.push(vfCurrentCard);
+
+  // Анимация выхода
+  const card_el = document.getElementById('vf-card');
+  card_el.classList.add(rating === 'known' ? 'card-exit-right' : 'card-exit-left');
+
+  setTimeout(() => {
+    vfCurrentIdx++;
+    updateVfProgress();
+    if (vfCurrentIdx >= vfAllCards.length) {
+      showVfCompletion();
+    } else {
+      showVfCard(vfAllCards[vfCurrentIdx]);
+    }
+  }, 280);
+}
+
+function updateVfProgress() {
+  const total = vfAllCards.length;
+  const done = vfCurrentIdx;
+  const pct = total > 0 ? Math.round(done / total * 100) : 0;
+  document.getElementById('vf-progress-bar').style.width = pct + '%';
+  document.getElementById('vf-counter').textContent = `${done} / ${total}`;
+  document.getElementById('vf-known-count').textContent = vfKnownCards.length + ' знаю';
+  document.getElementById('vf-learning-count').textContent = vfLearningCards.length + ' учу';
+}
+
+function showVfCompletion() {
+  const total = vfAllCards.length;
+  document.getElementById('vf-final-known').textContent = vfKnownCards.length;
+  document.getElementById('vf-final-learning').textContent = vfLearningCards.length;
+  document.getElementById('vf-completion-msg').textContent =
+    `Вы прошли ${total} карточек темы «${vfCurrentCard ? document.getElementById('vf-topic-name').textContent : ''}»`;
+
+  const repeatBtn = document.getElementById('vf-repeat-learning-btn');
+  repeatBtn.classList.toggle('hidden', vfLearningCards.length === 0);
+
+  document.getElementById('vf-completion').classList.remove('hidden');
+  document.getElementById('vf-action-btns').classList.add('hidden');
+}
+
+function repeatAll() {
+  startFlashcards(vfAllCards);
+}
+
+function repeatLearning() {
+  if (vfLearningCards.length > 0) {
+    startFlashcards(vfLearningCards);
+  }
+}
+
+async function speakWord() {
+  if (!vfCurrentCard) return;
+  try {
+    const audio = new Audio(`/api/tts/word?word=${encodeURIComponent(vfCurrentCard.word)}`);
+    audio.play();
+  } catch(e) { console.error(e); }
+}
+
+async function addCurrentWordToDict() {
+  if (!vfCurrentCard) return;
+  try {
+    const res = await fetch('/api/dictionary/quick_add', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        user_id: parseInt(userId),
+        word: vfCurrentCard.word,
+        context_sentence: vfCurrentCard.definition || ''
+      })
+    });
+    const data = await res.json();
+    showToast(data.status === 'success' ? '✅ Добавлено в блокнот!' : '⚠️ ' + (data.message||'Ошибка'));
+  } catch(e) {
+    showToast('Ошибка соединения', 'neutral');
+  }
+}
+
+// Свайп-жесты на карточке
+(function() {
+  let el, sx, sy;
+  function onStart(e) {
+    el = e.currentTarget;
+    const t = e.touches ? e.touches[0] : e;
+    sx = t.clientX; sy = t.clientY;
+  }
+  function onEnd(e) {
+    const t = e.changedTouches ? e.changedTouches[0] : e;
+    const dx = t.clientX - sx;
+    const dy = t.clientY - sy;
+    if (!vfFlipped) return; // свайп только после флипа
+    if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 55) {
+      rateCard(dx > 0 ? 'known' : 'learning');
+    }
+  }
+  document.addEventListener('DOMContentLoaded', () => {
+    const c = document.getElementById('vf-card');
+    if (!c) return;
+    c.addEventListener('touchstart', onStart, {passive:true});
+    c.addEventListener('touchend',   onEnd,   {passive:true});
+  });
+})();
 
 // ─────────────────────────────────────────────
 // ОНБОРДИНГ
