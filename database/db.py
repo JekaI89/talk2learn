@@ -658,11 +658,22 @@ async def get_user_category_stats(user_id: int) -> dict:
             "SELECT COUNT(*) as cnt FROM user_dictionary WHERE user_id = $1 AND status = 'known'",
             user_id
         )
+        vocab_cards_total = await db.fetchrow(
+            "SELECT COUNT(*) as cnt FROM vocabulary_cards WHERE is_active = TRUE"
+        )
+        vocab_cards_done = await db.fetchrow(
+            "SELECT COUNT(*) as cnt FROM user_progress WHERE user_id = $1 AND content_type = 'vocab_card'",
+            user_id
+        )
 
         stats = {r["content_type"]: {"total": int(r["total"]), "completed": int(r["completed"])} for r in rows}
         stats["practice"] = {"total": int(practice_total["cnt"]), "completed": int(practice_done["cnt"])}
         stats["words"] = {
             "total":     int(words_total["cnt"]),
             "completed": int(words_known["cnt"])
+        }
+        stats["vocab_cards"] = {
+            "total":     int(vocab_cards_total["cnt"]),
+            "completed": int(vocab_cards_done["cnt"])
         }
         return stats
