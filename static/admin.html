@@ -1,485 +1,749 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Админ Talk2Learn</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Talk2Learn Admin</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700;800&family=Be+Vietnam+Pro:wght@400;500;600&family=Hanken+Grotesk:wght@500;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script>
+tailwind.config = {
+  theme: { extend: {
+    colors: {
+      "surface":"#f7f9fb","surface-container-lowest":"#ffffff","surface-container":"#eceef0",
+      "surface-container-high":"#e6e8ea","surface-variant":"#e0e3e5","on-surface":"#191c1e",
+      "on-surface-variant":"#434655","outline":"#737686","outline-variant":"#c3c6d7",
+      "primary":"#004ac6","on-primary":"#ffffff","primary-container":"#2563eb",
+      "secondary":"#9d4300","secondary-container":"#fd761a","on-secondary":"#ffffff",
+      "tertiary-container":"#007f36","on-tertiary":"#ffffff",
+      "error":"#ba1a1a","on-error":"#ffffff","error-container":"#ffdad6",
+    },
+    fontFamily: { body:["Be Vietnam Pro","sans-serif"], headline:["Plus Jakarta Sans","sans-serif"], label:["Hanken Grotesk","sans-serif"] },
+    spacing: { xs:"4px",sm:"8px",md:"16px",lg:"24px",xl:"32px",touch:"52px" },
+  }}
+}
+</script>
+<style>
+  body { font-family:'Be Vietnam Pro',sans-serif; background:#f7f9fb; }
+  .material-symbols-outlined { font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24; vertical-align:middle; }
+  .filled { font-variation-settings:'FILL' 1,'wght' 400,'GRAD' 0,'opsz' 24; }
+  .tab-content { display:none; }
+  .tab-content.active { display:block; }
+  .tab-btn { transition:all 0.15s; }
+  .tab-btn.active { background:#2563eb; color:#fff; }
+  input,select,textarea { outline:none; }
+  input:focus,select:focus,textarea:focus { border-color:#2563eb; box-shadow:0 0 0 2px rgba(37,99,235,0.15); }
+</style>
 </head>
-<body class="bg-zinc-950 text-white p-6">
-    <div class="max-w-3xl mx-auto">
-        <h1 class="text-3xl font-bold mb-8">⚙️ Admin Panel</h1>
+<body class="bg-surface min-h-screen">
 
-        <div class="flex flex-wrap gap-2 mb-6">
-            <button onclick="showTab('stats')" class="px-6 py-2 bg-zinc-800 rounded-2xl text-sm font-medium hover:bg-zinc-700 transition-colors">Статистика</button>
-            <button onclick="showTab('users')" class="px-6 py-2 bg-zinc-800 rounded-2xl text-sm font-medium hover:bg-zinc-700 transition-colors">Пользователи</button>
-            <button onclick="showTab('lessons')" class="px-6 py-2 bg-zinc-800 rounded-2xl text-sm font-medium hover:bg-zinc-700 transition-colors">Уроки</button>
-            <button onclick="showTab('questions')" class="px-6 py-2 bg-zinc-800 rounded-2xl text-sm font-medium hover:bg-zinc-700 transition-colors">Вопросы</button>
-            <button onclick="showTab('vocab')" class="px-6 py-2 bg-zinc-800 rounded-2xl text-sm font-medium hover:bg-zinc-700 transition-colors">📚 Словарь</button>
-            <button onclick="closeAdmin()" class="px-6 py-2 bg-red-950/60 text-red-400 border border-red-900/50 rounded-2xl text-sm font-semibold hover:bg-red-900 hover:text-red-100 transition-colors ml-auto">
-                ◀ Назад в Академию
-            </button>
+<!-- Модал редактирования урока -->
+<div id="edit-modal" class="hidden fixed inset-0 z-50 flex items-end sm:items-center justify-center p-md">
+  <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" onclick="closeEditModal()"></div>
+  <div class="relative bg-surface-container-lowest rounded-3xl shadow-2xl w-full max-w-lg p-lg z-10 max-h-[90vh] overflow-y-auto">
+    <div class="flex items-center justify-between mb-lg">
+      <h2 class="font-headline font-bold text-on-surface text-xl" id="modal-title">Редактировать урок</h2>
+      <button onclick="closeEditModal()" class="w-9 h-9 flex items-center justify-center rounded-full bg-surface-container active:scale-90 transition-transform">
+        <span class="material-symbols-outlined text-on-surface-variant">close</span>
+      </button>
+    </div>
+    <input type="hidden" id="edit-id"/>
+    <div class="space-y-sm">
+      <div>
+        <label class="font-label text-xs text-outline uppercase tracking-wider block mb-xs">Название</label>
+        <input id="edit-title" class="w-full bg-surface-container border border-outline-variant rounded-xl px-md py-sm font-body text-on-surface" placeholder="Название урока"/>
+      </div>
+      <div class="grid grid-cols-3 gap-sm">
+        <div>
+          <label class="font-label text-xs text-outline uppercase tracking-wider block mb-xs">Уровень</label>
+          <select id="edit-level" class="w-full bg-surface-container border border-outline-variant rounded-xl px-sm py-sm font-body text-on-surface">
+            <option>A1</option><option>A2</option><option>B1</option><option>B2</option><option>C1</option><option>C2</option>
+          </select>
         </div>
-
-        <div id="tab-stats" class="tab-content">
-            <div class="bg-zinc-900 rounded-3xl p-6">
-                <h2 class="text-xl font-semibold mb-4">📊 Статистика</h2>
-                <div id="stats-content">Загрузка...</div>
-            </div>
+        <div>
+          <label class="font-label text-xs text-outline uppercase tracking-wider block mb-xs">Тип</label>
+          <select id="edit-type" class="w-full bg-surface-container border border-outline-variant rounded-xl px-sm py-sm font-body text-on-surface">
+            <option value="lesson">Урок</option>
+            <option value="grammar">Грамматика</option>
+            <option value="vocabulary">Лексика</option>
+          </select>
         </div>
-
-        <div id="tab-users" class="tab-content hidden">
-            <div class="bg-zinc-900 rounded-3xl p-6">
-                <h2 class="text-xl font-semibold mb-4">👤 Управление пользователями</h2>
-                <input id="user-input" placeholder="@username или Telegram ID" class="w-full bg-zinc-800 p-4 rounded-2xl mb-4">
-                <div class="grid grid-cols-2 gap-3">
-                    <button onclick="manageUser('grant_premium')" class="bg-emerald-600 py-4 rounded-2xl">Дать Premium</button>
-                    <button onclick="manageUser('revoke_premium')" class="bg-red-600 py-4 rounded-2xl">Снять Premium</button>
-                    <button onclick="manageUser('grant_admin')" class="bg-yellow-600 py-4 rounded-2xl">Сделать Админом</button>
-                    <button onclick="manageUser('revoke_admin')" class="bg-gray-600 py-4 rounded-2xl">Снять Админа</button>
-                </div>
-            </div>
+        <div>
+          <label class="font-label text-xs text-outline uppercase tracking-wider block mb-xs">Язык</label>
+          <select id="edit-lang" class="w-full bg-surface-container border border-outline-variant rounded-xl px-sm py-sm font-body text-on-surface">
+            <option value="en">🇬🇧 EN</option><option value="de">🇩🇪 DE</option>
+            <option value="fr">🇫🇷 FR</option><option value="es">🇪🇸 ES</option>
+            <option value="it">🇮🇹 IT</option><option value="zh">🇨🇳 ZH</option>
+            <option value="ja">🇯🇵 JA</option><option value="pt">🇵🇹 PT</option>
+            <option value="ru">🇷🇺 RU</option>
+          </select>
         </div>
+      </div>
+      <div>
+        <label class="font-label text-xs text-outline uppercase tracking-wider block mb-xs">Порядок</label>
+        <input id="edit-order" type="number" value="0" class="w-full bg-surface-container border border-outline-variant rounded-xl px-md py-sm font-body text-on-surface"/>
+      </div>
+      <div>
+        <label class="font-label text-xs text-outline uppercase tracking-wider block mb-xs">Текст урока</label>
+        <textarea id="edit-text" rows="8" class="w-full bg-surface-container border border-outline-variant rounded-xl px-md py-sm font-body text-on-surface resize-none" placeholder="Основной текст урока..."></textarea>
+      </div>
+    </div>
+    <div class="flex gap-sm mt-lg">
+      <button onclick="closeEditModal()" class="flex-1 h-touch rounded-xl bg-surface-container text-on-surface-variant font-label font-bold text-sm active:scale-[0.98] transition-transform">
+        Отмена
+      </button>
+      <button onclick="saveLesson()" class="flex-1 h-touch rounded-xl bg-primary-container text-on-primary font-label font-bold text-sm active:scale-[0.98] transition-transform shadow-sm">
+        <span id="save-btn-text">Сохранить</span>
+      </button>
+    </div>
+    <div id="modal-status" class="text-center font-label text-sm mt-sm min-h-[20px]"></div>
+  </div>
+</div>
 
-        <div id="tab-lessons" class="tab-content hidden">
-            <div class="bg-zinc-900 rounded-3xl p-6 mb-6">
-                <h2 class="text-xl font-semibold mb-4">➕ Добавить урок / Грамматику / Практику</h2>
-                
-                <input id="lesson-title" placeholder="Название урока" class="w-full bg-zinc-800 p-4 rounded-2xl mb-3">
-                
-                <div class="grid grid-cols-2 gap-3 mb-3">
-                    <div>
-                        <label class="block text-sm text-zinc-400 mb-1">Уровень</label>
-                        <select id="lesson-level" class="w-full bg-zinc-800 p-4 rounded-2xl">
-                            <option value="A1">A1</option>
-                            <option value="A2">A2</option>
-                            <option value="B1">B1</option>
-                            <option value="B2">B2</option>
-                            <option value="C1">C1</option>
-                            <option value="C2">C2</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm text-zinc-400 mb-1">Тип</label>
-                        <select id="lesson-type" class="w-full bg-zinc-800 p-4 rounded-2xl">
-                            <option value="lesson">📚 Урок</option>
-                            <option value="grammar">📖 Грамматика</option>
-                            <option value="practice">🎯 Практика (тест)</option>
-                        </select>
-                    </div>
-                </div>
+<!-- Основной контейнер -->
+<div class="max-w-3xl mx-auto min-h-screen flex flex-col">
 
-                <textarea id="lesson-text" placeholder="Текст урока (опционально)" class="w-full bg-zinc-800 p-4 rounded-3xl h-32 mb-4"></textarea>
-                <button onclick="addLesson()" class="w-full bg-emerald-600 py-4 rounded-2xl font-bold">Добавить урок</button>
-            </div>
+  <!-- Хедер -->
+  <header class="sticky top-0 z-30 bg-surface border-b border-surface-variant">
+    <div class="flex items-center gap-md px-md py-sm">
+      <div class="w-10 h-10 bg-error rounded-xl flex items-center justify-center flex-shrink-0">
+        <span class="material-symbols-outlined filled text-on-error">admin_panel_settings</span>
+      </div>
+      <div class="flex-1">
+        <div class="font-headline font-bold text-on-surface text-sm">Admin Panel</div>
+        <div class="font-label text-xs text-outline">Talk2Learn</div>
+      </div>
+      <button onclick="window.location.href='/'" class="flex items-center gap-xs px-md py-sm bg-surface-container rounded-xl font-label text-xs font-bold text-on-surface-variant active:scale-95 transition-transform">
+        <span class="material-symbols-outlined text-sm">arrow_back</span> Назад
+      </button>
+    </div>
+    <!-- Вкладки -->
+    <div class="flex gap-xs px-md pb-sm overflow-x-auto">
+      <button onclick="showTab('stats')" id="tab-btn-stats" class="tab-btn active flex-shrink-0 px-md py-sm rounded-xl font-label text-xs font-bold text-on-surface-variant bg-surface-container">
+        📊 Статистика
+      </button>
+      <button onclick="showTab('lessons')" id="tab-btn-lessons" class="tab-btn flex-shrink-0 px-md py-sm rounded-xl font-label text-xs font-bold text-on-surface-variant bg-surface-container">
+        📖 Уроки
+      </button>
+      <button onclick="showTab('questions')" id="tab-btn-questions" class="tab-btn flex-shrink-0 px-md py-sm rounded-xl font-label text-xs font-bold text-on-surface-variant bg-surface-container">
+        ❓ Вопросы
+      </button>
+      <button onclick="showTab('vocab')" id="tab-btn-vocab" class="tab-btn flex-shrink-0 px-md py-sm rounded-xl font-label text-xs font-bold text-on-surface-variant bg-surface-container">
+        📚 Словарь
+      </button>
+      <button onclick="showTab('users')" id="tab-btn-users" class="tab-btn flex-shrink-0 px-md py-sm rounded-xl font-label text-xs font-bold text-on-surface-variant bg-surface-container">
+        👥 Пользователи
+      </button>
+    </div>
+  </header>
 
-            <div class="bg-zinc-900 rounded-3xl p-6">
-                <h2 class="text-xl font-semibold mb-4">📋 Текущие уроки</h2>
-                <div id="lessons-list" class="space-y-2 max-h-96 overflow-y-auto pr-2">
-                    <div class="text-zinc-500">Загрузка уроков...</div>
-                </div>
-            </div>
+  <main class="flex-1 p-md space-y-md">
+
+    <!-- ── СТАТИСТИКА ───────────────────────────────── -->
+    <div id="tab-stats" class="tab-content active space-y-md">
+      <div id="stats-grid" class="grid grid-cols-2 gap-sm">
+        <div class="bg-surface-container-lowest border border-surface-variant rounded-2xl p-md text-center">
+          <p class="font-label text-xs text-outline mb-xs">Загрузка...</p>
         </div>
-
-        <div id="tab-questions" class="tab-content hidden">
-            <div class="bg-zinc-900 rounded-3xl p-6">
-                <h2 class="text-xl font-semibold mb-4">❓ Добавить вопрос (Multiple Choice)</h2>
-                <select id="q-lesson" class="w-full bg-zinc-800 p-4 rounded-2xl mb-3" onchange="onLessonSelect()">
-                    <option value="">-- Выбери урок --</option>
-                </select>
-                <div id="q-level-hint" class="text-sm text-zinc-400 mb-3"></div>
-                <input id="q-text" placeholder="Текст вопроса" class="w-full bg-zinc-800 p-4 rounded-2xl mb-3">
-                <input id="q-opt1" placeholder="Вариант 1" class="w-full bg-zinc-800 p-4 rounded-2xl mb-2">
-                <input id="q-opt2" placeholder="Вариант 2" class="w-full bg-zinc-800 p-4 rounded-2xl mb-2">
-                <input id="q-opt3" placeholder="Вариант 3" class="w-full bg-zinc-800 p-4 rounded-2xl mb-3">
-                <select id="q-correct" class="w-full bg-zinc-800 p-4 rounded-2xl mb-4">
-                    <option value="1">Правильный ответ: Вариант 1</option>
-                    <option value="2">Правильный ответ: Вариант 2</option>
-                    <option value="3">Правильный ответ: Вариант 3</option>
-                </select>
-                <button onclick="addQuestion()" class="w-full bg-blue-600 py-4 rounded-2xl font-bold">Добавить вопрос</button>
-            </div>
-        </div>
-
-        <!-- ── ВКЛАДКА: СЛОВАРЬ ──────────────────────────── -->
-        <div id="tab-vocab" class="tab-content hidden space-y-6">
-
-            <!-- Форма добавления карточки -->
-            <div class="bg-zinc-900 rounded-3xl p-6">
-                <h2 class="text-xl font-semibold mb-4">➕ Добавить карточку</h2>
-                <div class="grid grid-cols-2 gap-3 mb-3">
-                    <input id="vc-word" placeholder="Слово (EN)" class="bg-zinc-800 p-3 rounded-2xl col-span-1">
-                    <input id="vc-translation" placeholder="Перевод (RU)" class="bg-zinc-800 p-3 rounded-2xl col-span-1">
-                </div>
-                <div class="grid grid-cols-2 gap-3 mb-3">
-                    <input id="vc-topic" placeholder="Тема (Animals, Food...)" class="bg-zinc-800 p-3 rounded-2xl">
-                    <input id="vc-emoji" placeholder="Emoji code (1F415)" class="bg-zinc-800 p-3 rounded-2xl font-mono">
-                </div>
-                <div class="grid grid-cols-2 gap-3 mb-3">
-                    <select id="vc-level" class="bg-zinc-800 p-3 rounded-2xl">
-                        <option value="A1">A1</option><option value="A2">A2</option>
-                        <option value="B1">B1</option><option value="B2">B2</option>
-                        <option value="C1">C1</option><option value="C2">C2</option>
-                    </select>
-                    <input id="vc-order" type="number" placeholder="Порядок (0)" value="0" class="bg-zinc-800 p-3 rounded-2xl">
-                </div>
-                <input id="vc-definition" placeholder="Значение на английском (необязательно)" class="w-full bg-zinc-800 p-3 rounded-2xl mb-3">
-
-                <!-- Превью -->
-                <div class="flex items-center gap-3 mb-4 bg-zinc-800 rounded-2xl p-3">
-                    <img id="vc-preview-img" src="" alt="" class="w-12 h-12 object-contain hidden">
-                    <span id="vc-preview-emoji" class="text-4xl hidden"></span>
-                    <div>
-                        <div id="vc-preview-word" class="font-bold text-white text-sm">— введите данные выше</div>
-                        <div id="vc-preview-tr" class="text-blue-400 text-xs"></div>
-                    </div>
-                </div>
-
-                <div class="flex gap-3">
-                    <button onclick="previewVocabCard()" class="flex-1 bg-zinc-700 py-3 rounded-2xl font-bold text-sm hover:bg-zinc-600">👁 Превью</button>
-                    <button onclick="addVocabCard()" class="flex-1 bg-emerald-600 py-3 rounded-2xl font-bold text-sm hover:bg-emerald-500">+ Добавить</button>
-                </div>
-                <div id="vc-add-status" class="text-center text-sm mt-2 min-h-[20px]"></div>
-            </div>
-
-            <!-- Таблица карточек -->
-            <div class="bg-zinc-900 rounded-3xl p-6">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-xl font-semibold">📋 Все карточки</h2>
-                    <button onclick="loadAdminVocab()" class="text-xs bg-zinc-700 px-4 py-2 rounded-xl hover:bg-zinc-600">Обновить</button>
-                </div>
-                <div id="vocab-admin-list" class="space-y-2 max-h-[500px] overflow-y-auto pr-1"></div>
-            </div>
-        </div>
-
+      </div>
     </div>
 
-    <script>
-        let lessonsData = [];
+    <!-- ── УРОКИ ────────────────────────────────────── -->
+    <div id="tab-lessons" class="tab-content space-y-md">
 
-        // Инициализация Telegram WebApp API
-        if (window.Telegram && window.Telegram.WebApp) {
-            window.Telegram.WebApp.ready();
-            window.Telegram.WebApp.expand(); // Разворачиваем на весь экран для удобства админки
-        }
+      <!-- Форма добавления -->
+      <div class="bg-surface-container-lowest border border-surface-variant rounded-2xl p-lg">
+        <div class="flex items-center gap-sm mb-lg">
+          <div class="w-9 h-9 bg-primary-container rounded-xl flex items-center justify-center">
+            <span class="material-symbols-outlined filled text-on-primary text-sm">add</span>
+          </div>
+          <h2 class="font-headline font-bold text-on-surface">Новый урок</h2>
+        </div>
+        <div class="space-y-sm">
+          <input id="lesson-title" placeholder="Название урока"
+            class="w-full bg-surface-container border border-outline-variant rounded-xl px-md py-sm font-body text-on-surface placeholder:text-outline"/>
+          <div class="grid grid-cols-2 gap-sm">
+            <div>
+              <label class="font-label text-xs text-outline block mb-xs">Тип контента</label>
+              <select id="lesson-type" class="w-full bg-surface-container border border-outline-variant rounded-xl px-sm py-sm font-body text-on-surface">
+                <option value="lesson">📖 Урок</option>
+                <option value="grammar">✍️ Грамматика</option>
+                <option value="vocabulary">💬 Лексика</option>
+              </select>
+            </div>
+            <div>
+              <label class="font-label text-xs text-outline block mb-xs">Уровень</label>
+              <select id="lesson-level" class="w-full bg-surface-container border border-outline-variant rounded-xl px-sm py-sm font-body text-on-surface">
+                <option>A1</option><option>A2</option><option>B1</option><option>B2</option><option>C1</option><option>C2</option>
+              </select>
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-sm">
+            <div>
+              <label class="font-label text-xs text-outline block mb-xs">Язык обучения</label>
+              <select id="lesson-lang" class="w-full bg-surface-container border border-outline-variant rounded-xl px-sm py-sm font-body text-on-surface">
+                <option value="en">🇬🇧 Английский</option>
+                <option value="de">🇩🇪 Немецкий</option>
+                <option value="fr">🇫🇷 Французский</option>
+                <option value="es">🇪🇸 Испанский</option>
+                <option value="it">🇮🇹 Итальянский</option>
+                <option value="zh">🇨🇳 Китайский</option>
+                <option value="ja">🇯🇵 Японский</option>
+                <option value="pt">🇵🇹 Португальский</option>
+                <option value="ru">🇷🇺 Русский</option>
+              </select>
+            </div>
+            <div>
+              <label class="font-label text-xs text-outline block mb-xs">Порядок</label>
+              <input id="lesson-order" type="number" value="0" class="w-full bg-surface-container border border-outline-variant rounded-xl px-sm py-sm font-body text-on-surface"/>
+            </div>
+          </div>
+          <div>
+            <label class="font-label text-xs text-outline block mb-xs">Текст урока</label>
+            <textarea id="lesson-text" rows="6" placeholder="Основной текст урока..."
+              class="w-full bg-surface-container border border-outline-variant rounded-xl px-md py-sm font-body text-on-surface resize-none"></textarea>
+          </div>
+          <button onclick="addLesson()" class="w-full h-touch rounded-xl bg-primary-container text-on-primary font-label font-bold text-sm active:scale-[0.98] transition-transform shadow-sm">
+            + Добавить урок
+          </button>
+          <div id="lesson-add-status" class="text-center font-label text-sm min-h-[18px]"></div>
+        </div>
+      </div>
 
-        function showTab(tab) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-            document.getElementById('tab-' + tab).classList.remove('hidden');
+      <!-- Фильтры + список -->
+      <div class="bg-surface-container-lowest border border-surface-variant rounded-2xl p-lg">
+        <div class="flex items-center justify-between mb-md">
+          <h2 class="font-headline font-bold text-on-surface">Все уроки</h2>
+          <div class="flex gap-sm">
+            <select id="filter-lang" onchange="loadAdminLessonsList()" class="bg-surface-container border border-outline-variant rounded-xl px-sm py-xs font-label text-xs text-on-surface-variant">
+              <option value="">Все языки</option>
+              <option value="en">🇬🇧 EN</option><option value="de">🇩🇪 DE</option>
+              <option value="fr">🇫🇷 FR</option><option value="es">🇪🇸 ES</option>
+              <option value="it">🇮🇹 IT</option><option value="zh">🇨🇳 ZH</option>
+              <option value="ja">🇯🇵 JA</option><option value="pt">🇵🇹 PT</option>
+              <option value="ru">🇷🇺 RU</option>
+            </select>
+            <select id="filter-type" onchange="loadAdminLessonsList()" class="bg-surface-container border border-outline-variant rounded-xl px-sm py-xs font-label text-xs text-on-surface-variant">
+              <option value="">Все типы</option>
+              <option value="lesson">Уроки</option>
+              <option value="grammar">Грамматика</option>
+              <option value="vocabulary">Лексика</option>
+            </select>
+          </div>
+        </div>
+        <div id="lessons-list" class="space-y-sm max-h-[600px] overflow-y-auto pr-sm">
+          <p class="text-outline text-center py-lg font-label text-sm">Загрузка...</p>
+        </div>
+      </div>
+    </div>
 
-            if (tab === 'lessons') loadAdminLessonsList();
-            if (tab === 'vocab') loadAdminVocab();
-        }
+    <!-- ── ВОПРОСЫ ───────────────────────────────────── -->
+    <div id="tab-questions" class="tab-content space-y-md">
+      <div class="bg-surface-container-lowest border border-surface-variant rounded-2xl p-lg">
+        <div class="flex items-center gap-sm mb-lg">
+          <div class="w-9 h-9 bg-[#7c3aed] rounded-xl flex items-center justify-center">
+            <span class="material-symbols-outlined filled text-white text-sm">quiz</span>
+          </div>
+          <h2 class="font-headline font-bold text-on-surface">Добавить вопрос (Multiple Choice)</h2>
+        </div>
+        <div class="space-y-sm">
+          <div>
+            <label class="font-label text-xs text-outline block mb-xs">Урок</label>
+            <select id="q-lesson" onchange="onLessonSelect()" class="w-full bg-surface-container border border-outline-variant rounded-xl px-md py-sm font-body text-on-surface">
+              <option value="">— Выбери урок (или оставь пустым для автономного) —</option>
+            </select>
+            <div id="q-level-hint" class="font-label text-xs text-outline mt-xs"></div>
+          </div>
+          <div class="grid grid-cols-3 gap-sm">
+            <div>
+              <label class="font-label text-xs text-outline block mb-xs">Уровень</label>
+              <select id="q-level" class="w-full bg-surface-container border border-outline-variant rounded-xl px-sm py-sm font-body text-on-surface">
+                <option>A1</option><option>A2</option><option>B1</option><option>B2</option><option>C1</option><option>C2</option>
+              </select>
+            </div>
+            <div>
+              <label class="font-label text-xs text-outline block mb-xs">Тип</label>
+              <select id="q-type" class="w-full bg-surface-container border border-outline-variant rounded-xl px-sm py-sm font-body text-on-surface">
+                <option value="multiple_choice">Multiple Choice</option>
+                <option value="sentence_builder">Sentence Builder</option>
+              </select>
+            </div>
+            <div>
+              <label class="font-label text-xs text-outline block mb-xs">Язык</label>
+              <select id="q-lang" class="w-full bg-surface-container border border-outline-variant rounded-xl px-sm py-sm font-body text-on-surface">
+                <option value="en">🇬🇧 EN</option><option value="de">🇩🇪 DE</option>
+                <option value="fr">🇫🇷 FR</option><option value="es">🇪🇸 ES</option>
+                <option value="it">🇮🇹 IT</option><option value="ru">🇷🇺 RU</option>
+              </select>
+            </div>
+          </div>
+          <input id="q-text" placeholder="Текст вопроса / русское предложение (для Builder)"
+            class="w-full bg-surface-container border border-outline-variant rounded-xl px-md py-sm font-body text-on-surface placeholder:text-outline"/>
+          <div class="space-y-xs" id="mc-options">
+            <input id="q-opt1" placeholder="Вариант 1 / правильное предложение (для Builder)"
+              class="w-full bg-surface-container border border-outline-variant rounded-xl px-md py-sm font-body text-on-surface placeholder:text-outline"/>
+            <input id="q-opt2" placeholder="Вариант 2 / слова-ловушки через запятую (для Builder)"
+              class="w-full bg-surface-container border border-outline-variant rounded-xl px-md py-sm font-body text-on-surface placeholder:text-outline"/>
+            <input id="q-opt3" placeholder="Вариант 3 (только для Multiple Choice)"
+              class="w-full bg-surface-container border border-outline-variant rounded-xl px-md py-sm font-body text-on-surface placeholder:text-outline"/>
+          </div>
+          <div>
+            <label class="font-label text-xs text-outline block mb-xs">Правильный ответ (только Multiple Choice)</label>
+            <select id="q-correct" class="w-full bg-surface-container border border-outline-variant rounded-xl px-md py-sm font-body text-on-surface">
+              <option value="1">Вариант 1</option>
+              <option value="2">Вариант 2</option>
+              <option value="3">Вариант 3</option>
+            </select>
+          </div>
+          <button onclick="addQuestion()" class="w-full h-touch rounded-xl bg-[#7c3aed] text-white font-label font-bold text-sm active:scale-[0.98] transition-transform shadow-sm">
+            + Добавить вопрос
+          </button>
+          <div id="q-status" class="text-center font-label text-sm min-h-[18px]"></div>
+        </div>
+      </div>
+    </div>
 
-        function closeAdmin() {
-            if (window.Telegram && window.Telegram.WebApp) {
-                window.Telegram.WebApp.close();
-            } else {
-                alert("Эта кнопка работает только внутри Telegram Mini App!");
-            }
-        }
+    <!-- ── СЛОВАРЬ ───────────────────────────────────── -->
+    <div id="tab-vocab" class="tab-content space-y-md">
+      <!-- Форма добавления карточки -->
+      <div class="bg-surface-container-lowest border border-surface-variant rounded-2xl p-lg">
+        <div class="flex items-center gap-sm mb-lg">
+          <div class="w-9 h-9 bg-secondary-container rounded-xl flex items-center justify-center">
+            <span class="material-symbols-outlined filled text-on-secondary text-sm">add_circle</span>
+          </div>
+          <h2 class="font-headline font-bold text-on-surface">Добавить карточку</h2>
+        </div>
+        <div class="space-y-sm">
+          <div class="grid grid-cols-2 gap-sm">
+            <input id="vc-word" placeholder="Слово (на языке изучения)"
+              class="bg-surface-container border border-outline-variant rounded-xl px-md py-sm font-body text-on-surface placeholder:text-outline"/>
+            <input id="vc-translation" placeholder="Перевод (на родном)"
+              class="bg-surface-container border border-outline-variant rounded-xl px-md py-sm font-body text-on-surface placeholder:text-outline"/>
+          </div>
+          <div class="grid grid-cols-2 gap-sm">
+            <input id="vc-topic" placeholder="Тема (Animals, Food...)"
+              class="bg-surface-container border border-outline-variant rounded-xl px-md py-sm font-body text-on-surface placeholder:text-outline"/>
+            <div class="relative">
+              <input id="vc-emoji" placeholder="Emoji HEX (1F415)" oninput="liveEmojiPreview()"
+                class="w-full bg-surface-container border border-outline-variant rounded-xl px-md py-sm font-body text-on-surface placeholder:text-outline font-mono pr-12"/>
+              <span id="vc-emoji-live" class="absolute right-sm top-1/2 -translate-y-1/2 text-2xl pointer-events-none"></span>
+            </div>
+          </div>
+          <div class="grid grid-cols-3 gap-sm">
+            <div>
+              <label class="font-label text-xs text-outline block mb-xs">Уровень</label>
+              <select id="vc-level" class="w-full bg-surface-container border border-outline-variant rounded-xl px-sm py-sm font-body text-on-surface">
+                <option>A1</option><option>A2</option><option>B1</option><option>B2</option><option>C1</option><option>C2</option>
+              </select>
+            </div>
+            <div>
+              <label class="font-label text-xs text-outline block mb-xs">Язык слова</label>
+              <select id="vc-card-lang" class="w-full bg-surface-container border border-outline-variant rounded-xl px-sm py-sm font-body text-on-surface">
+                <option value="en">🇬🇧 EN</option><option value="de">🇩🇪 DE</option>
+                <option value="fr">🇫🇷 FR</option><option value="es">🇪🇸 ES</option>
+                <option value="it">🇮🇹 IT</option><option value="zh">🇨🇳 ZH</option>
+              </select>
+            </div>
+            <div>
+              <label class="font-label text-xs text-outline block mb-xs">Порядок</label>
+              <input id="vc-order" type="number" value="0" class="w-full bg-surface-container border border-outline-variant rounded-xl px-sm py-sm font-body text-on-surface"/>
+            </div>
+          </div>
+          <input id="vc-definition" placeholder="Описание на языке изучения (необязательно)"
+            class="w-full bg-surface-container border border-outline-variant rounded-xl px-md py-sm font-body text-on-surface placeholder:text-outline"/>
+          <button onclick="addVocabCard()" class="w-full h-touch rounded-xl bg-secondary-container text-on-secondary font-label font-bold text-sm active:scale-[0.98] transition-transform shadow-sm">
+            + Добавить карточку
+          </button>
+          <div id="vc-add-status" class="text-center font-label text-sm min-h-[18px]"></div>
+        </div>
+      </div>
 
-        async function loadStats() {
-            try {
-                const res = await fetch('/api/admin/stats');
-                const data = await res.json();
-                
-                let levelsHtml = '';
-                if (data.levels) {
-                    for (const [lvl, count] of Object.entries(data.levels)) {
-                        levelsHtml += `Уроков ${lvl}: <b>${count}</b><br>`;
-                    }
-                }
+      <!-- Список карточек -->
+      <div class="bg-surface-container-lowest border border-surface-variant rounded-2xl p-lg">
+        <div class="flex items-center justify-between mb-md">
+          <h2 class="font-headline font-bold text-on-surface">Все карточки</h2>
+          <button onclick="loadAdminVocab()" class="px-md py-xs bg-surface-container rounded-xl font-label text-xs text-on-surface-variant active:scale-95 transition-transform">
+            <span class="material-symbols-outlined text-sm">refresh</span>
+          </button>
+        </div>
+        <div id="vocab-admin-list" class="space-y-sm max-h-[500px] overflow-y-auto pr-sm">
+          <p class="text-outline text-center py-lg font-label text-sm">Загрузка...</p>
+        </div>
+      </div>
+    </div>
 
-                document.getElementById('stats-content').innerHTML = `
-                    Пользователей: <b>${data.total_users || 0}</b><br>
-                    Premium: <b>${data.premium_users || 0}</b><br>
-                    Свободных: <b>${data.free_users || 0}</b><br>
-                    <hr class="border-zinc-800 my-3">
-                    ${levelsHtml}
-                `;
-            } catch (err) {
-                console.error("Ошибка загрузки статистики:", err);
-            }
-        }
+    <!-- ── ПОЛЬЗОВАТЕЛИ ──────────────────────────────── -->
+    <div id="tab-users" class="tab-content space-y-md">
+      <div class="bg-surface-container-lowest border border-surface-variant rounded-2xl p-lg">
+        <div class="flex items-center gap-sm mb-lg">
+          <div class="w-9 h-9 bg-error rounded-xl flex items-center justify-center">
+            <span class="material-symbols-outlined filled text-on-error text-sm">manage_accounts</span>
+          </div>
+          <h2 class="font-headline font-bold text-on-surface">Управление пользователями</h2>
+        </div>
+        <input id="user-input" placeholder="@username или Telegram ID"
+          class="w-full bg-surface-container border border-outline-variant rounded-xl px-md py-sm font-body text-on-surface placeholder:text-outline mb-md"/>
+        <div class="grid grid-cols-2 gap-sm">
+          <button onclick="manageUser('grant_premium')" class="h-touch rounded-xl bg-[#d97706] text-white font-label font-bold text-sm active:scale-[0.98] transition-transform">
+            ⭐ Дать Premium
+          </button>
+          <button onclick="manageUser('revoke_premium')" class="h-touch rounded-xl bg-surface-container text-on-surface-variant font-label font-bold text-sm active:scale-[0.98] transition-transform border border-outline-variant">
+            Снять Premium
+          </button>
+          <button onclick="manageUser('grant_admin')" class="h-touch rounded-xl bg-error text-on-error font-label font-bold text-sm active:scale-[0.98] transition-transform">
+            ⚙️ Сделать Админом
+          </button>
+          <button onclick="manageUser('revoke_admin')" class="h-touch rounded-xl bg-surface-container text-on-surface-variant font-label font-bold text-sm active:scale-[0.98] transition-transform border border-outline-variant">
+            Снять Админа
+          </button>
+        </div>
+        <div id="user-status" class="text-center font-label text-sm mt-md min-h-[18px]"></div>
+      </div>
+    </div>
 
-        async function loadAdminLessonsList() {
-            try {
-                const res = await fetch('/api/admin/lessons');
-                const lessons = await res.json();
-                const container = document.getElementById('lessons-list');
-                
-                if (lessons.length === 0) {
-                    container.innerHTML = '<div class="text-zinc-500 py-2">Уроков пока нет</div>';
-                    return;
-                }
-                
-                container.innerHTML = '';
-                lessons.forEach(l => {
-                    const typeLabels = { 'lesson': '📚 Урок', 'grammar': '📖 Грамм.', 'practice': '🎯 Практ.' };
-                    const label = typeLabels[l.type] || l.type;
+  </main>
+</div>
 
-                    const row = document.createElement('div');
-                    row.className = "flex items-center justify-between bg-zinc-800 p-4 rounded-xl border border-zinc-700/50 hover:border-zinc-600 transition-all";
-                    row.innerHTML = `
-                        <div class="flex items-center gap-3">
-                            <span class="px-2 py-1 bg-zinc-700 text-xs font-bold rounded-lg text-yellow-400">${l.level}</span>
-                            <span class="text-sm font-medium">${l.title}</span>
-                            <span class="text-xs text-zinc-400 hidden sm:inline">${label}</span>
-                        </div>
-                        <button onclick="deleteLessonById(${l.id})" class="px-3 py-1.5 bg-red-950/40 text-red-400 hover:bg-red-900 hover:text-red-100 rounded-xl text-xs font-semibold transition-colors">
-                            🗑️ Удалить
-                        </button>
-                    `;
-                    container.appendChild(row);
-                });
-            } catch (err) {
-                console.error("Ошибка загрузки списка уроков:", err);
-            }
-        }
+<script>
+const LANG_FLAGS = { en:'🇬🇧', de:'🇩🇪', fr:'🇫🇷', es:'🇪🇸', it:'🇮🇹', zh:'🇨🇳', ja:'🇯🇵', pt:'🇵🇹', ru:'🇷🇺' };
+const TYPE_ICONS = { lesson:'📖', grammar:'✍️', vocabulary:'💬' };
+const LEVEL_COLORS = {
+  A1:'bg-gradient-to-br from-green-400 to-teal-500',
+  A2:'bg-gradient-to-br from-blue-400 to-indigo-500',
+  B1:'bg-gradient-to-br from-orange-400 to-amber-500',
+  B2:'bg-gradient-to-br from-pink-400 to-rose-500',
+  C1:'bg-gradient-to-br from-red-400 to-purple-500',
+  C2:'bg-gradient-to-br from-zinc-600 to-gray-800',
+};
 
-        async function deleteLessonById(lessonId) {
-            if (!confirm("Вы действительно хотите удалить этот урок? Он будет скрыт из доступа пользователей.")) return;
+let lessonsData = [];
+let editMode = false; // true = редактирование, false = создание
 
-            try {
-                const res = await fetch(`/api/admin/delete_lesson/${lessonId}`, { method: 'DELETE' });
-                const result = await res.json();
+// ── Вкладки ────────────────────────────────────────────
+function showTab(tab) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  document.getElementById('tab-btn-' + tab).classList.add('active');
+  if (tab === 'stats')     loadStats();
+  if (tab === 'lessons')   loadAdminLessonsList();
+  if (tab === 'questions') loadLessonsForSelect();
+  if (tab === 'vocab')     loadAdminVocab();
+}
 
-                if (result.status === 'success') {
-                    await loadAdminLessonsList();
-                    await loadLessonsForSelect();
-                    await loadStats();
-                } else {
-                    alert("Ошибка: " + result.message);
-                }
-            } catch (error) {
-                console.error("Ошибка при удалении урока:", error);
-                alert("Не удалось удалить урок");
-            }
-        }
+// ── Статистика ─────────────────────────────────────────
+async function loadStats() {
+  try {
+    const res = await fetch('/api/admin/stats');
+    const d   = await res.json();
+    document.getElementById('stats-grid').innerHTML = [
+      ['👥 Пользователей', d.total_users ?? '—', 'bg-blue-50 text-blue-700'],
+      ['⭐ Premium',        d.premium_users ?? '—', 'bg-amber-50 text-amber-700'],
+      ['📖 Уроков',        d.total_lessons ?? '—', 'bg-green-50 text-green-700'],
+      ['❓ Вопросов',      d.total_questions ?? '—', 'bg-purple-50 text-purple-700'],
+    ].map(([label, val, cls]) => `
+      <div class="bg-surface-container-lowest border border-surface-variant rounded-2xl p-md text-center">
+        <div class="font-headline font-extrabold text-3xl ${cls.split(' ')[1]}">${val}</div>
+        <div class="font-label text-xs text-outline mt-xs">${label}</div>
+      </div>`).join('');
+  } catch(e) {
+    document.getElementById('stats-grid').innerHTML = '<p class="text-error font-label text-sm col-span-2">Ошибка загрузки</p>';
+  }
+}
 
-        async function loadLessonsForSelect() {
-            try {
-                const res = await fetch('/api/admin/lessons_for_questions');
-                lessonsData = await res.json();
-                const select = document.getElementById('q-lesson');
-                select.innerHTML = '<option value="">-- Выбери урок --</option>';
-                lessonsData.forEach(l => {
-                    const opt = document.createElement('option');
-                    opt.value = l.id;
-                    opt.dataset.level = l.level;
-                    opt.textContent = `[${l.level}] ${l.title}`;
-                    select.appendChild(opt);
-                });
-                document.getElementById('q-level-hint').textContent = '';
-            } catch (err) {
-                console.error("Ошибка загрузки уроков для вопросов:", err);
-            }
-        }
+// ── Список уроков ──────────────────────────────────────
+async function loadAdminLessonsList() {
+  const list    = document.getElementById('lessons-list');
+  const langF   = document.getElementById('filter-lang').value;
+  const typeF   = document.getElementById('filter-type').value;
+  list.innerHTML = '<p class="text-outline text-center py-lg font-label text-sm">Загрузка...</p>';
+  try {
+    const url  = langF ? `/api/admin/lessons?language=${langF}` : '/api/admin/lessons';
+    const res  = await fetch(url);
+    let lessons = await res.json();
+    lessonsData = lessons;
+    if (typeF) lessons = lessons.filter(l => l.type === typeF);
+    if (!lessons.length) {
+      list.innerHTML = '<p class="text-outline text-center py-lg font-label text-sm">Нет уроков</p>'; return;
+    }
+    // Группировка по языку
+    const byLang = {};
+    lessons.forEach(l => {
+      const lang = l.language || 'en';
+      if (!byLang[lang]) byLang[lang] = [];
+      byLang[lang].push(l);
+    });
+    list.innerHTML = Object.entries(byLang).map(([lang, items]) => `
+      <div class="mb-md">
+        <p class="font-label text-xs text-outline uppercase tracking-wider mb-sm">${LANG_FLAGS[lang]||''} ${lang.toUpperCase()} · ${items.length} уроков</p>
+        <div class="space-y-sm">
+          ${items.map(l => `
+            <div class="flex items-center gap-sm bg-surface-container rounded-2xl p-sm pr-md">
+              <div class="w-9 h-9 rounded-xl ${LEVEL_COLORS[l.level]||''} flex items-center justify-center flex-shrink-0">
+                <span class="font-label text-xs font-bold text-white">${l.level}</span>
+              </div>
+              <div class="flex-1 min-w-0">
+                <div class="font-body font-bold text-on-surface text-sm truncate">${l.title}</div>
+                <div class="font-label text-xs text-outline">${TYPE_ICONS[l.type]||''} ${l.type} · #${l.order_num||0}</div>
+              </div>
+              <div class="flex gap-xs flex-shrink-0">
+                <button onclick="openEditModal(${l.id})"
+                  class="w-8 h-8 flex items-center justify-center rounded-xl bg-surface-container-high active:scale-90 transition-transform">
+                  <span class="material-symbols-outlined text-on-surface-variant" style="font-size:16px">edit</span>
+                </button>
+                <button onclick="deleteLesson(${l.id})"
+                  class="w-8 h-8 flex items-center justify-center rounded-xl bg-error-container active:scale-90 transition-transform">
+                  <span class="material-symbols-outlined text-error" style="font-size:16px">delete</span>
+                </button>
+              </div>
+            </div>`).join('')}
+        </div>
+      </div>`).join('');
+  } catch(e) {
+    list.innerHTML = '<p class="text-error text-center py-lg font-label text-sm">Ошибка загрузки</p>';
+  }
+}
 
-        function onLessonSelect() {
-            const select = document.getElementById('q-lesson');
-            const selectedOpt = select.options[select.selectedIndex];
-            const level = selectedOpt.dataset.level;
-            const hint = document.getElementById('q-level-hint');
-            hint.textContent = level ? `Уровень вопроса будет автоматически установлен: ${level}` : '';
-        }
+// ── Добавить урок ──────────────────────────────────────
+async function addLesson() {
+  const title = document.getElementById('lesson-title').value.trim();
+  const type  = document.getElementById('lesson-type').value;
+  const level = document.getElementById('lesson-level').value;
+  const lang  = document.getElementById('lesson-lang').value;
+  const order = parseInt(document.getElementById('lesson-order').value)||0;
+  const text  = document.getElementById('lesson-text').value.trim();
+  const status= document.getElementById('lesson-add-status');
+  if (!title) { status.textContent='⚠️ Введите название'; status.className='text-center font-label text-sm text-amber-600'; return; }
+  try {
+    const res  = await fetch('/api/admin/add_lesson',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({title,level,lesson_text:text,content_type:type,order_num:order,language:lang})});
+    const data = await res.json();
+    if (data.status==='success') {
+      status.textContent='✅ Урок добавлен (ID '+data.id+')';
+      status.className='text-center font-label text-sm text-green-700';
+      ['lesson-title','lesson-text'].forEach(id => document.getElementById(id).value='');
+      document.getElementById('lesson-order').value='0';
+      loadAdminLessonsList();
+    } else { throw new Error(data.detail||'error'); }
+  } catch(e) { status.textContent='❌ '+e.message; status.className='text-center font-label text-sm text-error'; }
+}
 
-        async function addLesson() {
-            const title = document.getElementById('lesson-title').value.trim();
-            const level = document.getElementById('lesson-level').value;
-            const content_type = document.getElementById('lesson-type').value;
-            const lesson_text = document.getElementById('lesson-text').value.trim();
+// ── Удалить урок ───────────────────────────────────────
+async function deleteLesson(id) {
+  if (!confirm('Удалить урок? Это действие нельзя отменить.')) return;
+  try {
+    const res = await fetch(`/api/admin/delete_lesson/${id}`,{method:'DELETE'});
+    const d   = await res.json();
+    if (d.status==='success') { loadAdminLessonsList(); showToast('Урок удалён'); }
+    else throw new Error();
+  } catch(e) { showToast('Ошибка удаления','error'); }
+}
 
-            if (!title) return alert("Введите название урока");
+// ── Модал редактирования ───────────────────────────────
+async function openEditModal(id) {
+  editMode = true;
+  document.getElementById('modal-title').textContent = 'Редактировать урок';
+  document.getElementById('modal-status').textContent = '';
+  document.getElementById('save-btn-text').textContent = 'Сохранить изменения';
+  document.getElementById('edit-modal').classList.remove('hidden');
+  try {
+    const res  = await fetch(`/api/admin/lesson/${id}`);
+    const data = await res.json();
+    document.getElementById('edit-id').value    = data.id;
+    document.getElementById('edit-title').value = data.title || '';
+    document.getElementById('edit-text').value  = data.lesson_text || '';
+    document.getElementById('edit-order').value = data.order_num || 0;
+    document.getElementById('edit-level').value = data.level || 'A1';
+    document.getElementById('edit-type').value  = data.content_type || 'lesson';
+    document.getElementById('edit-lang').value  = data.language || 'en';
+  } catch(e) {
+    document.getElementById('modal-status').textContent = 'Ошибка загрузки данных';
+  }
+}
 
-            try {
-                await fetch('/api/admin/add_lesson', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ level, title, lesson_text, content_type })
-                });
+function openAddModal() {
+  editMode = false;
+  document.getElementById('modal-title').textContent = 'Новый урок';
+  document.getElementById('modal-status').textContent = '';
+  document.getElementById('save-btn-text').textContent = 'Добавить';
+  ['edit-id','edit-title','edit-text'].forEach(id => document.getElementById(id).value='');
+  document.getElementById('edit-order').value = '0';
+  document.getElementById('edit-modal').classList.remove('hidden');
+}
 
-                alert("Урок добавлен!");
-                document.getElementById('lesson-title').value = '';
-                document.getElementById('lesson-text').value = '';
-                await loadAdminLessonsList();
-                await loadLessonsForSelect();
-                await loadStats();
-            } catch (err) {
-                console.error("Ошибка добавления урока:", err);
-                alert("Не удалось добавить урок");
-            }
-        }
+function closeEditModal() {
+  document.getElementById('edit-modal').classList.add('hidden');
+}
 
-        async function addQuestion() {
-            const select = document.getElementById('q-lesson');
-            const lesson_id = select.value;
-            const selectedOpt = select.options[select.selectedIndex];
-            const level = selectedOpt.dataset.level || "A1";
+async function saveLesson() {
+  const title = document.getElementById('edit-title').value.trim();
+  const text  = document.getElementById('edit-text').value.trim();
+  const level = document.getElementById('edit-level').value;
+  const type  = document.getElementById('edit-type').value;
+  const lang  = document.getElementById('edit-lang').value;
+  const order = parseInt(document.getElementById('edit-order').value)||0;
+  const status= document.getElementById('modal-status');
+  if (!title) { status.textContent='⚠️ Введите название'; return; }
 
-            const question_text = document.getElementById('q-text').value.trim();
-            const option_1 = document.getElementById('q-opt1').value.trim();
-            const option_2 = document.getElementById('q-opt2').value.trim();
-            const option_3 = document.getElementById('q-opt3').value.trim();
-            const correct_option = parseInt(document.getElementById('q-correct').value);
+  try {
+    let res, data;
+    if (editMode) {
+      const id = parseInt(document.getElementById('edit-id').value);
+      res  = await fetch('/api/admin/update_lesson',{method:'PUT',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({id,title,lesson_text:text,level,content_type:type,order_num:order,language:lang})});
+      data = await res.json();
+      if (data.status==='success') { status.textContent='✅ Сохранено'; closeEditModal(); loadAdminLessonsList(); }
+      else throw new Error(data.detail||'error');
+    } else {
+      res  = await fetch('/api/admin/add_lesson',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({title,lesson_text:text,level,content_type:type,order_num:order,language:lang})});
+      data = await res.json();
+      if (data.status==='success') { status.textContent='✅ Добавлен (ID '+data.id+')'; loadAdminLessonsList(); }
+      else throw new Error(data.detail||'error');
+    }
+  } catch(e) { status.textContent='❌ '+e.message; }
+}
 
-            if (!lesson_id || !question_text || !option_1 || !option_2 || !option_3) {
-                return alert("Заполните все поля");
-            }
+// ── Вопросы ────────────────────────────────────────────
+async function loadLessonsForSelect() {
+  try {
+    const res = await fetch('/api/admin/lessons_for_questions');
+    const lessons = await res.json();
+    const sel = document.getElementById('q-lesson');
+    sel.innerHTML = '<option value="">— Автономный вопрос (без урока) —</option>';
+    lessons.forEach(l => {
+      const opt = document.createElement('option');
+      opt.value = l.id; opt.textContent = `[${l.level}] ${l.title}`;
+      sel.appendChild(opt);
+    });
+  } catch(e) {}
+}
 
-            try {
-                await fetch('/api/admin/add_question', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({
-                        lesson_id: parseInt(lesson_id),
-                        level,
-                        task_type: "multiple_choice",
-                        question_text,
-                        option_1,
-                        option_2,
-                        option_3,
-                        correct_option
-                    })
-                });
+function onLessonSelect() {
+  const sel  = document.getElementById('q-lesson');
+  const hint = document.getElementById('q-level-hint');
+  const opt  = sel.options[sel.selectedIndex];
+  if (sel.value) {
+    const match = opt.textContent.match(/\[([A-C][12])\]/);
+    if (match) { document.getElementById('q-level').value = match[1]; }
+    hint.textContent = '📌 Уровень подставлен автоматически';
+  } else { hint.textContent = ''; }
+}
 
-                alert("Вопрос добавлен!");
-                document.getElementById('q-text').value = '';
-                document.getElementById('q-opt1').value = '';
-                document.getElementById('q-opt2').value = '';
-                document.getElementById('q-opt3').value = '';
-            } catch (err) {
-                console.error("Ошибка добавления вопроса:", err);
-                alert("Не удалось добавить вопрос");
-            }
-        }
+async function addQuestion() {
+  const lessonId = document.getElementById('q-lesson').value;
+  const level    = document.getElementById('q-level').value;
+  const type     = document.getElementById('q-type').value;
+  const lang     = document.getElementById('q-lang').value;
+  const qText    = document.getElementById('q-text').value.trim();
+  const opt1     = document.getElementById('q-opt1').value.trim();
+  const opt2     = document.getElementById('q-opt2').value.trim();
+  const opt3     = document.getElementById('q-opt3').value.trim();
+  const correct  = parseInt(document.getElementById('q-correct').value);
+  const status   = document.getElementById('q-status');
+  if (!qText || !opt1) { status.textContent='⚠️ Заполните вопрос и вариант 1'; status.className='text-center font-label text-sm text-amber-600'; return; }
+  try {
+    const res  = await fetch('/api/admin/add_question',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({lesson_id:lessonId||null,level,task_type:type,question_text:qText,
+        option_1:opt1,option_2:opt2,option_3:opt3,correct_option:correct,language:lang})});
+    const data = await res.json();
+    if (data.status==='success') {
+      status.textContent='✅ Вопрос добавлен';
+      status.className='text-center font-label text-sm text-green-700';
+      ['q-text','q-opt1','q-opt2','q-opt3'].forEach(id=>document.getElementById(id).value='');
+    } else throw new Error(data.detail||'error');
+  } catch(e) { status.textContent='❌ '+e.message; status.className='text-center font-label text-sm text-error'; }
+}
 
-        async function manageUser(action) {
-            const input = document.getElementById('user-input').value.trim();
-            if (!input) return alert("Введите ID или username");
+// ── Словарь ────────────────────────────────────────────
+function liveEmojiPreview() {
+  const code = document.getElementById('vc-emoji').value.trim().toUpperCase();
+  const prev = document.getElementById('vc-emoji-live');
+  try { prev.textContent = code ? String.fromCodePoint(parseInt(code,16)) : ''; } catch(e) { prev.textContent=''; }
+}
 
-            try {
-                await fetch('/api/admin/manage_user', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ tg_id: input, action })
-                });
-                alert("Выполнено!");
-                await loadStats();
-            } catch (err) {
-                console.error("Ошибка управления пользователем:", err);
-                alert("Не удалось выполнить действие");
-            }
-        }
+async function addVocabCard() {
+  const word  = document.getElementById('vc-word').value.trim();
+  const tr    = document.getElementById('vc-translation').value.trim();
+  const topic = document.getElementById('vc-topic').value.trim();
+  const emoji = document.getElementById('vc-emoji').value.trim().toUpperCase();
+  const level = document.getElementById('vc-level').value;
+  const lang  = document.getElementById('vc-card-lang').value;
+  const def   = document.getElementById('vc-definition').value.trim();
+  const order = parseInt(document.getElementById('vc-order').value)||0;
+  const status= document.getElementById('vc-add-status');
+  if (!word||!tr||!topic||!emoji) { status.textContent='⚠️ Заполните Слово, Перевод, Тему и Emoji'; status.className='text-center font-label text-sm text-amber-600'; return; }
+  try {
+    const res  = await fetch('/api/admin/vocab/add',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({word,translation:tr,topic,emoji_code:emoji,level,definition:def,order_num:order})});
+    const data = await res.json();
+    if (data.status==='success') {
+      status.textContent='✅ Добавлено (ID '+data.id+')';
+      status.className='text-center font-label text-sm text-green-700';
+      ['vc-word','vc-translation','vc-emoji','vc-definition'].forEach(id=>document.getElementById(id).value='');
+      document.getElementById('vc-emoji-live').textContent='';
+      loadAdminVocab();
+    } else throw new Error(data.detail||'error');
+  } catch(e) { status.textContent='❌ '+e.message; status.className='text-center font-label text-sm text-error'; }
+}
 
-        // ====================== VOCAB ADMIN ======================
+async function loadAdminVocab() {
+  const list = document.getElementById('vocab-admin-list');
+  list.innerHTML='<p class="text-outline text-center py-lg font-label text-sm">Загрузка...</p>';
+  try {
+    const res   = await fetch('/api/admin/vocab');
+    const cards = await res.json();
+    if (!cards.length) { list.innerHTML='<p class="text-outline text-center py-lg font-label text-sm">Карточек нет</p>'; return; }
+    list.innerHTML = cards.map(c => {
+      let emoji='📖'; try{ emoji=String.fromCodePoint(parseInt(c.emoji_code,16)); }catch(e){}
+      return `<div class="flex items-center gap-sm bg-surface-container rounded-2xl p-sm pr-md">
+        <span class="text-3xl flex-shrink-0" style="line-height:1">${emoji}</span>
+        <div class="flex-1 min-w-0">
+          <div class="font-body font-bold text-on-surface text-sm">${c.word} <span class="text-outline font-normal">— ${c.translation}</span></div>
+          <div class="font-label text-xs text-outline">${c.topic} · ${c.level}</div>
+        </div>
+        <button onclick="deleteVocabCard(${c.id})"
+          class="w-8 h-8 flex items-center justify-center rounded-xl bg-error-container active:scale-90 transition-transform flex-shrink-0">
+          <span class="material-symbols-outlined text-error" style="font-size:16px">delete</span>
+        </button>
+      </div>`;
+    }).join('');
+  } catch(e) { list.innerHTML='<p class="text-error text-center py-lg font-label text-sm">Ошибка загрузки</p>'; }
+}
 
-        function emojiAdminUrl(code) {
-            return `https://raw.githubusercontent.com/hfg-gmuend/openmoji/master/color/svg/${code}.svg`;
-        }
+async function deleteVocabCard(id) {
+  if (!confirm('Удалить карточку?')) return;
+  try {
+    await fetch(`/api/admin/vocab/delete/${id}`,{method:'DELETE'});
+    loadAdminVocab();
+  } catch(e) { showToast('Ошибка','error'); }
+}
 
-        function previewVocabCard() {
-            const code = document.getElementById('vc-emoji').value.trim().toUpperCase();
-            const word = document.getElementById('vc-word').value.trim();
-            const tr   = document.getElementById('vc-translation').value.trim();
+// ── Пользователи ───────────────────────────────────────
+async function manageUser(action) {
+  const input  = document.getElementById('user-input').value.trim();
+  const status = document.getElementById('user-status');
+  if (!input) { status.textContent='⚠️ Введите ID или @username'; return; }
+  try {
+    await fetch('/api/admin/manage_user',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({tg_id:input,action})});
+    status.textContent='✅ Выполнено';
+    status.className='text-center font-label text-sm text-green-700';
+    loadStats();
+  } catch(e) { status.textContent='❌ Ошибка'; status.className='text-center font-label text-sm text-error'; }
+}
 
-            const fallback = document.getElementById('vc-preview-emoji');
-            if (code) {
-                try {
-                    fallback.textContent = String.fromCodePoint(parseInt(code, 16));
-                    fallback.classList.remove('hidden');
-                } catch(e) {
-                    fallback.textContent = '❓';
-                    fallback.classList.remove('hidden');
-                }
-            }
-            document.getElementById('vc-preview-word').textContent = word || '—';
-            document.getElementById('vc-preview-tr').textContent   = tr   || '';
-        }
+// ── Утилиты ────────────────────────────────────────────
+function showToast(msg, type='success') {
+  const t = document.createElement('div');
+  t.className = `fixed bottom-6 left-1/2 -translate-x-1/2 px-lg py-sm rounded-xl text-sm font-label font-bold shadow-lg z-50 whitespace-nowrap ${type==='error'?'bg-error text-on-error':'bg-tertiary-container text-on-tertiary'}`;
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(), 2500);
+}
 
-        async function addVocabCard() {
-            const word  = document.getElementById('vc-word').value.trim();
-            const tr    = document.getElementById('vc-translation').value.trim();
-            const topic = document.getElementById('vc-topic').value.trim();
-            const emoji = document.getElementById('vc-emoji').value.trim().toUpperCase();
-            const level = document.getElementById('vc-level').value;
-            const def   = document.getElementById('vc-definition').value.trim();
-            const order = parseInt(document.getElementById('vc-order').value) || 0;
-            const status = document.getElementById('vc-add-status');
-
-            if (!word || !tr || !topic || !emoji) {
-                status.textContent = '⚠️ Заполните Слово, Перевод, Тему и Emoji code';
-                status.className = 'text-center text-sm mt-2 text-yellow-400';
-                return;
-            }
-
-            try {
-                const res = await fetch('/api/admin/vocab/add', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ word, translation: tr, topic, emoji_code: emoji, level, definition: def, order_num: order })
-                });
-                const data = await res.json();
-                if (data.status === 'success') {
-                    status.textContent = `✅ Добавлено! ID: ${data.id}`;
-                    status.className = 'text-center text-sm mt-2 text-emerald-400';
-                    ['vc-word','vc-translation','vc-emoji','vc-definition'].forEach(id => document.getElementById(id).value = '');
-                    loadAdminVocab();
-                } else {
-                    status.textContent = '❌ Ошибка: ' + (data.detail || 'неизвестная');
-                    status.className = 'text-center text-sm mt-2 text-red-400';
-                }
-            } catch(e) {
-                status.textContent = '❌ Ошибка соединения';
-                status.className = 'text-center text-sm mt-2 text-red-400';
-            }
-        }
-
-        async function loadAdminVocab() {
-            const list = document.getElementById('vocab-admin-list');
-            list.innerHTML = '<p class="text-zinc-400 text-sm text-center py-4">Загрузка...</p>';
-            try {
-                const res = await fetch('/api/admin/vocab');
-                const cards = await res.json();
-                if (!cards.length) {
-                    list.innerHTML = '<p class="text-zinc-500 text-sm text-center py-4">Карточек пока нет</p>';
-                    return;
-                }
-                list.innerHTML = cards.map(c => {
-                    let emojiChar = '📖';
-                    try { emojiChar = String.fromCodePoint(parseInt(c.emoji_code, 16)); } catch(e) {}
-                    return `
-                    <div class="flex items-center gap-3 bg-zinc-800 rounded-2xl p-3">
-                        <span style="font-size:32px;line-height:1;flex-shrink:0">${emojiChar}</span>
-                        <div class="flex-1 min-w-0">
-                            <div class="font-bold text-white text-sm">${c.word} <span class="text-zinc-400 font-normal">— ${c.translation}</span></div>
-                            <div class="text-xs text-zinc-500">${c.topic} · ${c.level}</div>
-                        </div>
-                        <button onclick="deleteVocabCard(${c.id})"
-                            class="text-red-400 hover:text-red-300 text-xs px-3 py-1.5 bg-red-950/40 rounded-xl flex-shrink-0">🗑</button>
-                    </div>
-                `}).join('');
-            } catch(e) {
-                list.innerHTML = '<p class="text-red-400 text-sm text-center py-4">Ошибка загрузки</p>';
-            }
-        }
-
-        async function deleteVocabCard(id) {
-            if (!confirm('Удалить карточку?')) return;
-            try {
-                const res = await fetch(`/api/admin/vocab/delete/${id}`, { method: 'DELETE' });
-                const data = await res.json();
-                if (data.status === 'success') loadAdminVocab();
-            } catch(e) { alert('Ошибка удаления'); }
-        }
-
-        window.onload = () => {
-            loadStats();
-            loadLessonsForSelect();
-            showTab('stats');
-        };
-    </script>
+window.onload = () => showTab('stats');
+</script>
 </body>
 </html>
