@@ -172,8 +172,45 @@ tailwind.config = {
 
     <!-- ══════════ ОНБОРДИНГ ══════════ -->
     <div id="screen-onboarding" class="hidden screen-body px-md pt-xl pb-32">
+
+      <!-- Шаг 0: Целевой язык -->
+      <div id="ob-step-0" class="space-y-lg">
+        <div class="text-center">
+          <div class="text-5xl mb-md">🌍</div>
+          <h1 class="font-headline font-extrabold text-on-surface text-2xl mb-sm">Добро пожаловать!</h1>
+          <p class="font-body text-on-surface-variant text-sm">Какой язык хотите изучать?</p>
+        </div>
+        <div class="grid grid-cols-2 gap-sm">
+          <button onclick="selectTargetLang('en')" data-lang="en" class="ob-lang-btn p-md bg-surface-container-lowest border-2 border-surface-variant rounded-2xl text-center active:scale-95 transition-all"><div class="text-3xl mb-xs">🇬🇧</div><div class="font-headline font-bold text-on-surface text-sm">Английский</div></button>
+          <button onclick="selectTargetLang('de')" data-lang="de" class="ob-lang-btn p-md bg-surface-container-lowest border-2 border-surface-variant rounded-2xl text-center active:scale-95 transition-all"><div class="text-3xl mb-xs">🇩🇪</div><div class="font-headline font-bold text-on-surface text-sm">Немецкий</div></button>
+          <button onclick="selectTargetLang('fr')" data-lang="fr" class="ob-lang-btn p-md bg-surface-container-lowest border-2 border-surface-variant rounded-2xl text-center active:scale-95 transition-all"><div class="text-3xl mb-xs">🇫🇷</div><div class="font-headline font-bold text-on-surface text-sm">Французский</div></button>
+          <button onclick="selectTargetLang('es')" data-lang="es" class="ob-lang-btn p-md bg-surface-container-lowest border-2 border-surface-variant rounded-2xl text-center active:scale-95 transition-all"><div class="text-3xl mb-xs">🇪🇸</div><div class="font-headline font-bold text-on-surface text-sm">Испанский</div></button>
+          <button onclick="selectTargetLang('it')" data-lang="it" class="ob-lang-btn p-md bg-surface-container-lowest border-2 border-surface-variant rounded-2xl text-center active:scale-95 transition-all"><div class="text-3xl mb-xs">🇮🇹</div><div class="font-headline font-bold text-on-surface text-sm">Итальянский</div></button>
+          <button onclick="selectTargetLang('zh')" data-lang="zh" class="ob-lang-btn p-md bg-surface-container-lowest border-2 border-surface-variant rounded-2xl text-center active:scale-95 transition-all"><div class="text-3xl mb-xs">🇨🇳</div><div class="font-headline font-bold text-on-surface text-sm">Китайский</div></button>
+          <button onclick="selectTargetLang('ja')" data-lang="ja" class="ob-lang-btn p-md bg-surface-container-lowest border-2 border-surface-variant rounded-2xl text-center active:scale-95 transition-all"><div class="text-3xl mb-xs">🇯🇵</div><div class="font-headline font-bold text-on-surface text-sm">Японский</div></button>
+          <button onclick="selectTargetLang('pt')" data-lang="pt" class="ob-lang-btn p-md bg-surface-container-lowest border-2 border-surface-variant rounded-2xl text-center active:scale-95 transition-all"><div class="text-3xl mb-xs">🇵🇹</div><div class="font-headline font-bold text-on-surface text-sm">Португальский</div></button>
+        </div>
+      </div>
+
+      <!-- Шаг 0.5: Родной язык -->
+      <div id="ob-step-05" class="hidden space-y-lg">
+        <div class="text-center">
+          <div class="text-5xl mb-md">🗣️</div>
+          <h1 class="font-headline font-extrabold text-on-surface text-2xl mb-sm">Ваш родной язык?</h1>
+          <p class="font-body text-on-surface-variant text-sm">Переводы и подсказки будут на этом языке</p>
+        </div>
+        <div class="grid grid-cols-2 gap-sm">
+          <button onclick="selectNativeLang('ru')" data-lang="ru" class="ob-native-btn p-md bg-surface-container-lowest border-2 border-surface-variant rounded-2xl text-center active:scale-95 transition-all"><div class="text-3xl mb-xs">🇷🇺</div><div class="font-headline font-bold text-on-surface text-sm">Русский</div></button>
+          <button onclick="selectNativeLang('en')" data-lang="en" class="ob-native-btn p-md bg-surface-container-lowest border-2 border-surface-variant rounded-2xl text-center active:scale-95 transition-all"><div class="text-3xl mb-xs">🇬🇧</div><div class="font-headline font-bold text-on-surface text-sm">Английский</div></button>
+          <button onclick="selectNativeLang('de')" data-lang="de" class="ob-native-btn p-md bg-surface-container-lowest border-2 border-surface-variant rounded-2xl text-center active:scale-95 transition-all"><div class="text-3xl mb-xs">🇩🇪</div><div class="font-headline font-bold text-on-surface text-sm">Немецкий</div></button>
+          <button onclick="selectNativeLang('fr')" data-lang="fr" class="ob-native-btn p-md bg-surface-container-lowest border-2 border-surface-variant rounded-2xl text-center active:scale-95 transition-all"><div class="text-3xl mb-xs">🇫🇷</div><div class="font-headline font-bold text-on-surface text-sm">Французский</div></button>
+          <button onclick="selectNativeLang('es')" data-lang="es" class="ob-native-btn p-md bg-surface-container-lowest border-2 border-surface-variant rounded-2xl text-center active:scale-95 transition-all"><div class="text-3xl mb-xs">🇪🇸</div><div class="font-headline font-bold text-on-surface text-sm">Испанский</div></button>
+          <button onclick="selectNativeLang('zh')" data-lang="zh" class="ob-native-btn p-md bg-surface-container-lowest border-2 border-surface-variant rounded-2xl text-center active:scale-95 transition-all"><div class="text-3xl mb-xs">🇨🇳</div><div class="font-headline font-bold text-on-surface text-sm">Китайский</div></button>
+        </div>
+      </div>
+
       <!-- Шаг 1: Цель -->
-      <div id="ob-step-1" class="space-y-lg">
+      <div id="ob-step-1" class="hidden space-y-lg">
         <div class="text-center">
           <div class="text-5xl mb-md">👋</div>
           <h1 class="font-headline font-extrabold text-on-surface text-2xl mb-sm">Добро пожаловать!</h1>
@@ -792,6 +829,19 @@ let currentPracticeQuestionId = null;
 let mediaRecorder = null, audioChunks = [], streamRef = null;
 let popupWord = '', popupContext = '';
 
+// Языки пользователя (загружаются при старте)
+let userNativeLang = 'ru';
+let userTargetLang = 'en';
+
+const LANG_FLAGS = {
+  'ru':'🇷🇺','en':'🇬🇧','de':'🇩🇪','fr':'🇫🇷',
+  'es':'🇪🇸','it':'🇮🇹','pt':'🇵🇹','zh':'🇨🇳','ja':'🇯🇵'
+};
+const LANG_NAMES_RU = {
+  'ru':'Русский','en':'Английский','de':'Немецкий','fr':'Французский',
+  'es':'Испанский','it':'Итальянский','pt':'Португальский','zh':'Китайский','ja':'Японский'
+};
+
 const LEVELS = ['A1','A2','B1','B2','C1','C2'];
 const LEVEL_GRADIENTS = {
   'A1': 'from-green-400 to-teal-500',
@@ -1121,7 +1171,7 @@ async function handleWordTap(word, context) {
   try {
     const res = await fetch('/api/dictionary/translate', {
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({user_id:parseInt(userId), word, context_sentence: context.substring(0,300)})
+      body: JSON.stringify({user_id:parseInt(userId), word, context_sentence: context.substring(0,300), native_language: userNativeLang, target_language: userTargetLang})
     });
     const data = await res.json();
     if (data.status === 'success') {
@@ -1214,6 +1264,7 @@ async function sendSituationMessage() {
     const fd = new FormData();
     fd.append('user_id', userId); fd.append('text', text);
     fd.append('level', currentLevel); fd.append('situation', currentSituation);
+    fd.append('native_language', userNativeLang); fd.append('target_language', userTargetLang);
     const res = await fetch('/api/web-club/text',{method:'POST',body:fd});
     const data = await res.json();
     appendSituationMessage('ai', data.ai_text);
@@ -1237,6 +1288,7 @@ async function startSituationRecording(e) {
       const fd = new FormData();
       fd.append('user_id',userId); fd.append('file',blob,'voice');
       fd.append('level',currentLevel); fd.append('situation',currentSituation);
+      fd.append('native_language',userNativeLang); fd.append('target_language',userTargetLang);
       try {
         const res = await fetch('/api/web-club/voice',{method:'POST',body:fd});
         const data = await res.json();
@@ -1286,6 +1338,7 @@ async function sendTextMessage() {
   try {
     const fd = new FormData();
     fd.append('user_id',userId); fd.append('text',text); fd.append('level',currentLevel);
+    fd.append('native_language',userNativeLang); fd.append('target_language',userTargetLang);
     const res = await fetch('/api/web-club/text',{method:'POST',body:fd});
     const data = await res.json();
     appendMessage('AI',data.ai_text,true);
@@ -1308,6 +1361,7 @@ async function startRecording(e) {
       appendMessage('You','<i>🎙️ Sending voice...</i>',false);
       const fd=new FormData();
       fd.append('user_id',userId); fd.append('file',audioBlob,'voice_msg'); fd.append('level',currentLevel);
+      fd.append('native_language',userNativeLang); fd.append('target_language',userTargetLang);
       try {
         const res=await fetch('/api/web-club/voice',{method:'POST',body:fd});
         const data=await res.json();
@@ -1778,6 +1832,40 @@ async function addCurrentWordToDict() {
 // ─────────────────────────────────────────────
 let obGoal = 'general';
 let obLevel = 'A1';
+let obTargetLang = 'en';
+let obNativeLang = 'ru';
+
+function selectTargetLang(lang) {
+  obTargetLang = lang;
+  document.querySelectorAll('.ob-lang-btn').forEach(b => {
+    const isMe = b.dataset.lang === lang;
+    b.classList.toggle('border-primary-container', isMe);
+    b.classList.toggle('bg-surface-container-low', isMe);
+    b.classList.toggle('border-surface-variant', !isMe);
+  });
+  setTimeout(() => {
+    document.getElementById('ob-step-0').classList.add('hidden');
+    document.getElementById('ob-step-05').classList.remove('hidden');
+    // Скрываем родной язык = целевому
+    document.querySelectorAll('.ob-native-btn').forEach(b => {
+      b.classList.toggle('hidden', b.dataset.lang === lang);
+    });
+  }, 280);
+}
+
+function selectNativeLang(lang) {
+  obNativeLang = lang;
+  document.querySelectorAll('.ob-native-btn').forEach(b => {
+    const isMe = b.dataset.lang === lang;
+    b.classList.toggle('border-primary-container', isMe);
+    b.classList.toggle('bg-surface-container-low', isMe);
+    b.classList.toggle('border-surface-variant', !isMe);
+  });
+  setTimeout(() => {
+    document.getElementById('ob-step-05').classList.add('hidden');
+    document.getElementById('ob-step-1').classList.remove('hidden');
+  }, 280);
+}
 
 function selectGoal(goal) {
   obGoal = goal;
@@ -1796,19 +1884,29 @@ function selectGoal(goal) {
 function selectObLevel(level) {
   obLevel = level;
   document.getElementById('ob-step-2').classList.add('hidden');
-  const goals = { travel:'путешествий', work:'карьеры', study:'учёбы', general:'общения' };
+  const tFlag = LANG_FLAGS[obTargetLang] || '🌍';
+  const tName = LANG_NAMES_RU[obTargetLang] || obTargetLang;
   document.getElementById('ob-ready-msg').textContent =
-    `Ваша цель — улучшение английского для ${goals[obGoal]||'общения'}. Начинаем с уровня ${level}!`;
+    `Вы изучаете ${tFlag} ${tName}. Уровень ${level}. Поехали!`;
   document.getElementById('ob-step-3').classList.remove('hidden');
 }
 
 async function finishOnboarding() {
   try {
+    userNativeLang = obNativeLang;
+    userTargetLang = obTargetLang;
+    currentLevel   = obLevel;
     await fetch('/api/onboarding/complete', {
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ user_id: parseInt(userId), level: obLevel, goal: obGoal })
+      body: JSON.stringify({
+        user_id: parseInt(userId),
+        level: obLevel,
+        goal: obGoal,
+        native_language: obNativeLang,
+        target_language: obTargetLang
+      })
     });
-    currentLevel = obLevel;
+    updateLangUI();
     await loadProfile();
     showScreen('screen-main');
   } catch(e) {
@@ -2071,10 +2169,36 @@ function showToast(msg, type='success') {
 }
 
 // ─────────────────────────────────────────────
+// ЯЗЫКИ — вспомогательные функции
+// ─────────────────────────────────────────────
+function updateLangUI() {
+  const tFlag = LANG_FLAGS[userTargetLang] || '🌍';
+  const nFlag = LANG_FLAGS[userNativeLang] || '🏳️';
+  const tName = LANG_NAMES_RU[userTargetLang] || userTargetLang;
+  // Обновляем бейдж уровня клуба
+  const clubBadge = document.getElementById('club-level-badge');
+  if (clubBadge) clubBadge.textContent = currentLevel;
+  // Можно добавить язык в хедер - пока просто консоль
+  console.log(`🌍 Языки: ${nFlag}→${tFlag} (${tName}), уровень ${currentLevel}`);
+}
+
+// ─────────────────────────────────────────────
 // INIT
 // ─────────────────────────────────────────────
 window.onload = async () => {
   await loadProfile();
+
+  // Загружаем языки пользователя из БД
+  if (userId > 0) {
+    try {
+      const res = await fetch(`/api/user/languages/${userId}`);
+      const langs = await res.json();
+      userNativeLang = langs.native || 'ru';
+      userTargetLang = langs.target || 'en';
+      updateLangUI();
+    } catch(e) {}
+  }
+
   // Проверяем онбординг
   try {
     const res = await fetch(`/api/onboarding/${userId}`);
@@ -2083,7 +2207,7 @@ window.onload = async () => {
       showScreen('screen-onboarding');
       return;
     }
-  } catch(e) { /* если ошибка — просто показываем главный экран */ }
+  } catch(e) {}
   showScreen('screen-main');
 };
 </script>
