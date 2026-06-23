@@ -40,7 +40,10 @@ from database.db import (
     complete_onboarding,
     get_onboarding_status,
     update_word_status,
-    get_user_category_stats
+    get_user_category_stats,
+    get_user_languages,
+    update_user_languages,
+    LANG_NAMES_EN,
 )
 
 from utils.ai_service import transcribe_voice, get_ai_response, generate_voice, translate_word
@@ -176,12 +179,22 @@ class QuickAddWordRequest(BaseModel):
     user_id: int
     word: str
     context_sentence: str = ""
+    native_language: str = "ru"
+    target_language: str = "en"
 
 
 class OnboardingRequest(BaseModel):
     user_id: int
     level: str
     goal: str = ""
+    native_language: str = "ru"
+    target_language: str = "en"
+
+
+class UserLanguagesRequest(BaseModel):
+    user_id: int
+    native_language: str
+    target_language: str
 
 
 class WordStatusRequest(BaseModel):
@@ -284,9 +297,13 @@ async def get_lessons_by_level(level: str, user_id: Optional[int] = Query(None))
 
 
 @app.get("/api/lessons/next/{level}")
-async def get_next_lesson(level: str, user_id: int = Query(...), content_type: Optional[str] = Query(None)):
+async def get_next_lesson(level: str, user_id: int = Query(...),
+                          content_type: Optional[str] = Query(None)):
     try:
-        row = await get_next_uncompleted_lesson(user_id, level, content_type)
+        langs = await get_user_languages(user_id)
+        row = await get_next_uncompleted_lesson(
+            user_id, level, content_type, language=langs["target"]
+        )
         progress = await get_lesson_progress(user_id, level, content_type)
 
         if not row:
@@ -298,11 +315,11 @@ async def get_next_lesson(level: str, user_id: int = Query(...), content_type: O
             "title": row["title"],
             "lesson_text": row["lesson_text"] or "",
             "type": row["content_type"],
-            "progress": progress  # {total, completed, next_num}
+            "progress": progress
         }
     except Exception as e:
         traceback.print_exc()
-        raise HTTPException(500, "Ошибка загрузки следующего урока")
+        raise HTTPException(500, "Ошибка загрузки урока")
 
 
 @app.get("/api/lesson/{lesson_id}")
@@ -356,7 +373,8 @@ async def random_question(
     task_type: str = Query("multiple_choice", alias="type")
 ):
     try:
-        row = await get_random_practice_question(user_id, level, task_type)
+        langs = await get_user_languages(user_id)
+        row = await get_random_practice_question(user_id, level, task_type, language=langs["target"])
         if not row:
             return {"error": "no_more_questions"}
 
@@ -527,13 +545,18 @@ async def web_club_text(
     user_id: int = Form(...),
     text: str = Form(...),
     level: str = Form("A1"),
-    situation: str = Form("")
+    situation: str = Form(""),
+    native_language: str = Form("ru"),
+    target_language: str = Form("en")
 ):
     try:
-        ai_response = await get_ai_response(text, user_level=level, situation=situation)
+        ai_response = await get_ai_response(
+            text, user_level=level, situation=situation,
+            target_lang=target_language, native_lang=native_language
+        )
         session_id = f"ai_{user_id}_{uuid.uuid4().hex[:6]}"
         output_path = os.path.join(AUDIO_DIR, f"{session_id}.mp3")
-        await generate_voice(ai_response, output_path)
+        await generate_voice(ai_response, output_path, target_lang=target_language)
         return {
             "user_text": text,
             "ai_text": ai_response,
@@ -549,24 +572,29 @@ async def web_club_voice(
     user_id: int = Form(...),
     file: UploadFile = File(...),
     level: str = Form("A1"),
-    situation: str = Form("")
+    situation: str = Form(""),
+    native_language: str = Form("ru"),
+    target_language: str = Form("en")
 ):
     try:
         temp_path = os.path.join(AUDIO_DIR, f"user_{user_id}_{uuid.uuid4().hex[:6]}.wav")
         with open(temp_path, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
 
-        user_text = await transcribe_voice(temp_path)
+        user_text = await transcribe_voice(temp_path, target_lang=target_language)
         if os.path.exists(temp_path):
             os.remove(temp_path)
 
         if not user_text.strip():
             return {"user_text": "", "ai_text": "I couldn't hear you. Please try again!", "audio_url": ""}
 
-        ai_response = await get_ai_response(user_text, user_level=level, situation=situation)
+        ai_response = await get_ai_response(
+            user_text, user_level=level, situation=situation,
+            target_lang=target_language, native_lang=native_language
+        )
         session_id = f"ai_{user_id}_{uuid.uuid4().hex[:6]}"
         output_path = os.path.join(AUDIO_DIR, f"{session_id}.mp3")
-        await generate_voice(ai_response, output_path)
+        await generate_voice(ai_response, output_path, target_lang=target_language)
 
         return {
             "user_text": user_text,
@@ -656,21 +684,27 @@ async def quick_add_word(data: QuickAddWordRequest):
 
 @app.post("/api/dictionary/translate")
 async def translate_word_only(data: QuickAddWordRequest):
-    """
-    Только перевод слова через AI — без сохранения в БД.
-    Вызывается фронтендом при тапе по слову для показа попапа.
-    Сохранение происходит отдельно через /api/dictionary/quick_add.
-    """
     try:
         word_clean = data.word.strip()
         if not word_clean:
             raise HTTPException(400, "Пустое слово")
+        # Если языки не переданы — берём из БД
+        if data.user_id > 0 and (data.native_language == "ru" and data.target_language == "en"):
+            try:
+                langs = await get_user_languages(data.user_id)
+                native = langs["native"]
+                target = langs["target"]
+            except Exception:
+                native, target = data.native_language, data.target_language
+        else:
+            native, target = data.native_language, data.target_language
 
-        translated = await translate_word(word_clean, context=data.context_sentence)
-
+        translated = await translate_word(
+            word_clean, context=data.context_sentence,
+            native_lang=native, target_lang=target
+        )
         if not translated["translation"]:
             return {"status": "error", "message": "Не удалось получить перевод"}
-
         return {
             "status": "success",
             "word": word_clean,
@@ -802,7 +836,29 @@ async def check_onboarding(user_id: int):
 @app.post("/api/onboarding/complete")
 async def finish_onboarding(data: OnboardingRequest):
     try:
-        await complete_onboarding(data.user_id, data.level, data.goal)
+        await complete_onboarding(
+            data.user_id, data.level, data.goal,
+            data.native_language, data.target_language
+        )
+        return {"status": "success"}
+    except Exception as e:
+        traceback.print_exc()
+        raise HTTPException(500, str(e))
+
+
+@app.get("/api/user/languages/{user_id}")
+async def get_languages(user_id: int):
+    try:
+        return await get_user_languages(user_id)
+    except Exception as e:
+        traceback.print_exc()
+        return {"native": "ru", "target": "en"}
+
+
+@app.post("/api/user/languages")
+async def set_languages(data: UserLanguagesRequest):
+    try:
+        await update_user_languages(data.user_id, data.native_language, data.target_language)
         return {"status": "success"}
     except Exception as e:
         traceback.print_exc()
