@@ -51,11 +51,15 @@ async def init_db():
                 is_admin BOOLEAN DEFAULT FALSE,
                 is_premium BOOLEAN DEFAULT FALSE,
                 onboarding_done BOOLEAN DEFAULT FALSE,
+                native_language TEXT DEFAULT 'ru',
+                target_language TEXT DEFAULT 'en',
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """)
-        # Добавляем onboarding_done для существующих БД
+        # Миграции для существующих БД
         await db.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS onboarding_done BOOLEAN DEFAULT FALSE")
+        await db.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS native_language TEXT DEFAULT 'ru'")
+        await db.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS target_language TEXT DEFAULT 'en'")
 
         # LESSONS
         await db.execute("""
@@ -65,32 +69,33 @@ async def init_db():
                 title TEXT NOT NULL,
                 lesson_text TEXT,
                 content_type TEXT DEFAULT 'lesson',
+                language TEXT DEFAULT 'en',
                 order_num INTEGER DEFAULT 0,
                 is_active BOOLEAN DEFAULT TRUE,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """)
+        await db.execute("ALTER TABLE lessons ADD COLUMN IF NOT EXISTS language TEXT DEFAULT 'en'")
 
         # QUESTIONS
         await db.execute("""
             CREATE TABLE IF NOT EXISTS questions (
                 id SERIAL PRIMARY KEY,
-                lesson_id INTEGER REFERENCES lessons(id),
+                lesson_id INTEGER REFERENCES lessons(id) ON DELETE SET NULL,
                 level TEXT NOT NULL,
-                task_type TEXT NOT NULL,
+                task_type TEXT DEFAULT 'multiple_choice',
                 question_text TEXT NOT NULL,
-                option_1 TEXT,
-                option_2 TEXT,
-                option_3 TEXT,
-                correct_option INTEGER,
+                option_1 TEXT DEFAULT '',
+                option_2 TEXT DEFAULT '',
+                option_3 TEXT DEFAULT '',
+                correct_option INTEGER DEFAULT 1,
+                language TEXT DEFAULT 'en',
                 order_num INTEGER DEFAULT 0
             )
         """)
-        # На случай, если таблица questions уже существует с прошлого деплоя
-        # без колонки commentary (используется в get_next_queue_item)
-        await db.execute("""
-            ALTER TABLE questions ADD COLUMN IF NOT EXISTS commentary TEXT
-        """)
+
+        await db.execute("ALTER TABLE questions ADD COLUMN IF NOT EXISTS language TEXT DEFAULT 'en'")
+        await db.execute("ALTER TABLE questions ADD COLUMN IF NOT EXISTS commentary TEXT")
 
         # USER_QUEUE (очередь заданий пользователя; использовалась в
         # check_and_fill_queue/get_next_queue_item/handle_answer_result,
@@ -153,12 +158,53 @@ async def init_db():
                 translation TEXT NOT NULL,
                 definition TEXT DEFAULT '',
                 emoji_code TEXT NOT NULL,
+                card_language TEXT DEFAULT 'en',
+                native_language TEXT DEFAULT 'ru',
                 order_num INTEGER DEFAULT 0,
                 is_active BOOLEAN DEFAULT TRUE,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """)
+        await db.execute("ALTER TABLE vocabulary_cards ADD COLUMN IF NOT EXISTS card_language TEXT DEFAULT 'en'")
+        await db.execute("ALTER TABLE vocabulary_cards ADD COLUMN IF NOT EXISTS native_language TEXT DEFAULT 'ru'")
         print("✅ PostgreSQL: База данных инициализирована")
+
+
+# ==================== ЯЗЫКИ ПОЛЬЗОВАТЕЛЯ ====================
+
+SUPPORTED_LANGUAGES = {
+    'ru': 'Русский',   'en': 'English',    'de': 'Deutsch',
+    'fr': 'Français',  'es': 'Español',    'it': 'Italiano',
+    'pt': 'Português', 'zh': '中文',        'ja': '日本語',
+}
+
+LANG_NAMES_EN = {
+    'ru': 'Russian',   'en': 'English',    'de': 'German',
+    'fr': 'French',    'es': 'Spanish',    'it': 'Italian',
+    'pt': 'Portuguese','zh': 'Chinese',    'ja': 'Japanese',
+}
+
+
+async def get_user_languages(user_id: int) -> dict:
+    pool = await get_pool()
+    async with pool.acquire() as db:
+        row = await db.fetchrow(
+            "SELECT native_language, target_language FROM users WHERE user_id = $1", user_id
+        )
+        if row:
+            return {
+                "native": row["native_language"] or "ru",
+                "target": row["target_language"] or "en"
+            }
+        return {"native": "ru", "target": "en"}
+
+
+async def update_user_languages(user_id: int, native_language: str, target_language: str):
+    pool = await get_pool()
+    async with pool.acquire() as db:
+        await db.execute("""
+            UPDATE users SET native_language = $1, target_language = $2 WHERE user_id = $3
+        """, native_language, target_language, user_id)
 
 
 # ==================== ПОЛЬЗОВАТЕЛИ ====================
@@ -252,14 +298,10 @@ async def delete_lesson(lesson_id: int):
     print(f"🗑️ Урок ID {lesson_id} скрыт")
 
 
-async def get_next_uncompleted_lesson(user_id: int, level: str, content_type: str = None):
+async def get_next_uncompleted_lesson(user_id: int, level: str, content_type: str = None,
+                                      language: str = 'en'):
     """
-    Возвращает первый непройденный урок уровня (по order_num), опционально
-    отфильтрованный по типу контента ('lesson' / 'grammar' / 'vocabulary').
-    Пройденность определяется наличием записи в user_progress с тем же
-    content_type, что и у самого урока (так фронтенд уже отмечает прогресс
-    через /api/progress/complete). Если непройденных уроков не осталось —
-    возвращает None.
+    Первый непройденный урок уровня, с фильтром по языку (target_language пользователя).
     """
     pool = await get_pool()
     async with pool.acquire() as db:
@@ -267,30 +309,31 @@ async def get_next_uncompleted_lesson(user_id: int, level: str, content_type: st
             return await db.fetchrow("""
                 SELECT l.id, l.title, l.lesson_text, l.content_type
                 FROM lessons l
-                WHERE l.level = $1 AND l.is_active = TRUE AND l.content_type = $2
+                WHERE l.level = $1 AND l.is_active = TRUE
+                  AND l.content_type = $2 AND l.language = $3
                   AND NOT EXISTS (
                       SELECT 1 FROM user_progress up
-                      WHERE up.user_id = $3
+                      WHERE up.user_id = $4
                         AND up.content_type = l.content_type
                         AND up.content_id = l.id
                   )
                 ORDER BY l.order_num, l.id
                 LIMIT 1
-            """, level, content_type, user_id)
+            """, level, content_type, language, user_id)
 
         return await db.fetchrow("""
             SELECT l.id, l.title, l.lesson_text, l.content_type
             FROM lessons l
-            WHERE l.level = $1 AND l.is_active = TRUE
+            WHERE l.level = $1 AND l.is_active = TRUE AND l.language = $2
               AND NOT EXISTS (
                   SELECT 1 FROM user_progress up
-                  WHERE up.user_id = $2
+                  WHERE up.user_id = $3
                     AND up.content_type = l.content_type
                     AND up.content_id = l.id
               )
             ORDER BY l.order_num, l.id
             LIMIT 1
-        """, level, user_id)
+        """, level, language, user_id)
 
 
 # ==================== ВОПРОСЫ ====================
@@ -399,23 +442,23 @@ async def save_user_progress(user_id: int, content_type: str, content_id: int):
 # уроков: прогресс пользователя по вопросам трекаем в user_progress
 # с content_type='practice', content_id=questions.id.
 
-async def get_random_practice_question(user_id: int, level: str, task_type: str):
-    """Возвращает случайный вопрос уровня/типа, который пользователь ещё не прошёл."""
+async def get_random_practice_question(user_id: int, level: str, task_type: str, language: str = 'en'):
+    """Случайный непройденный вопрос по уровню, типу и языку изучения."""
     pool = await get_pool()
     async with pool.acquire() as db:
         return await db.fetchrow("""
             SELECT q.id, q.question_text, q.option_1, q.option_2, q.option_3, q.correct_option
             FROM questions q
-            WHERE q.level = $1 AND q.task_type = $2
+            WHERE q.level = $1 AND q.task_type = $2 AND q.language = $3
               AND NOT EXISTS (
                   SELECT 1 FROM user_progress up
-                  WHERE up.user_id = $3
+                  WHERE up.user_id = $4
                     AND up.content_type = 'practice'
                     AND up.content_id = q.id
               )
             ORDER BY random()
             LIMIT 1
-        """, level, task_type, user_id)
+        """, level, task_type, language, user_id)
 
 
 
@@ -561,13 +604,17 @@ async def get_all_vocab_cards_admin():
 
 # ==================== ОНБОРДИНГ ====================
 
-async def complete_onboarding(user_id: int, level: str, goal: str = ""):
-    """Отмечаем онбординг пройденным и сохраняем выбранный уровень."""
+async def complete_onboarding(user_id: int, level: str, goal: str = "",
+                              native_language: str = "ru", target_language: str = "en"):
+    """Отмечаем онбординг пройденным и сохраняем выбранный уровень и языки."""
     pool = await get_pool()
     async with pool.acquire() as db:
         await db.execute("""
-            UPDATE users SET onboarding_done = TRUE, level = $1 WHERE user_id = $2
-        """, level, user_id)
+            UPDATE users
+            SET onboarding_done = TRUE, level = $1,
+                native_language = $2, target_language = $3
+            WHERE user_id = $4
+        """, level, native_language, target_language, user_id)
 
 
 async def get_onboarding_status(user_id: int) -> bool:
