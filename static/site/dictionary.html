@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Talk2Learn | Dictionary</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;700;800&family=Be+Vietnam+Pro:wght@400;500;700&family=Hanken+Grotesk:wght@500;700&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script id="tw-config">
+tailwind.config = {
+  darkMode: "class",
+  theme: { extend: {
+    colors: {
+      "surface":"#f7f9fb","surface-dim":"#d8dadc","surface-bright":"#f7f9fb",
+      "surface-container-lowest":"#ffffff","surface-container-low":"#f2f4f6",
+      "surface-container":"#eceef0","surface-container-high":"#e6e8ea",
+      "surface-container-highest":"#e0e3e5","on-surface":"#191c1e",
+      "on-surface-variant":"#434655","outline":"#737686","outline-variant":"#c3c6d7",
+      "surface-variant":"#e0e3e5","surface-tint":"#0053db",
+      "primary":"#004ac6","on-primary":"#ffffff","primary-container":"#2563eb",
+      "on-primary-container":"#eeefff","primary-fixed":"#dbe1ff","primary-fixed-dim":"#b4c5ff",
+      "on-primary-fixed":"#00174b","on-primary-fixed-variant":"#003ea8",
+      "secondary":"#9d4300","on-secondary":"#ffffff","secondary-container":"#fd761a",
+      "on-secondary-container":"#5c2400","secondary-fixed":"#ffdbca",
+      "secondary-fixed-dim":"#ffb690","on-secondary-fixed":"#341100",
+      "on-secondary-fixed-variant":"#783200",
+      "tertiary":"#006329","on-tertiary":"#ffffff","tertiary-container":"#007f36",
+      "on-tertiary-container":"#c7ffca","tertiary-fixed":"#7ffc97",
+      "on-tertiary-fixed":"#002109","on-tertiary-fixed-variant":"#005320",
+      "error":"#ba1a1a","on-error":"#ffffff","background":"#f7f9fb","on-background":"#191c1e"
+    },
+    borderRadius: { "DEFAULT":"0.5rem","sm":"0.25rem","md":"0.75rem","lg":"1rem","xl":"1.5rem","full":"9999px" },
+    spacing: { "xs":"4px","sm":"8px","md":"16px","lg":"24px","xl":"32px","touch-target-min":"52px" },
+    fontFamily: {
+      "display-hero":["Plus Jakarta Sans"],"headline-lg":["Plus Jakarta Sans"],
+      "headline-md":["Plus Jakarta Sans"],"body-lg":["Be Vietnam Pro"],
+      "body-base":["Be Vietnam Pro"],"body-loose":["Be Vietnam Pro"],
+      "label-caps":["Hanken Grotesk"],"caption":["Hanken Grotesk"]
+    },
+    fontSize: {
+      "display-hero":["48px",{lineHeight:"56px",letterSpacing:"-0.02em",fontWeight:"800"}],
+      "headline-lg":["32px",{lineHeight:"40px",letterSpacing:"-0.01em",fontWeight:"800"}],
+      "headline-md":["24px",{lineHeight:"32px",fontWeight:"700"}],
+      "body-lg":["18px",{lineHeight:"28px",fontWeight:"400"}],
+      "body-base":["16px",{lineHeight:"24px",fontWeight:"400"}],
+      "body-loose":["16px",{lineHeight:"30px",fontWeight:"400"}],
+      "label-caps":["12px",{lineHeight:"16px",letterSpacing:"0.05em",fontWeight:"700"}],
+      "caption":["10px",{lineHeight:"14px",fontWeight:"500"}]
+    }
+  }}
+}
+</script>
+<style>
+  .material-symbols-outlined { font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24; }
+  .icon-fill { font-variation-settings:'FILL' 1,'wght' 400,'GRAD' 0,'opsz' 24; }
+  ::-webkit-scrollbar { width:6px; }
+  ::-webkit-scrollbar-track { background:#f7f9fb; }
+  ::-webkit-scrollbar-thumb { background:#c3c6d7; border-radius:6px; }
+  .card-press { transition: transform 150ms cubic-bezier(.4,0,.2,1); }
+  .card-press:active { transform: scale(0.97); }
+</style>
+</head>
+<body class="bg-surface text-on-surface font-body-base antialiased">
+
+<!-- Sidebar -->
+<aside class="h-screen w-64 fixed left-0 top-0 bg-surface-container-low flex flex-col p-md gap-md z-40 border-r border-outline-variant/40">
+  <div class="mb-lg px-sm pt-sm">
+    <h1 class="font-headline-md text-headline-md text-primary">Talk2Learn</h1>
+    <p class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-widest mt-xs">Personal Tutor</p>
+  </div>
+  <nav class="flex-grow flex flex-col gap-xs">
+    <a href="index.html" class="flex items-center gap-md px-md py-sm rounded-xl text-on-surface-variant hover:bg-surface-variant transition-all active:scale-95 duration-150">
+      <span class="material-symbols-outlined">school</span>
+      <span class="font-label-caps text-label-caps">Lessons</span>
+    </a>
+    <a href="dictionary.html" class="flex items-center gap-md px-md py-sm rounded-xl bg-primary-container text-on-primary-container shadow-sm transition-all">
+      <span class="material-symbols-outlined icon-fill">book</span>
+      <span class="font-label-caps text-label-caps font-bold">Dictionary</span>
+    </a>
+    <a href="profile.html" class="flex items-center gap-md px-md py-sm rounded-xl text-on-surface-variant hover:bg-surface-variant transition-all active:scale-95 duration-150">
+      <span class="material-symbols-outlined">person</span>
+      <span class="font-label-caps text-label-caps">Profile</span>
+    </a>
+  </nav>
+  <button class="mb-md w-full h-touch-target-min bg-primary text-on-primary rounded-xl font-bold flex items-center justify-center gap-sm hover:opacity-90 active:scale-95 transition-all">
+    <span class="material-symbols-outlined icon-fill">play_arrow</span>
+    Start Practice
+  </button>
+  <footer class="flex flex-col gap-xs pt-md border-t border-outline-variant/40">
+    <a href="#" class="flex items-center gap-md px-md py-xs rounded-lg text-on-surface-variant hover:bg-surface-variant transition-all">
+      <span class="material-symbols-outlined text-[20px]">settings</span>
+      <span class="font-caption text-caption">Settings</span>
+    </a>
+    <a href="#" class="flex items-center gap-md px-md py-xs rounded-lg text-on-surface-variant hover:bg-surface-variant transition-all">
+      <span class="material-symbols-outlined text-[20px]">help</span>
+      <span class="font-caption text-caption">Help</span>
+    </a>
+  </footer>
+</aside>
+
+<!-- Main -->
+<main class="ml-64 min-h-screen">
+  <!-- Top bar -->
+  <header class="sticky top-0 bg-surface shadow-sm flex justify-between items-center px-xl py-sm z-30 border-b border-outline-variant/20">
+    <div>
+      <h2 class="font-headline-md text-headline-md text-on-surface">My Dictionary</h2>
+      <p class="font-label-caps text-label-caps text-on-surface-variant uppercase mt-xs">1,284 words learned</p>
+    </div>
+    <div class="flex items-center gap-md">
+      <div class="relative">
+        <span class="material-symbols-outlined absolute left-sm top-1/2 -translate-y-1/2 text-outline">search</span>
+        <input id="search-input" type="text" placeholder="Search words..." class="bg-surface-container-low border border-outline-variant rounded-full pl-xl pr-md py-sm text-body-base focus:ring-2 focus:ring-primary focus:border-primary w-64 outline-none transition-all"/>
+      </div>
+      <button class="p-sm rounded-full bg-surface-container-high hover:bg-surface-variant transition-colors">
+        <span class="material-symbols-outlined">notifications</span>
+      </button>
+    </div>
+  </header>
+
+  <div class="p-xl">
+    <!-- CEFR filter tabs -->
+    <div class="flex gap-sm mb-xl overflow-x-auto pb-1">
+      <button onclick="filterLevel(this,'all')" class="level-btn active px-lg py-sm rounded-full font-label-caps text-label-caps bg-primary text-on-primary transition-all whitespace-nowrap">All Levels</button>
+      <button onclick="filterLevel(this,'A1')" class="level-btn px-lg py-sm rounded-full font-label-caps text-label-caps bg-surface-container text-on-surface-variant hover:bg-surface-container-high transition-all whitespace-nowrap">A1 Beginner</button>
+      <button onclick="filterLevel(this,'A2')" class="level-btn px-lg py-sm rounded-full font-label-caps text-label-caps bg-surface-container text-on-surface-variant hover:bg-surface-container-high transition-all whitespace-nowrap">A2 Elementary</button>
+      <button onclick="filterLevel(this,'B1')" class="level-btn px-lg py-sm rounded-full font-label-caps text-label-caps bg-surface-container text-on-surface-variant hover:bg-surface-container-high transition-all whitespace-nowrap">B1 Intermediate</button>
+      <button onclick="filterLevel(this,'B2')" class="level-btn px-lg py-sm rounded-full font-label-caps text-label-caps bg-surface-container text-on-surface-variant hover:bg-surface-container-high transition-all whitespace-nowrap">B2 Upper-Int</button>
+      <button onclick="filterLevel(this,'C1')" class="level-btn px-lg py-sm rounded-full font-label-caps text-label-caps bg-surface-container text-on-surface-variant hover:bg-surface-container-high transition-all whitespace-nowrap">C1 Advanced</button>
+    </div>
+
+    <!-- Stats row -->
+    <div class="grid grid-cols-4 gap-md mb-xl">
+      <div class="bg-white rounded-xl border border-outline-variant/30 shadow-[0px_4px_20px_rgba(0,0,0,0.05)] p-md flex flex-col items-center justify-center text-center">
+        <span class="material-symbols-outlined text-primary text-[28px] mb-xs">auto_stories</span>
+        <span class="font-headline-md text-headline-md text-primary">1,284</span>
+        <span class="font-label-caps text-label-caps text-on-surface-variant">TOTAL WORDS</span>
+      </div>
+      <div class="bg-white rounded-xl border border-outline-variant/30 shadow-[0px_4px_20px_rgba(0,0,0,0.05)] p-md flex flex-col items-center justify-center text-center">
+        <span class="material-symbols-outlined text-tertiary text-[28px] mb-xs">check_circle</span>
+        <span class="font-headline-md text-headline-md text-tertiary">847</span>
+        <span class="font-label-caps text-label-caps text-on-surface-variant">MEMORIZED</span>
+      </div>
+      <div class="bg-white rounded-xl border border-outline-variant/30 shadow-[0px_4px_20px_rgba(0,0,0,0.05)] p-md flex flex-col items-center justify-center text-center">
+        <span class="material-symbols-outlined text-secondary text-[28px] mb-xs">pending</span>
+        <span class="font-headline-md text-headline-md text-secondary">437</span>
+        <span class="font-label-caps text-label-caps text-on-surface-variant">IN PROGRESS</span>
+      </div>
+      <div class="bg-white rounded-xl border border-outline-variant/30 shadow-[0px_4px_20px_rgba(0,0,0,0.05)] p-md flex flex-col items-center justify-center text-center">
+        <span class="material-symbols-outlined text-on-surface-variant text-[28px] mb-xs">today</span>
+        <span class="font-headline-md text-headline-md text-on-surface">24</span>
+        <span class="font-label-caps text-label-caps text-on-surface-variant">ADDED TODAY</span>
+      </div>
+    </div>
+
+    <!-- Word grid -->
+    <div id="word-grid" class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-md">
+    </div>
+  </div>
+</main>
+
+<!-- Footer -->
+<footer class="ml-64 bg-surface-container-highest border-t border-outline-variant/30 flex flex-col md:flex-row justify-between items-center px-xl py-lg">
+  <div>
+    <span class="font-label-caps text-label-caps text-primary uppercase">Talk2Learn AI</span>
+    <p class="font-caption text-caption text-on-surface-variant mt-xs">© 2025 Talk2Learn AI. Master languages with ease.</p>
+  </div>
+  <div class="flex flex-wrap gap-lg mt-md md:mt-0">
+    <a href="#" class="font-caption text-caption text-on-surface-variant hover:text-secondary transition-colors">Language Settings</a>
+    <a href="#" class="font-caption text-caption text-on-surface-variant hover:text-secondary transition-colors">Privacy Policy</a>
+    <a href="#" class="font-caption text-caption text-on-surface-variant hover:text-secondary transition-colors">Terms of Service</a>
+    <a href="#" class="font-caption text-caption text-on-surface-variant hover:text-secondary transition-colors">Contact Support</a>
+  </div>
+</footer>
+
+<script src="_shared.js"></script>
+<script>
+const words = [
+  { word:"Adventure", translation:"Приключение", level:"B2", emoji:"🏔️", gradient:"from-emerald-400 to-teal-600", memorized:85 },
+  { word:"Beautiful", translation:"Красивый", level:"A1", emoji:"🌸", gradient:"from-pink-400 to-rose-500", memorized:100 },
+  { word:"Challenge", translation:"Испытание", level:"B1", emoji:"💪", gradient:"from-orange-400 to-amber-600", memorized:72 },
+  { word:"Discover", translation:"Открывать", level:"A2", emoji:"🔍", gradient:"from-blue-400 to-indigo-600", memorized:60 },
+  { word:"Eloquent", translation:"Красноречивый", level:"C1", emoji:"🎤", gradient:"from-purple-500 to-red-600", memorized:30 },
+  { word:"Freedom", translation:"Свобода", level:"A2", emoji:"🕊️", gradient:"from-sky-400 to-blue-600", memorized:95 },
+  { word:"Grateful", translation:"Благодарный", level:"B1", emoji:"🙏", gradient:"from-yellow-400 to-orange-500", memorized:55 },
+  { word:"Harmony", translation:"Гармония", level:"B2", emoji:"🎵", gradient:"from-teal-400 to-cyan-600", memorized:40 },
+  { word:"Inspire", translation:"Вдохновлять", level:"B1", emoji:"✨", gradient:"from-violet-400 to-purple-600", memorized:80 },
+  { word:"Journey", translation:"Путешествие", level:"A2", emoji:"🗺️", gradient:"from-green-400 to-emerald-600", memorized:100 },
+  { word:"Knowledge", translation:"Знание", level:"A1", emoji:"📚", gradient:"from-blue-400 to-blue-700", memorized:90 },
+  { word:"Legendary", translation:"Легендарный", level:"C1", emoji:"⚡", gradient:"from-red-500 to-pink-600", memorized:20 },
+];
+
+const levelColors = {
+  A1:"bg-tertiary-fixed text-on-tertiary-fixed-variant",
+  A2:"bg-tertiary-fixed text-on-tertiary-fixed-variant",
+  B1:"bg-secondary-fixed text-on-secondary-fixed-variant",
+  B2:"bg-secondary-fixed text-on-secondary-fixed-variant",
+  C1:"bg-primary-fixed text-on-primary-fixed-variant",
+  C2:"bg-primary-fixed text-on-primary-fixed-variant",
+};
+
+let activeLevel = 'all';
+let searchQuery = '';
+
+function renderWords() {
+  const grid = document.getElementById('word-grid');
+  const filtered = words.filter(w => {
+    const matchLevel = activeLevel === 'all' || w.level === activeLevel;
+    const matchSearch = w.word.toLowerCase().includes(searchQuery) || w.translation.toLowerCase().includes(searchQuery);
+    return matchLevel && matchSearch;
+  });
+
+  grid.innerHTML = filtered.map(w => `
+    <a href="word.html?word=${encodeURIComponent(w.word)}" class="card-press bg-white rounded-2xl overflow-hidden border border-outline-variant/30 shadow-[0px_4px_20px_rgba(0,0,0,0.05)] hover:shadow-md transition-all group block">
+      <div class="h-28 bg-gradient-to-br ${w.gradient} flex items-center justify-center relative">
+        <span class="text-5xl">${w.emoji}</span>
+        <span class="absolute top-sm right-sm font-label-caps text-caption px-sm py-xs rounded-full bg-white/25 text-white backdrop-blur-sm">${w.level}</span>
+      </div>
+      <div class="p-md">
+        <h4 class="font-headline-md text-[16px] text-on-surface font-bold">${w.word}</h4>
+        <p class="font-body-base text-[13px] text-primary mt-xs">${w.translation}</p>
+        <div class="mt-sm">
+          <div class="flex justify-between items-center mb-xs">
+            <span class="font-caption text-caption text-on-surface-variant">${w.memorized}% memorized</span>
+          </div>
+          <div class="w-full h-1.5 bg-surface-container-high rounded-full overflow-hidden">
+            <div class="h-full rounded-full transition-all duration-700 ${w.memorized === 100 ? 'bg-tertiary' : 'bg-primary'}" style="width:${w.memorized}%"></div>
+          </div>
+        </div>
+      </div>
+    </a>
+  `).join('');
+}
+
+function filterLevel(btn, level) {
+  activeLevel = level;
+  document.querySelectorAll('.level-btn').forEach(b => {
+    b.className = 'level-btn px-lg py-sm rounded-full font-label-caps text-label-caps bg-surface-container text-on-surface-variant hover:bg-surface-container-high transition-all whitespace-nowrap';
+  });
+  btn.className = 'level-btn active px-lg py-sm rounded-full font-label-caps text-label-caps bg-primary text-on-primary transition-all whitespace-nowrap';
+  renderWords();
+}
+
+document.getElementById('search-input').addEventListener('input', e => {
+  searchQuery = e.target.value.toLowerCase();
+  renderWords();
+});
+
+renderWords();
+</script>
+</body>
+</html>

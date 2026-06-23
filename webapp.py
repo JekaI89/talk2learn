@@ -943,6 +943,31 @@ async def serve_admin():
     return FileResponse(os.path.join(STATIC_DIR, "admin.html"))
 
 
+# ====================== САЙТ (не мини-апп) ======================
+SITE_DIR = os.path.join(STATIC_DIR, "site")
+
+@app.get("/site")
+@app.get("/site/")
+async def serve_site():
+    return FileResponse(os.path.join(SITE_DIR, "index.html"))
+
+@app.get("/site/lessons")
+async def serve_site_lessons():
+    return FileResponse(os.path.join(SITE_DIR, "index.html"))
+
+@app.get("/site/dictionary")
+async def serve_site_dictionary():
+    return FileResponse(os.path.join(SITE_DIR, "dictionary.html"))
+
+@app.get("/site/word")
+async def serve_site_word():
+    return FileResponse(os.path.join(SITE_DIR, "word.html"))
+
+@app.get("/site/profile")
+async def serve_site_profile():
+    return FileResponse(os.path.join(SITE_DIR, "profile.html"))
+
+
 if __name__ == "__main__":
     import uvicorn
     port = int(os.environ.get("PORT", 8000))

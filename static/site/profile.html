@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Talk2Learn | Profile</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;700;800&family=Be+Vietnam+Pro:wght@400;500;700&family=Hanken+Grotesk:wght@500;700&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script id="tw-config">
+tailwind.config = {
+  darkMode: "class",
+  theme: { extend: {
+    colors: {
+      "surface":"#f7f9fb","surface-dim":"#d8dadc","surface-bright":"#f7f9fb",
+      "surface-container-lowest":"#ffffff","surface-container-low":"#f2f4f6",
+      "surface-container":"#eceef0","surface-container-high":"#e6e8ea",
+      "surface-container-highest":"#e0e3e5","on-surface":"#191c1e",
+      "on-surface-variant":"#434655","outline":"#737686","outline-variant":"#c3c6d7",
+      "surface-variant":"#e0e3e5","surface-tint":"#0053db",
+      "primary":"#004ac6","on-primary":"#ffffff","primary-container":"#2563eb",
+      "on-primary-container":"#eeefff","primary-fixed":"#dbe1ff","primary-fixed-dim":"#b4c5ff",
+      "on-primary-fixed":"#00174b","on-primary-fixed-variant":"#003ea8",
+      "secondary":"#9d4300","on-secondary":"#ffffff","secondary-container":"#fd761a",
+      "on-secondary-container":"#5c2400","secondary-fixed":"#ffdbca",
+      "secondary-fixed-dim":"#ffb690","on-secondary-fixed":"#341100",
+      "on-secondary-fixed-variant":"#783200",
+      "tertiary":"#006329","on-tertiary":"#ffffff","tertiary-container":"#007f36",
+      "on-tertiary-container":"#c7ffca","tertiary-fixed":"#7ffc97",
+      "on-tertiary-fixed":"#002109","on-tertiary-fixed-variant":"#005320",
+      "error":"#ba1a1a","on-error":"#ffffff","background":"#f7f9fb","on-background":"#191c1e"
+    },
+    borderRadius: { "DEFAULT":"0.5rem","sm":"0.25rem","md":"0.75rem","lg":"1rem","xl":"1.5rem","full":"9999px" },
+    spacing: { "xs":"4px","sm":"8px","md":"16px","lg":"24px","xl":"32px","touch-target-min":"52px" },
+    fontFamily: {
+      "display-hero":["Plus Jakarta Sans"],"headline-lg":["Plus Jakarta Sans"],
+      "headline-md":["Plus Jakarta Sans"],"body-lg":["Be Vietnam Pro"],
+      "body-base":["Be Vietnam Pro"],"body-loose":["Be Vietnam Pro"],
+      "label-caps":["Hanken Grotesk"],"caption":["Hanken Grotesk"]
+    },
+    fontSize: {
+      "display-hero":["48px",{lineHeight:"56px",letterSpacing:"-0.02em",fontWeight:"800"}],
+      "headline-lg":["32px",{lineHeight:"40px",letterSpacing:"-0.01em",fontWeight:"800"}],
+      "headline-md":["24px",{lineHeight:"32px",fontWeight:"700"}],
+      "body-lg":["18px",{lineHeight:"28px",fontWeight:"400"}],
+      "body-base":["16px",{lineHeight:"24px",fontWeight:"400"}],
+      "body-loose":["16px",{lineHeight:"30px",fontWeight:"400"}],
+      "label-caps":["12px",{lineHeight:"16px",letterSpacing:"0.05em",fontWeight:"700"}],
+      "caption":["10px",{lineHeight:"14px",fontWeight:"500"}]
+    }
+  }}
+}
+</script>
+<style>
+  .material-symbols-outlined { font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24; }
+  .icon-fill { font-variation-settings:'FILL' 1,'wght' 400,'GRAD' 0,'opsz' 24; }
+  ::-webkit-scrollbar { width:6px; }
+  ::-webkit-scrollbar-track { background:#f7f9fb; }
+  ::-webkit-scrollbar-thumb { background:#c3c6d7; border-radius:6px; }
+  .chart-bar { transition: height 1s ease-out; }
+  .card-shadow { box-shadow: 0px 4px 20px rgba(0,0,0,0.05); }
+</style>
+</head>
+<body class="bg-background text-on-surface font-body-base antialiased">
+
+<!-- Sidebar -->
+<aside class="h-screen w-64 fixed left-0 top-0 bg-surface-container-low flex flex-col p-md gap-md z-40 border-r border-outline-variant/40">
+  <div class="mb-lg px-sm pt-sm">
+    <h1 class="font-headline-md text-headline-md text-primary">Talk2Learn</h1>
+    <p class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-widest mt-xs">Personal Tutor</p>
+  </div>
+  <nav class="flex-grow flex flex-col gap-xs">
+    <a href="index.html" class="flex items-center gap-md px-md py-sm rounded-xl text-on-surface-variant hover:bg-surface-variant transition-all active:scale-95 duration-150">
+      <span class="material-symbols-outlined">school</span>
+      <span class="font-label-caps text-label-caps">Lessons</span>
+    </a>
+    <a href="dictionary.html" class="flex items-center gap-md px-md py-sm rounded-xl text-on-surface-variant hover:bg-surface-variant transition-all active:scale-95 duration-150">
+      <span class="material-symbols-outlined">book</span>
+      <span class="font-label-caps text-label-caps">Dictionary</span>
+    </a>
+    <a href="profile.html" class="flex items-center gap-md px-md py-sm rounded-xl bg-primary-container text-on-primary-container shadow-sm transition-all">
+      <span class="material-symbols-outlined icon-fill">person</span>
+      <span class="font-label-caps text-label-caps font-bold">Profile</span>
+    </a>
+  </nav>
+  <button class="mb-md w-full h-touch-target-min bg-primary text-on-primary rounded-xl font-bold flex items-center justify-center gap-sm hover:opacity-90 active:scale-95 transition-all">
+    <span class="material-symbols-outlined icon-fill">play_arrow</span>
+    Start Practice
+  </button>
+  <footer class="flex flex-col gap-xs pt-md border-t border-outline-variant/40">
+    <a href="#" class="flex items-center gap-md px-md py-xs rounded-lg text-on-surface-variant hover:bg-surface-variant transition-all">
+      <span class="material-symbols-outlined text-[20px]">settings</span>
+      <span class="font-caption text-caption">Settings</span>
+    </a>
+    <a href="#" class="flex items-center gap-md px-md py-xs rounded-lg text-on-surface-variant hover:bg-surface-variant transition-all">
+      <span class="material-symbols-outlined text-[20px]">help</span>
+      <span class="font-caption text-caption">Help</span>
+    </a>
+  </footer>
+</aside>
+
+<!-- Main -->
+<main class="ml-64 min-h-screen">
+  <!-- Header -->
+  <header class="sticky top-0 bg-surface shadow-sm flex justify-between items-center px-xl py-sm z-30 border-b border-outline-variant/20 h-touch-target-min">
+    <div>
+      <h2 class="font-headline-md text-headline-md text-on-surface">My Profile</h2>
+    </div>
+    <div class="flex items-center gap-md">
+      <button class="p-sm rounded-full bg-surface-container-high hover:bg-surface-variant transition-colors">
+        <span class="material-symbols-outlined">notifications</span>
+      </button>
+      <button class="flex items-center gap-sm px-md py-sm bg-surface-container-high hover:bg-surface-variant rounded-full transition-colors">
+        <span class="material-symbols-outlined text-[18px]">edit</span>
+        <span class="font-label-caps text-label-caps">Edit Profile</span>
+      </button>
+    </div>
+  </header>
+
+  <div class="p-xl max-w-6xl">
+
+    <!-- Profile hero -->
+    <div class="bg-white rounded-[2rem] border border-outline-variant/30 card-shadow p-xl mb-xl overflow-hidden relative">
+      <!-- Background decoration -->
+      <div class="absolute top-0 left-0 right-0 h-32 bg-gradient-to-br from-primary to-primary-container opacity-10 rounded-t-[2rem]"></div>
+
+      <div class="relative flex flex-col md:flex-row items-center md:items-end gap-xl">
+        <div class="relative">
+          <div class="w-24 h-24 rounded-full border-4 border-white shadow-lg overflow-hidden bg-primary-container flex items-center justify-center">
+            <span class="material-symbols-outlined text-on-primary-container text-[48px] icon-fill">person</span>
+          </div>
+          <div class="absolute bottom-0 right-0 bg-secondary-container text-white text-[10px] font-bold px-2 py-1 rounded-full border-2 border-white">
+            LVL 14
+          </div>
+        </div>
+        <div class="flex-grow text-center md:text-left">
+          <h2 class="font-headline-md text-headline-md text-on-surface">Alex Chen</h2>
+          <p class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-widest mt-xs">Polyglot Explorer</p>
+          <div class="flex flex-wrap gap-sm mt-md justify-center md:justify-start">
+            <span class="px-sm py-xs bg-primary-fixed text-on-primary-fixed-variant font-label-caps text-caption rounded-full">🇺🇸 English B2</span>
+            <span class="px-sm py-xs bg-tertiary-fixed text-on-tertiary-fixed-variant font-label-caps text-caption rounded-full">🇩🇪 German A2</span>
+            <span class="px-sm py-xs bg-secondary-fixed text-on-secondary-fixed-variant font-label-caps text-caption rounded-full">🇫🇷 French A1</span>
+          </div>
+        </div>
+        <div class="flex gap-lg">
+          <div class="text-center">
+            <p class="font-headline-md text-headline-md text-primary">47</p>
+            <p class="font-label-caps text-label-caps text-on-surface-variant">LESSONS</p>
+          </div>
+          <div class="text-center border-x border-outline-variant/40 px-lg">
+            <p class="font-headline-md text-headline-md text-secondary">12</p>
+            <p class="font-label-caps text-label-caps text-on-surface-variant">STREAK</p>
+          </div>
+          <div class="text-center">
+            <p class="font-headline-md text-headline-md text-tertiary">1284</p>
+            <p class="font-label-caps text-label-caps text-on-surface-variant">WORDS</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats bento -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-md mb-xl">
+      <div class="bg-surface-container-lowest p-md rounded-xl card-shadow border border-outline-variant/30 flex flex-col items-center justify-center text-center py-lg">
+        <span class="material-symbols-outlined text-primary text-3xl mb-sm">auto_stories</span>
+        <span class="font-headline-md text-headline-md text-primary">1,284</span>
+        <span class="font-label-caps text-label-caps text-on-surface-variant mt-xs">WORDS LEARNED</span>
+      </div>
+      <div class="bg-surface-container-lowest p-md rounded-xl card-shadow border border-outline-variant/30 flex flex-col items-center justify-center text-center py-lg">
+        <span class="material-symbols-outlined text-secondary text-3xl mb-sm icon-fill">local_fire_department</span>
+        <span class="font-headline-md text-headline-md text-secondary">12</span>
+        <span class="font-label-caps text-label-caps text-on-surface-variant mt-xs">DAY STREAK</span>
+      </div>
+      <div class="bg-surface-container-lowest p-md rounded-xl card-shadow border border-outline-variant/30 flex flex-col items-center justify-center text-center py-lg">
+        <span class="material-symbols-outlined text-tertiary text-3xl mb-sm icon-fill">check_circle</span>
+        <span class="font-headline-md text-headline-md text-tertiary">47</span>
+        <span class="font-label-caps text-label-caps text-on-surface-variant mt-xs">LESSONS DONE</span>
+      </div>
+      <div class="bg-surface-container-lowest p-md rounded-xl card-shadow border border-outline-variant/30 flex flex-col items-center justify-center text-center py-lg">
+        <span class="material-symbols-outlined text-on-surface text-3xl mb-sm">timer</span>
+        <span class="font-headline-md text-headline-md text-on-surface">38h</span>
+        <span class="font-label-caps text-label-caps text-on-surface-variant mt-xs">TOTAL TIME</span>
+      </div>
+    </div>
+
+    <!-- Next milestone + Activity chart -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-xl mb-xl">
+
+      <!-- Next milestone -->
+      <div class="bg-primary-container rounded-[1.5rem] p-lg card-shadow text-on-primary-container overflow-hidden relative">
+        <div class="relative z-10">
+          <p class="font-label-caps text-label-caps opacity-80 mb-xs">NEXT MILESTONE</p>
+          <h3 class="font-headline-md text-headline-md mb-xs">Fluent Speaker</h3>
+          <p class="font-body-base text-body-base opacity-70 mb-lg">1,500 words · 50 lessons · 30-day streak</p>
+          <div class="space-y-sm">
+            <div>
+              <div class="flex justify-between mb-xs">
+                <span class="font-label-caps text-caption opacity-80">Words</span>
+                <span class="font-label-caps text-caption opacity-80">1,284 / 1,500</span>
+              </div>
+              <div class="w-full h-2 bg-white/20 rounded-full">
+                <div class="h-full bg-white rounded-full" style="width:85%"></div>
+              </div>
+            </div>
+            <div>
+              <div class="flex justify-between mb-xs">
+                <span class="font-label-caps text-caption opacity-80">Lessons</span>
+                <span class="font-label-caps text-caption opacity-80">47 / 50</span>
+              </div>
+              <div class="w-full h-2 bg-white/20 rounded-full">
+                <div class="h-full bg-white rounded-full" style="width:94%"></div>
+              </div>
+            </div>
+            <div>
+              <div class="flex justify-between mb-xs">
+                <span class="font-label-caps text-caption opacity-80">Streak</span>
+                <span class="font-label-caps text-caption opacity-80">12 / 30 days</span>
+              </div>
+              <div class="w-full h-2 bg-white/20 rounded-full">
+                <div class="h-full bg-white rounded-full" style="width:40%"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <span class="material-symbols-outlined text-white/20 text-[120px] absolute -right-4 -bottom-4">military_tech</span>
+      </div>
+
+      <!-- Weekly chart -->
+      <div class="bg-surface-container-lowest p-lg rounded-[1.5rem] card-shadow border border-outline-variant/30">
+        <div class="flex justify-between items-center mb-lg">
+          <h3 class="font-headline-md text-headline-md text-on-surface">Weekly Activity</h3>
+          <div class="flex items-center gap-xs">
+            <div class="w-3 h-3 rounded-full bg-primary"></div>
+            <span class="font-label-caps text-label-caps text-on-surface-variant">MINUTES</span>
+          </div>
+        </div>
+        <div class="flex items-end justify-between h-36 px-2 gap-2">
+          <!-- Days -->
+          <div class="flex flex-col items-center gap-2 flex-1">
+            <span class="font-caption text-caption text-on-surface-variant text-[10px]">40</span>
+            <div class="w-full bg-surface-container-high rounded-t-sm relative" style="height:40%">
+              <div class="chart-bar w-full bg-primary rounded-t-sm absolute bottom-0" style="height:0%"></div>
+            </div>
+            <span class="font-label-caps text-[10px] text-on-surface-variant">M</span>
+          </div>
+          <div class="flex flex-col items-center gap-2 flex-1">
+            <span class="font-caption text-caption text-on-surface-variant text-[10px]">60</span>
+            <div class="w-full bg-surface-container-high rounded-t-sm relative" style="height:60%">
+              <div class="chart-bar w-full bg-primary rounded-t-sm absolute bottom-0" style="height:0%"></div>
+            </div>
+            <span class="font-label-caps text-[10px] text-on-surface-variant">T</span>
+          </div>
+          <div class="flex flex-col items-center gap-2 flex-1">
+            <span class="font-caption text-caption text-on-surface-variant text-[10px]">90</span>
+            <div class="w-full bg-surface-container-high rounded-t-sm relative" style="height:90%">
+              <div class="chart-bar w-full bg-primary rounded-t-sm absolute bottom-0" style="height:0%"></div>
+            </div>
+            <span class="font-label-caps text-[10px] text-on-surface-variant">W</span>
+          </div>
+          <div class="flex flex-col items-center gap-2 flex-1">
+            <span class="font-caption text-caption text-on-surface-variant text-[10px]">30</span>
+            <div class="w-full bg-surface-container-high rounded-t-sm relative" style="height:30%">
+              <div class="chart-bar w-full bg-primary rounded-t-sm absolute bottom-0" style="height:0%"></div>
+            </div>
+            <span class="font-label-caps text-[10px] text-on-surface-variant">T</span>
+          </div>
+          <div class="flex flex-col items-center gap-2 flex-1">
+            <span class="font-caption text-caption text-on-surface-variant text-[10px]">75</span>
+            <div class="w-full bg-surface-container-high rounded-t-sm relative" style="height:75%">
+              <div class="chart-bar w-full bg-primary rounded-t-sm absolute bottom-0" style="height:0%"></div>
+            </div>
+            <span class="font-label-caps text-[10px] text-on-surface-variant">F</span>
+          </div>
+          <div class="flex flex-col items-center gap-2 flex-1">
+            <span class="font-caption text-caption text-on-surface-variant text-[10px]">50</span>
+            <div class="w-full bg-surface-container-high rounded-t-sm relative" style="height:50%">
+              <div class="chart-bar w-full bg-primary/50 rounded-t-sm absolute bottom-0" style="height:0%"></div>
+            </div>
+            <span class="font-label-caps text-[10px] text-on-surface-variant">S</span>
+          </div>
+          <div class="flex flex-col items-center gap-2 flex-1">
+            <span class="font-caption text-caption text-on-surface-variant text-[10px]">20</span>
+            <div class="w-full bg-surface-container-high rounded-t-sm relative" style="height:20%">
+              <div class="chart-bar w-full bg-primary/50 rounded-t-sm absolute bottom-0" style="height:0%"></div>
+            </div>
+            <span class="font-label-caps text-[10px] text-on-surface-variant">S</span>
+          </div>
+        </div>
+        <div class="mt-lg pt-md border-t border-outline-variant/30 flex justify-between">
+          <div class="text-center">
+            <p class="font-headline-md text-[20px] text-on-surface">365 min</p>
+            <p class="font-label-caps text-label-caps text-on-surface-variant">THIS WEEK</p>
+          </div>
+          <div class="text-center">
+            <p class="font-headline-md text-[20px] text-tertiary">+18%</p>
+            <p class="font-label-caps text-label-caps text-on-surface-variant">VS LAST WEEK</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Achievements -->
+    <section class="mb-xl">
+      <div class="flex justify-between items-center mb-lg">
+        <h3 class="font-headline-md text-headline-md text-on-surface">Badges Earned</h3>
+        <button class="text-primary font-bold text-sm hover:underline">View All</button>
+      </div>
+      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-md">
+
+        <div class="flex flex-col items-center text-center p-md bg-surface-container-lowest rounded-2xl card-shadow border border-outline-variant/30 hover:-translate-y-1 transition-transform cursor-pointer">
+          <div class="w-14 h-14 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center mb-sm shadow-inner">
+            <span class="material-symbols-outlined text-white text-3xl icon-fill">emoji_events</span>
+          </div>
+          <p class="font-bold text-xs text-on-surface">Early Bird</p>
+          <p class="text-[10px] text-on-surface-variant">50 AM Lessons</p>
+        </div>
+
+        <div class="flex flex-col items-center text-center p-md bg-surface-container-lowest rounded-2xl card-shadow border border-outline-variant/30 hover:-translate-y-1 transition-transform cursor-pointer">
+          <div class="w-14 h-14 bg-gradient-to-br from-blue-400 to-indigo-600 rounded-full flex items-center justify-center mb-sm shadow-inner">
+            <span class="material-symbols-outlined text-white text-3xl icon-fill">history_edu</span>
+          </div>
+          <p class="font-bold text-xs text-on-surface">Wordsmith</p>
+          <p class="text-[10px] text-on-surface-variant">1k words</p>
+        </div>
+
+        <div class="flex flex-col items-center text-center p-md bg-surface-container-lowest rounded-2xl card-shadow border border-outline-variant/30 hover:-translate-y-1 transition-transform cursor-pointer">
+          <div class="w-14 h-14 bg-gradient-to-br from-emerald-400 to-teal-600 rounded-full flex items-center justify-center mb-sm shadow-inner">
+            <span class="material-symbols-outlined text-white text-3xl icon-fill">chat</span>
+          </div>
+          <p class="font-bold text-xs text-on-surface">Chatterbox</p>
+          <p class="text-[10px] text-on-surface-variant">100 chats</p>
+        </div>
+
+        <div class="flex flex-col items-center text-center p-md bg-surface-container-lowest rounded-2xl card-shadow border border-outline-variant/30 hover:-translate-y-1 transition-transform cursor-pointer">
+          <div class="w-14 h-14 bg-gradient-to-br from-secondary-container to-secondary rounded-full flex items-center justify-center mb-sm shadow-inner">
+            <span class="material-symbols-outlined text-white text-3xl icon-fill">local_fire_department</span>
+          </div>
+          <p class="font-bold text-xs text-on-surface">On Fire</p>
+          <p class="text-[10px] text-on-surface-variant">7-day streak</p>
+        </div>
+
+        <div class="flex flex-col items-center text-center p-md bg-surface-container-lowest rounded-2xl card-shadow border border-outline-variant/30 hover:-translate-y-1 transition-transform cursor-pointer">
+          <div class="w-14 h-14 bg-gradient-to-br from-violet-500 to-purple-700 rounded-full flex items-center justify-center mb-sm shadow-inner">
+            <span class="material-symbols-outlined text-white text-3xl icon-fill">headphones</span>
+          </div>
+          <p class="font-bold text-xs text-on-surface">Listener</p>
+          <p class="text-[10px] text-on-surface-variant">20 audio lessons</p>
+        </div>
+
+        <!-- Locked -->
+        <div class="flex flex-col items-center text-center p-md bg-surface-container-low/60 rounded-2xl border border-dashed border-outline-variant cursor-pointer opacity-60">
+          <div class="w-14 h-14 bg-surface-variant rounded-full flex items-center justify-center mb-sm">
+            <span class="material-symbols-outlined text-on-surface-variant text-3xl">lock</span>
+          </div>
+          <p class="font-bold text-xs text-on-surface-variant">Traveler</p>
+          <p class="text-[10px] text-on-surface-variant">5 Countries</p>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- CEFR Progress -->
+    <section class="bg-surface-container-lowest p-xl rounded-[1.5rem] card-shadow border border-outline-variant/30">
+      <h3 class="font-headline-md text-headline-md text-on-surface mb-lg">CEFR Progress</h3>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-lg">
+        <div>
+          <div class="flex justify-between mb-sm">
+            <span class="font-label-caps text-label-caps text-tertiary">A1 — Beginner</span>
+            <span class="font-label-caps text-label-caps text-on-surface-variant">100%</span>
+          </div>
+          <div class="w-full h-3 bg-surface-container-high rounded-full overflow-hidden">
+            <div class="h-full bg-tertiary rounded-full" style="width:100%"></div>
+          </div>
+        </div>
+        <div>
+          <div class="flex justify-between mb-sm">
+            <span class="font-label-caps text-label-caps text-tertiary">A2 — Elementary</span>
+            <span class="font-label-caps text-label-caps text-on-surface-variant">100%</span>
+          </div>
+          <div class="w-full h-3 bg-surface-container-high rounded-full overflow-hidden">
+            <div class="h-full bg-tertiary rounded-full" style="width:100%"></div>
+          </div>
+        </div>
+        <div>
+          <div class="flex justify-between mb-sm">
+            <span class="font-label-caps text-label-caps text-secondary">B1 — Intermediate</span>
+            <span class="font-label-caps text-label-caps text-on-surface-variant">72%</span>
+          </div>
+          <div class="w-full h-3 bg-surface-container-high rounded-full overflow-hidden">
+            <div class="h-full bg-secondary-container rounded-full" style="width:72%"></div>
+          </div>
+        </div>
+        <div>
+          <div class="flex justify-between mb-sm">
+            <span class="font-label-caps text-label-caps text-secondary">B2 — Upper Int.</span>
+            <span class="font-label-caps text-label-caps text-on-surface-variant">35%</span>
+          </div>
+          <div class="w-full h-3 bg-surface-container-high rounded-full overflow-hidden">
+            <div class="h-full bg-secondary-container rounded-full" style="width:35%"></div>
+          </div>
+        </div>
+        <div>
+          <div class="flex justify-between mb-sm">
+            <span class="font-label-caps text-label-caps text-primary">C1 — Advanced</span>
+            <span class="font-label-caps text-label-caps text-on-surface-variant">8%</span>
+          </div>
+          <div class="w-full h-3 bg-surface-container-high rounded-full overflow-hidden">
+            <div class="h-full bg-primary rounded-full" style="width:8%"></div>
+          </div>
+        </div>
+        <div>
+          <div class="flex justify-between mb-sm">
+            <span class="font-label-caps text-label-caps text-outline">C2 — Mastery</span>
+            <span class="font-label-caps text-label-caps text-on-surface-variant">0%</span>
+          </div>
+          <div class="w-full h-3 bg-surface-container-high rounded-full overflow-hidden">
+            <div class="h-full bg-outline rounded-full" style="width:0%"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</main>
+
+<!-- Footer -->
+<footer class="ml-64 bg-surface-container-highest border-t border-outline-variant/30 flex flex-col md:flex-row justify-between items-center px-xl py-lg">
+  <div>
+    <span class="font-label-caps text-label-caps text-primary uppercase">Talk2Learn AI</span>
+    <p class="font-caption text-caption text-on-surface-variant mt-xs">© 2025 Talk2Learn AI. Master languages with ease.</p>
+  </div>
+  <div class="flex flex-wrap gap-lg mt-md md:mt-0">
+    <a href="#" class="font-caption text-caption text-on-surface-variant hover:text-secondary transition-colors">Language Settings</a>
+    <a href="#" class="font-caption text-caption text-on-surface-variant hover:text-secondary transition-colors">Privacy Policy</a>
+    <a href="#" class="font-caption text-caption text-on-surface-variant hover:text-secondary transition-colors">Terms of Service</a>
+    <a href="#" class="font-caption text-caption text-on-surface-variant hover:text-secondary transition-colors">Contact Support</a>
+  </div>
+</footer>
+
+<script src="_shared.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  // Animate chart bars
+  setTimeout(() => {
+    document.querySelectorAll('.chart-bar').forEach(bar => {
+      bar.style.height = '100%';
+    });
+  }, 300);
+});
+</script>
+</body>
+</html>

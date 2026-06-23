@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Talk2Learn | Word Detail</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;700;800&family=Be+Vietnam+Pro:wght@400;500;700&family=Hanken+Grotesk:wght@500;700&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script id="tw-config">
+tailwind.config = {
+  darkMode: "class",
+  theme: { extend: {
+    colors: {
+      "surface":"#f7f9fb","surface-dim":"#d8dadc","surface-bright":"#f7f9fb",
+      "surface-container-lowest":"#ffffff","surface-container-low":"#f2f4f6",
+      "surface-container":"#eceef0","surface-container-high":"#e6e8ea",
+      "surface-container-highest":"#e0e3e5","on-surface":"#191c1e",
+      "on-surface-variant":"#434655","outline":"#737686","outline-variant":"#c3c6d7",
+      "surface-variant":"#e0e3e5","surface-tint":"#0053db",
+      "primary":"#004ac6","on-primary":"#ffffff","primary-container":"#2563eb",
+      "on-primary-container":"#eeefff","primary-fixed":"#dbe1ff","primary-fixed-dim":"#b4c5ff",
+      "on-primary-fixed":"#00174b","on-primary-fixed-variant":"#003ea8",
+      "secondary":"#9d4300","on-secondary":"#ffffff","secondary-container":"#fd761a",
+      "on-secondary-container":"#5c2400","secondary-fixed":"#ffdbca",
+      "secondary-fixed-dim":"#ffb690","on-secondary-fixed":"#341100",
+      "on-secondary-fixed-variant":"#783200",
+      "tertiary":"#006329","on-tertiary":"#ffffff","tertiary-container":"#007f36",
+      "on-tertiary-container":"#c7ffca","tertiary-fixed":"#7ffc97",
+      "on-tertiary-fixed":"#002109","on-tertiary-fixed-variant":"#005320",
+      "error":"#ba1a1a","on-error":"#ffffff","background":"#f7f9fb","on-background":"#191c1e"
+    },
+    borderRadius: { "DEFAULT":"0.5rem","sm":"0.25rem","md":"0.75rem","lg":"1rem","xl":"1.5rem","full":"9999px" },
+    spacing: { "xs":"4px","sm":"8px","md":"16px","lg":"24px","xl":"32px","touch-target-min":"52px" },
+    fontFamily: {
+      "display-hero":["Plus Jakarta Sans"],"headline-lg":["Plus Jakarta Sans"],
+      "headline-md":["Plus Jakarta Sans"],"body-lg":["Be Vietnam Pro"],
+      "body-base":["Be Vietnam Pro"],"body-loose":["Be Vietnam Pro"],
+      "label-caps":["Hanken Grotesk"],"caption":["Hanken Grotesk"]
+    },
+    fontSize: {
+      "display-hero":["48px",{lineHeight:"56px",letterSpacing:"-0.02em",fontWeight:"800"}],
+      "headline-lg":["32px",{lineHeight:"40px",letterSpacing:"-0.01em",fontWeight:"800"}],
+      "headline-md":["24px",{lineHeight:"32px",fontWeight:"700"}],
+      "body-lg":["18px",{lineHeight:"28px",fontWeight:"400"}],
+      "body-base":["16px",{lineHeight:"24px",fontWeight:"400"}],
+      "body-loose":["16px",{lineHeight:"30px",fontWeight:"400"}],
+      "label-caps":["12px",{lineHeight:"16px",letterSpacing:"0.05em",fontWeight:"700"}],
+      "caption":["10px",{lineHeight:"14px",fontWeight:"500"}]
+    }
+  }}
+}
+</script>
+<style>
+  .material-symbols-outlined { font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24; vertical-align:middle; }
+  .icon-fill { font-variation-settings:'FILL' 1,'wght' 400,'GRAD' 0,'opsz' 24; }
+  ::-webkit-scrollbar { width:6px; }
+  ::-webkit-scrollbar-track { background:#f7f9fb; }
+  ::-webkit-scrollbar-thumb { background:#c3c6d7; border-radius:6px; }
+  .word-img { transition: transform 700ms cubic-bezier(.4,0,.2,1); }
+  .word-img:hover { transform: scale(1.04); }
+</style>
+</head>
+<body class="bg-background text-on-surface font-body-base antialiased">
+
+<!-- Sidebar -->
+<aside class="h-screen w-64 fixed left-0 top-0 bg-surface-container-low flex flex-col p-md gap-md z-40 border-r border-outline-variant/40">
+  <div class="mb-lg px-sm pt-sm">
+    <h1 class="font-headline-md text-headline-md text-primary">Talk2Learn</h1>
+    <p class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-widest mt-xs">Personal Tutor</p>
+  </div>
+  <nav class="flex-grow flex flex-col gap-xs">
+    <a href="index.html" class="flex items-center gap-md px-md py-sm rounded-xl text-on-surface-variant hover:bg-surface-variant transition-all active:scale-95 duration-150">
+      <span class="material-symbols-outlined">school</span>
+      <span class="font-label-caps text-label-caps">Lessons</span>
+    </a>
+    <a href="dictionary.html" class="flex items-center gap-md px-md py-sm rounded-xl bg-primary-container text-on-primary-container shadow-sm transition-all">
+      <span class="material-symbols-outlined icon-fill">book</span>
+      <span class="font-label-caps text-label-caps font-bold">Dictionary</span>
+    </a>
+    <a href="profile.html" class="flex items-center gap-md px-md py-sm rounded-xl text-on-surface-variant hover:bg-surface-variant transition-all active:scale-95 duration-150">
+      <span class="material-symbols-outlined">person</span>
+      <span class="font-label-caps text-label-caps">Profile</span>
+    </a>
+  </nav>
+  <button class="mb-md w-full h-touch-target-min bg-primary text-on-primary rounded-xl font-bold flex items-center justify-center gap-sm hover:opacity-90 active:scale-95 transition-all">
+    <span class="material-symbols-outlined icon-fill">play_arrow</span>
+    Start Practice
+  </button>
+  <footer class="flex flex-col gap-xs pt-md border-t border-outline-variant/40">
+    <a href="#" class="flex items-center gap-md px-md py-xs rounded-lg text-on-surface-variant hover:bg-surface-variant transition-all">
+      <span class="material-symbols-outlined text-[20px]">settings</span>
+      <span class="font-caption text-caption">Settings</span>
+    </a>
+    <a href="#" class="flex items-center gap-md px-md py-xs rounded-lg text-on-surface-variant hover:bg-surface-variant transition-all">
+      <span class="material-symbols-outlined text-[20px]">help</span>
+      <span class="font-caption text-caption">Help</span>
+    </a>
+  </footer>
+</aside>
+
+<!-- Main -->
+<main class="ml-64 min-h-screen bg-background">
+  <!-- Top bar -->
+  <header class="sticky top-0 bg-surface shadow-sm flex items-center gap-md px-xl py-sm z-30 border-b border-outline-variant/20 h-touch-target-min">
+    <a href="dictionary.html" class="p-sm rounded-full hover:bg-surface-variant transition-colors active:scale-95">
+      <span class="material-symbols-outlined">arrow_back</span>
+    </a>
+    <nav class="flex gap-sm items-center font-label-caps text-label-caps text-outline">
+      <a href="dictionary.html" class="hover:text-primary transition-colors">Dictionary</a>
+      <span class="material-symbols-outlined text-[14px]">chevron_right</span>
+      <span id="breadcrumb-word" class="text-on-surface">Adventure</span>
+    </nav>
+    <div class="ml-auto flex items-center gap-md">
+      <button class="p-sm rounded-full bg-surface-container-high hover:bg-surface-variant transition-colors">
+        <span class="material-symbols-outlined">notifications</span>
+      </button>
+    </div>
+  </header>
+
+  <div class="max-w-7xl mx-auto p-xl">
+    <!-- Main layout: image + definition -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-xl mb-xl">
+
+      <!-- Left: image -->
+      <div class="lg:col-span-5">
+        <div class="rounded-[2rem] overflow-hidden shadow-[0px_12px_32px_rgba(0,0,0,0.10)] h-[480px] relative">
+          <div id="word-image-bg" class="w-full h-full bg-gradient-to-br from-emerald-400 to-teal-600 flex items-center justify-center word-img">
+            <span id="word-emoji" class="text-[120px]">🏔️</span>
+          </div>
+          <div class="absolute bottom-0 left-0 right-0 p-lg bg-gradient-to-t from-black/60 to-transparent">
+            <span id="word-level-badge" class="bg-tertiary text-on-tertiary px-md py-xs rounded-full font-label-caps text-label-caps inline-block">B2 Level</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: definition card -->
+      <div class="lg:col-span-7 flex flex-col justify-center">
+        <div class="bg-surface-container-lowest p-xl rounded-[2rem] shadow-[0px_4px_20px_rgba(0,0,0,0.05)] border border-outline-variant/30">
+          <div class="flex justify-between items-start mb-md">
+            <div>
+              <h1 id="word-title" class="font-display-hero text-display-hero text-primary mb-xs">Adventure</h1>
+              <div class="flex items-center gap-md flex-wrap">
+                <span id="word-phonetic" class="text-outline font-body-lg text-body-lg">/ədˈven.tʃər/</span>
+                <span id="word-translation" class="text-secondary font-bold text-body-lg">приключение</span>
+              </div>
+            </div>
+            <button onclick="playAudio()" class="p-md bg-primary-container text-on-primary-container rounded-full hover:bg-primary hover:text-on-primary transition-all active:scale-95">
+              <span class="material-symbols-outlined text-[32px]">volume_up</span>
+            </button>
+          </div>
+
+          <div class="mb-xl">
+            <p id="word-definition" class="font-body-loose text-body-loose text-on-surface-variant italic mb-md">
+              "An unusual and exciting or daring experience; a bold, usually risky undertaking, with an uncertain outcome."
+            </p>
+            <div class="flex flex-wrap gap-sm">
+              <button onclick="playAudio()" class="h-touch-target-min px-lg bg-primary text-on-primary rounded-xl font-bold active:scale-95 transition-all flex items-center gap-sm">
+                <span class="material-symbols-outlined">play_circle</span> Listen
+              </button>
+              <button onclick="showExamples()" class="h-touch-target-min px-lg border-2 border-primary text-primary rounded-xl font-bold hover:bg-primary-fixed transition-all active:scale-95 flex items-center gap-sm">
+                <span class="material-symbols-outlined">format_list_bulleted</span> Examples
+              </button>
+              <button id="bookmark-btn" onclick="toggleBookmark()" class="h-touch-target-min w-touch-target-min flex items-center justify-center border-2 border-outline-variant text-outline rounded-xl hover:text-primary hover:border-primary transition-all active:scale-95">
+                <span class="material-symbols-outlined">bookmark</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Mini stats -->
+          <div class="grid grid-cols-3 gap-md border-t border-surface-variant pt-lg">
+            <div class="text-center">
+              <p class="font-label-caps text-label-caps text-outline mb-xs">MEMORIZED</p>
+              <p id="stat-memorized" class="font-headline-md text-headline-md text-tertiary">85%</p>
+            </div>
+            <div class="text-center border-x border-surface-variant">
+              <p class="font-label-caps text-label-caps text-outline mb-xs">SEEN</p>
+              <p id="stat-seen" class="font-headline-md text-headline-md text-on-surface">12×</p>
+            </div>
+            <div class="text-center">
+              <p class="font-label-caps text-label-caps text-outline mb-xs">FREQUENCY</p>
+              <p id="stat-freq" class="font-headline-md text-headline-md text-on-surface">High</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Synonyms + Examples -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-xl mb-xl">
+
+      <!-- Synonyms -->
+      <section class="bg-surface-container-lowest p-lg rounded-[1.5rem] shadow-[0px_4px_20px_rgba(0,0,0,0.05)] border border-outline-variant/30">
+        <div class="flex items-center justify-between mb-lg">
+          <h2 class="font-headline-md text-headline-md text-on-surface flex items-center gap-sm">
+            <span class="material-symbols-outlined text-primary">join_inner</span>
+            Synonyms
+          </h2>
+          <span id="synonyms-count" class="font-caption text-caption text-outline">5 found</span>
+        </div>
+        <div id="synonyms-list" class="flex flex-wrap gap-sm">
+          <span class="px-md py-sm bg-surface-container-low text-on-surface rounded-lg font-body-base hover:bg-primary-fixed hover:text-on-primary-fixed-variant cursor-pointer transition-colors">Excursion</span>
+          <span class="px-md py-sm bg-surface-container-low text-on-surface rounded-lg font-body-base hover:bg-primary-fixed hover:text-on-primary-fixed-variant cursor-pointer transition-colors">Expedition</span>
+          <span class="px-md py-sm bg-surface-container-low text-on-surface rounded-lg font-body-base hover:bg-primary-fixed hover:text-on-primary-fixed-variant cursor-pointer transition-colors">Exploration</span>
+          <span class="px-md py-sm bg-surface-container-low text-on-surface rounded-lg font-body-base hover:bg-primary-fixed hover:text-on-primary-fixed-variant cursor-pointer transition-colors">Quest</span>
+          <span class="px-md py-sm bg-surface-container-low text-on-surface rounded-lg font-body-base hover:bg-primary-fixed hover:text-on-primary-fixed-variant cursor-pointer transition-colors">Escapade</span>
+        </div>
+      </section>
+
+      <!-- Examples -->
+      <section id="examples-section" class="bg-surface-container-lowest p-lg rounded-[1.5rem] shadow-[0px_4px_20px_rgba(0,0,0,0.05)] border border-outline-variant/30">
+        <h2 class="font-headline-md text-headline-md text-on-surface flex items-center gap-sm mb-lg">
+          <span class="material-symbols-outlined text-primary">chat_bubble</span>
+          Usage Examples
+        </h2>
+        <ul id="examples-list" class="space-y-md">
+          <li class="flex gap-md group">
+            <div class="mt-2 w-2 h-2 rounded-full bg-primary flex-shrink-0 group-hover:scale-150 transition-transform"></div>
+            <div>
+              <p class="font-body-base text-body-base text-on-surface">"Traveling solo across Asia was the greatest <strong class="text-primary">adventure</strong> of her life."</p>
+              <p class="text-outline text-caption mt-xs font-caption">Путешествие в одиночку по Азии было величайшим приключением в её жизни.</p>
+            </div>
+          </li>
+          <li class="flex gap-md group">
+            <div class="mt-2 w-2 h-2 rounded-full bg-primary flex-shrink-0 group-hover:scale-150 transition-transform"></div>
+            <div>
+              <p class="font-body-base text-body-base text-on-surface">"The children's book is filled with magic and <strong class="text-primary">adventure</strong>."</p>
+              <p class="text-outline text-caption mt-xs font-caption">Детская книга наполнена магией и приключениями.</p>
+            </div>
+          </li>
+          <li class="flex gap-md group">
+            <div class="mt-2 w-2 h-2 rounded-full bg-primary flex-shrink-0 group-hover:scale-150 transition-transform"></div>
+            <div>
+              <p class="font-body-base text-body-base text-on-surface">"Starting a new business is always a great <strong class="text-primary">adventure</strong>."</p>
+              <p class="text-outline text-caption mt-xs font-caption">Начать новый бизнес — всегда большое приключение.</p>
+            </div>
+          </li>
+        </ul>
+      </section>
+    </div>
+
+    <!-- Quiz CTA -->
+    <div class="bg-surface-container-low p-xl rounded-[1.5rem] flex flex-col md:flex-row items-center justify-between gap-lg">
+      <div>
+        <h3 class="font-headline-md text-headline-md text-on-surface mb-xs">Think you've mastered it?</h3>
+        <p class="font-body-base text-body-base text-on-surface-variant">Try a quick quiz to cement this word in your long-term memory.</p>
+      </div>
+      <div class="flex gap-md">
+        <button class="px-xl py-md bg-secondary text-on-secondary rounded-full font-bold flex items-center gap-sm active:scale-95 transition-all">
+          <span class="material-symbols-outlined">quiz</span>
+          Take Quiz
+        </button>
+        <a href="dictionary.html" class="px-xl py-md border-2 border-outline-variant text-on-surface-variant rounded-full font-bold flex items-center gap-sm active:scale-95 transition-all hover:border-primary hover:text-primary">
+          <span class="material-symbols-outlined">arrow_back</span>
+          Back to Dictionary
+        </a>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- Footer -->
+<footer class="ml-64 bg-surface-container-highest border-t border-outline-variant/30 flex flex-col md:flex-row justify-between items-center px-xl py-lg">
+  <div>
+    <span class="font-label-caps text-label-caps text-primary uppercase">Talk2Learn AI</span>
+    <p class="font-caption text-caption text-on-surface-variant mt-xs">© 2025 Talk2Learn AI. Master languages with ease.</p>
+  </div>
+  <div class="flex flex-wrap gap-lg mt-md md:mt-0">
+    <a href="#" class="font-caption text-caption text-on-surface-variant hover:text-secondary transition-colors">Language Settings</a>
+    <a href="#" class="font-caption text-caption text-on-surface-variant hover:text-secondary transition-colors">Privacy Policy</a>
+    <a href="#" class="font-caption text-caption text-on-surface-variant hover:text-secondary transition-colors">Terms of Service</a>
+    <a href="#" class="font-caption text-caption text-on-surface-variant hover:text-secondary transition-colors">Contact Support</a>
+  </div>
+</footer>
+
+<script src="_shared.js"></script>
+<script>
+const wordData = {
+  "Adventure": {
+    translation:"Приключение", phonetic:"/ədˈven.tʃər/", level:"B2",
+    definition:'"An unusual and exciting or daring experience; a bold, usually risky undertaking, with an uncertain outcome."',
+    emoji:"🏔️", gradient:"from-emerald-400 to-teal-600",
+    levelBg:"bg-tertiary text-on-tertiary",
+    memorized:85, seen:12, frequency:"High",
+    synonyms:["Excursion","Expedition","Exploration","Quest","Escapade"],
+    examples:[
+      {en:'"Traveling solo across Asia was the greatest <strong class="text-primary">adventure</strong> of her life."',ru:"Путешествие в одиночку по Азии было величайшим приключением в её жизни."},
+      {en:'"The children\'s book is filled with magic and <strong class="text-primary">adventure</strong>."',ru:"Детская книга наполнена магией и приключениями."},
+      {en:'"Starting a new business is always a great <strong class="text-primary">adventure</strong>."',ru:"Начать новый бизнес — всегда большое приключение."},
+    ]
+  },
+  "Beautiful": {
+    translation:"Красивый / Красивая", phonetic:"/ˈbjuː.tɪ.fəl/", level:"A1",
+    definition:'"Pleasing the senses or mind aesthetically; of a very high standard; excellent."',
+    emoji:"🌸", gradient:"from-pink-400 to-rose-500",
+    levelBg:"bg-tertiary-container text-on-tertiary-container",
+    memorized:100, seen:30, frequency:"Very High",
+    synonyms:["Gorgeous","Stunning","Lovely","Attractive","Pretty"],
+    examples:[
+      {en:'"What a <strong class="text-primary">beautiful</strong> sunset over the mountains!"',ru:"Какой красивый закат над горами!"},
+      {en:'"She has a <strong class="text-primary">beautiful</strong> voice that captivates everyone."',ru:"У неё красивый голос, который покоряет всех."},
+    ]
+  },
+};
+
+function getWordParam() {
+  const p = new URLSearchParams(window.location.search);
+  return p.get('word') || 'Adventure';
+}
+
+function loadWord() {
+  const name = getWordParam();
+  const d = wordData[name] || wordData['Adventure'];
+
+  document.title = `Talk2Learn | ${name}`;
+  document.getElementById('breadcrumb-word').textContent = name;
+  document.getElementById('word-title').textContent = name;
+  document.getElementById('word-phonetic').textContent = d.phonetic;
+  document.getElementById('word-translation').textContent = d.translation;
+  document.getElementById('word-definition').innerHTML = d.definition;
+  document.getElementById('word-emoji').textContent = d.emoji;
+  document.getElementById('word-image-bg').className = `w-full h-full bg-gradient-to-br ${d.gradient} flex items-center justify-center word-img`;
+  document.getElementById('word-level-badge').className = `${d.levelBg} px-md py-xs rounded-full font-label-caps text-label-caps inline-block`;
+  document.getElementById('word-level-badge').textContent = `${d.level} Level`;
+  document.getElementById('stat-memorized').textContent = `${d.memorized}%`;
+  document.getElementById('stat-seen').textContent = `${d.seen}×`;
+  document.getElementById('stat-freq').textContent = d.frequency;
+  document.getElementById('synonyms-count').textContent = `${d.synonyms.length} found`;
+  document.getElementById('synonyms-list').innerHTML = d.synonyms.map(s =>
+    `<span class="px-md py-sm bg-surface-container-low text-on-surface rounded-lg font-body-base hover:bg-primary-fixed hover:text-on-primary-fixed-variant cursor-pointer transition-colors">${s}</span>`
+  ).join('');
+  document.getElementById('examples-list').innerHTML = d.examples.map(ex => `
+    <li class="flex gap-md group">
+      <div class="mt-2 w-2 h-2 rounded-full bg-primary flex-shrink-0 group-hover:scale-150 transition-transform"></div>
+      <div>
+        <p class="font-body-base text-body-base text-on-surface">${ex.en}</p>
+        <p class="text-outline text-caption mt-xs font-caption">${ex.ru}</p>
+      </div>
+    </li>
+  `).join('');
+}
+
+let bookmarked = false;
+function toggleBookmark() {
+  bookmarked = !bookmarked;
+  const btn = document.getElementById('bookmark-btn');
+  const icon = btn.querySelector('.material-symbols-outlined');
+  if (bookmarked) {
+    icon.classList.add('icon-fill');
+    btn.classList.add('text-primary','border-primary');
+    btn.classList.remove('text-outline','border-outline-variant');
+  } else {
+    icon.classList.remove('icon-fill');
+    btn.classList.remove('text-primary','border-primary');
+    btn.classList.add('text-outline','border-outline-variant');
+  }
+}
+
+function playAudio() {
+  const word = getWordParam();
+  const utterance = new SpeechSynthesisUtterance(word);
+  utterance.lang = 'en-US';
+  utterance.rate = 0.85;
+  window.speechSynthesis.speak(utterance);
+}
+
+function showExamples() {
+  document.getElementById('examples-section').scrollIntoView({ behavior:'smooth' });
+}
+
+loadWord();
+</script>
+</body>
+</html>
