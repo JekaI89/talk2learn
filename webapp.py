@@ -1147,24 +1147,13 @@ SITE_DIR = os.path.join(STATIC_DIR, "site")
 
 @app.get("/site")
 @app.get("/site/")
-async def serve_site():
-    return FileResponse(os.path.join(SITE_DIR, "index.html"))
-
+@app.get("/site/app")
 @app.get("/site/lessons")
-async def serve_site_lessons():
-    return FileResponse(os.path.join(SITE_DIR, "index.html"))
-
 @app.get("/site/dictionary")
-async def serve_site_dictionary():
-    return FileResponse(os.path.join(SITE_DIR, "dictionary.html"))
-
 @app.get("/site/word")
-async def serve_site_word():
-    return FileResponse(os.path.join(SITE_DIR, "word.html"))
-
 @app.get("/site/profile")
-async def serve_site_profile():
-    return FileResponse(os.path.join(SITE_DIR, "profile.html"))
+async def serve_site():
+    return FileResponse(os.path.join(SITE_DIR, "app.html"))
 
 
 if __name__ == "__main__":
