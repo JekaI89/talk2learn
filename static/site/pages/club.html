@@ -1,0 +1,25 @@
+<!-- club.html — полная высота, flex колонка -->
+<style>
+  /* Для этой страницы убираем паддинг контейнера */
+  #page-container { padding: 0 !important; }
+</style>
+<div class="chat-layout">
+  <div class="chat-header">
+    <div style="font-weight:700;font-size:16px">🗣️ Разговорный клуб</div>
+    <div class="text-muted text-sm">Уровень: <strong id="club-lvl-label"></strong></div>
+  </div>
+  <div id="chat-box" class="chat-messages"></div>
+  <div class="chat-footer">
+    <input id="chat-input" type="text" placeholder="Напишите сообщение..."
+      class="chat-input-field" onkeydown="if(event.key==='Enter')sendClubMsg()"/>
+    <button onclick="sendClubMsg()" class="chat-icon-btn primary">➤</button>
+    <button id="club-mic-btn" class="chat-icon-btn ghost"
+      onmousedown="startMicRecording('club')" onmouseup="stopMicRecording('club')"
+      ontouchstart="startMicRecording('club')" ontouchend="stopMicRecording('club')">🎙️</button>
+  </div>
+</div>
+<script>
+  const ll = document.getElementById('club-lvl-label');
+  if (ll) ll.textContent = STATE.level;
+  initClubGreeting();
+</script>

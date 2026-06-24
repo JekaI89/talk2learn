@@ -1,0 +1,64 @@
+<!-- home.html -->
+<div id="home-welcome" style="margin-bottom:24px">
+  <h2 style="font-family:var(--font-display);font-size:26px;font-weight:800;margin-bottom:4px">
+    Добро пожаловать! 👋
+  </h2>
+  <p style="color:var(--clr-txt-2)">Выберите раздел для занятия</p>
+</div>
+
+<div class="grid-2" style="gap:16px;margin-bottom:24px">
+  <button onclick="STATE.currentCategory='lessons';APP.go('lessons')"
+    class="card card-pad card-hover" style="text-align:left;cursor:pointer;background:linear-gradient(135deg,#3b82f6,#6366f1);color:#fff;border:none">
+    <div style="font-size:32px;margin-bottom:8px">📚</div>
+    <div style="font-size:17px;font-weight:700;margin-bottom:2px">Уроки</div>
+    <div style="font-size:13px;opacity:.8">Теория курса</div>
+  </button>
+  <button onclick="STATE.currentCategory='grammar';APP.go('lessons')"
+    class="card card-pad card-hover" style="text-align:left;cursor:pointer;background:linear-gradient(135deg,#f59e0b,#ef4444);color:#fff;border:none">
+    <div style="font-size:32px;margin-bottom:8px">✍️</div>
+    <div style="font-size:17px;font-weight:700;margin-bottom:2px">Грамматика</div>
+    <div style="font-size:13px;opacity:.8">Правила языка</div>
+  </button>
+  <button onclick="STATE.currentCategory='vocabulary';APP.go('lessons')"
+    class="card card-pad card-hover" style="text-align:left;cursor:pointer;background:linear-gradient(135deg,#10b981,#06b6d4);color:#fff;border:none">
+    <div style="font-size:32px;margin-bottom:8px">💬</div>
+    <div style="font-size:17px;font-weight:700;margin-bottom:2px">Лексика</div>
+    <div style="font-size:13px;opacity:.8">Словарный запас</div>
+  </button>
+  <button onclick="APP.go('dictionary')"
+    class="card card-pad card-hover" style="text-align:left;cursor:pointer;background:linear-gradient(135deg,#ec4899,#8b5cf6);color:#fff;border:none">
+    <div style="font-size:32px;margin-bottom:8px">🃏</div>
+    <div style="font-size:17px;font-weight:700;margin-bottom:2px">Флэшкарты</div>
+    <div style="font-size:13px;opacity:.8">Визуальный словарь</div>
+  </button>
+</div>
+
+<div class="section-head">
+  <div class="section-title">🎭 Ситуации</div>
+</div>
+<div class="grid-3" style="gap:12px">
+  <button onclick="APP.go('sit-chat',{sit:'shop',title:'В магазине'})" class="card card-pad text-center card-hover" style="cursor:pointer">
+    <div style="font-size:24px;margin-bottom:6px">🛒</div>
+    <div style="font-size:13px;font-weight:600">В магазине</div>
+  </button>
+  <button onclick="APP.go('sit-chat',{sit:'restaurant',title:'В ресторане'})" class="card card-pad text-center card-hover" style="cursor:pointer">
+    <div style="font-size:24px;margin-bottom:6px">🍽️</div>
+    <div style="font-size:13px;font-weight:600">В ресторане</div>
+  </button>
+  <button onclick="APP.go('sit-chat',{sit:'airport',title:'В аэропорту'})" class="card card-pad text-center card-hover" style="cursor:pointer">
+    <div style="font-size:24px;margin-bottom:6px">✈️</div>
+    <div style="font-size:13px;font-weight:600">В аэропорту</div>
+  </button>
+  <button onclick="APP.go('sit-chat',{sit:'hotel',title:'В отеле'})" class="card card-pad text-center card-hover" style="cursor:pointer">
+    <div style="font-size:24px;margin-bottom:6px">🏨</div>
+    <div style="font-size:13px;font-weight:600">В отеле</div>
+  </button>
+  <button onclick="APP.go('sit-chat',{sit:'doctor',title:'У врача'})" class="card card-pad text-center card-hover" style="cursor:pointer">
+    <div style="font-size:24px;margin-bottom:6px">🏥</div>
+    <div style="font-size:13px;font-weight:600">У врача</div>
+  </button>
+  <button onclick="APP.go('sit-chat',{sit:'emergency',title:'Экстренная помощь'})" class="card card-pad text-center card-hover" style="cursor:pointer">
+    <div style="font-size:24px;margin-bottom:6px">🚨</div>
+    <div style="font-size:13px;font-weight:600">Экстренная</div>
+  </button>
+</div>
