@@ -1,0 +1,17 @@
+<!-- dictionary.html -->
+<h2 style="font-family:var(--font-display);font-size:22px;font-weight:800;margin-bottom:16px">🃏 Визуальный словарь</h2>
+
+<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
+  <button onclick="loadVocabTopics(null)" data-lvl="all"
+    class="vocab-lvl-btn badge badge-primary" style="font-size:13px;padding:6px 14px;cursor:pointer">Все</button>
+  <button onclick="loadVocabTopics('A1')" data-lvl="A1"
+    class="vocab-lvl-btn badge badge-accent" style="font-size:13px;padding:6px 14px;cursor:pointer">A1</button>
+  <button onclick="loadVocabTopics('A2')" data-lvl="A2"
+    class="vocab-lvl-btn badge badge-accent" style="font-size:13px;padding:6px 14px;cursor:pointer">A2</button>
+  <button onclick="loadVocabTopics('B1')" data-lvl="B1"
+    class="vocab-lvl-btn badge badge-accent" style="font-size:13px;padding:6px 14px;cursor:pointer">B1</button>
+  <button onclick="loadVocabTopics('B2')" data-lvl="B2"
+    class="vocab-lvl-btn badge badge-accent" style="font-size:13px;padding:6px 14px;cursor:pointer">B2</button>
+</div>
+
+<div id="vocab-grid" class="grid-3" style="gap:12px"></div>

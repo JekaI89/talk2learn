@@ -1,0 +1,22 @@
+<!-- sit-chat.html -->
+<style>
+  #page-container { padding: 0 !important; }
+</style>
+<div class="chat-layout">
+  <div class="chat-header" style="display:flex;align-items:center;gap:12px">
+    <button class="btn btn-ghost btn-sm" onclick="APP.go('situations')" style="padding:6px 10px">←</button>
+    <div>
+      <div id="sit-title" style="font-weight:700;font-size:15px"></div>
+      <div id="sit-hint" class="text-muted text-sm"></div>
+    </div>
+  </div>
+  <div id="sit-chat-box" class="chat-messages"></div>
+  <div class="chat-footer">
+    <input id="sit-input" type="text" placeholder="Напишите сообщение..."
+      class="chat-input-field" onkeydown="if(event.key==='Enter')sendSitMsg()"/>
+    <button onclick="sendSitMsg()" class="chat-icon-btn primary">➤</button>
+    <button id="sit-mic-btn" class="chat-icon-btn ghost"
+      onmousedown="startMicRecording('sit')" onmouseup="stopMicRecording('sit')"
+      ontouchstart="startMicRecording('sit')" ontouchend="stopMicRecording('sit')">🎙️</button>
+  </div>
+</div>

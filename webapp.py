@@ -1130,6 +1130,10 @@ async def telegram_verify(data: TelegramAuthData):
 
 # ====================== СТАТИКА ======================
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+# Serve site assets (css/js/pages) under /site/*
+app.mount("/site/css",   StaticFiles(directory=os.path.join(STATIC_DIR, "site", "css")),   name="site-css")
+app.mount("/site/js",    StaticFiles(directory=os.path.join(STATIC_DIR, "site", "js")),    name="site-js")
+app.mount("/site/pages", StaticFiles(directory=os.path.join(STATIC_DIR, "site", "pages")), name="site-pages")
 
 @app.get("/")
 @app.get("/index.html")
@@ -1147,13 +1151,8 @@ SITE_DIR = os.path.join(STATIC_DIR, "site")
 
 @app.get("/site")
 @app.get("/site/")
-@app.get("/site/app")
-@app.get("/site/lessons")
-@app.get("/site/dictionary")
-@app.get("/site/word")
-@app.get("/site/profile")
 async def serve_site():
-    return FileResponse(os.path.join(SITE_DIR, "app.html"))
+    return FileResponse(os.path.join(SITE_DIR, "index.html"))
 
 
 if __name__ == "__main__":

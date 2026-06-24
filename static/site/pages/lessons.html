@@ -1,0 +1,45 @@
+<!-- lessons.html -->
+<button class="btn btn-ghost btn-sm mb-16" onclick="APP.go('home')">← Главная</button>
+
+<h2 style="font-family:var(--font-display);font-size:22px;font-weight:800;margin-bottom:6px">📚 Выберите уровень</h2>
+<p style="color:var(--clr-txt-2);margin-bottom:20px">Раздел: <strong id="lessons-category-label">Уроки</strong></p>
+
+<div id="lessons-grid" class="grid-3" style="gap:12px;margin-bottom:24px"></div>
+
+<div style="margin-top:24px">
+  <div class="section-head"><div class="section-title">🎯 Режим практики</div></div>
+  <div class="grid-2" style="gap:12px">
+    <button onclick="APP.go('practice',{mode:'multiple_choice'})"
+      class="card card-pad card-hover" style="text-align:left;cursor:pointer">
+      <div style="font-size:24px;margin-bottom:8px">🎯</div>
+      <div style="font-weight:700;margin-bottom:4px">Тест с вариантами</div>
+      <div class="text-muted text-sm">Выберите правильный ответ</div>
+    </button>
+    <button onclick="APP.go('practice',{mode:'sentence_builder'})"
+      class="card card-pad card-hover" style="text-align:left;cursor:pointer">
+      <div style="font-size:24px;margin-bottom:8px">🧩</div>
+      <div style="font-weight:700;margin-bottom:4px">Конструктор</div>
+      <div class="text-muted text-sm">Составьте фразу из слов</div>
+    </button>
+  </div>
+</div>
+
+<script>
+// Подпись категории
+const catLabels = {lessons:'Уроки',grammar:'Грамматика',vocabulary:'Лексика'};
+const lbl = document.getElementById('lessons-category-label');
+if (lbl) lbl.textContent = catLabels[STATE.currentCategory] || 'Уроки';
+
+// Сетка уровней
+const grid = document.getElementById('lessons-grid');
+if (grid) {
+  const LEVELS = ['A1','A2','B1','B2','C1','C2'];
+  const GRAD = {A1:'lvl-A1',A2:'lvl-A2',B1:'lvl-B1',B2:'lvl-B2',C1:'lvl-C1',C2:'lvl-C2'};
+  grid.innerHTML = LEVELS.map(lvl => `
+    <button onclick="APP.go('lesson-view',{level:'${lvl}',category:STATE.currentCategory})"
+      class="card card-pad ${GRAD[lvl]} text-white card-hover" style="text-align:left;cursor:pointer;border:none">
+      <div style="font-size:11px;opacity:.75;margin-bottom:4px">Уровень</div>
+      <div style="font-size:26px;font-weight:800">${lvl}</div>
+    </button>`).join('');
+}
+</script>

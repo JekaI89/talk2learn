@@ -1,0 +1,96 @@
+<!-- onboarding.html — wizard 4 шага -->
+<div style="max-width:480px;margin:0 auto">
+
+  <!-- Step 0: target language -->
+  <div id="ob-step-0">
+    <div class="text-center mb-24">
+      <div style="font-size:48px;margin-bottom:8px">🌍</div>
+      <h2 style="font-family:var(--font-display);font-size:22px;font-weight:800">Какой язык учим?</h2>
+    </div>
+    <div class="grid-2" style="gap:12px">
+      <button onclick="obSelectTarget('en')" data-lang="en" class="ob-lang card card-pad text-center card-hover" style="cursor:pointer">
+        <div style="font-size:32px;margin-bottom:6px">🇬🇧</div><div style="font-weight:600">Английский</div>
+      </button>
+      <button onclick="obSelectTarget('de')" data-lang="de" class="ob-lang card card-pad text-center card-hover" style="cursor:pointer">
+        <div style="font-size:32px;margin-bottom:6px">🇩🇪</div><div style="font-weight:600">Немецкий</div>
+      </button>
+      <button onclick="obSelectTarget('fr')" data-lang="fr" class="ob-lang card card-pad text-center card-hover" style="cursor:pointer">
+        <div style="font-size:32px;margin-bottom:6px">🇫🇷</div><div style="font-weight:600">Французский</div>
+      </button>
+      <button onclick="obSelectTarget('es')" data-lang="es" class="ob-lang card card-pad text-center card-hover" style="cursor:pointer">
+        <div style="font-size:32px;margin-bottom:6px">🇪🇸</div><div style="font-weight:600">Испанский</div>
+      </button>
+      <button onclick="obSelectTarget('it')" data-lang="it" class="ob-lang card card-pad text-center card-hover" style="cursor:pointer">
+        <div style="font-size:32px;margin-bottom:6px">🇮🇹</div><div style="font-weight:600">Итальянский</div>
+      </button>
+      <button onclick="obSelectTarget('zh')" data-lang="zh" class="ob-lang card card-pad text-center card-hover" style="cursor:pointer">
+        <div style="font-size:32px;margin-bottom:6px">🇨🇳</div><div style="font-weight:600">Китайский</div>
+      </button>
+    </div>
+  </div>
+
+  <!-- Step 1: native language -->
+  <div id="ob-step-1" class="hidden">
+    <div class="text-center mb-24">
+      <div style="font-size:48px;margin-bottom:8px">🗣️</div>
+      <h2 style="font-family:var(--font-display);font-size:22px;font-weight:800">Ваш родной язык?</h2>
+    </div>
+    <div class="grid-2" style="gap:12px">
+      <button onclick="obSelectNative('ru')" data-lang="ru" class="ob-native card card-pad text-center card-hover" style="cursor:pointer">
+        <div style="font-size:32px;margin-bottom:6px">🇷🇺</div><div style="font-weight:600">Русский</div>
+      </button>
+      <button onclick="obSelectNative('en')" data-lang="en" class="ob-native card card-pad text-center card-hover" style="cursor:pointer">
+        <div style="font-size:32px;margin-bottom:6px">🇬🇧</div><div style="font-weight:600">Английский</div>
+      </button>
+      <button onclick="obSelectNative('de')" data-lang="de" class="ob-native card card-pad text-center card-hover" style="cursor:pointer">
+        <div style="font-size:32px;margin-bottom:6px">🇩🇪</div><div style="font-weight:600">Немецкий</div>
+      </button>
+      <button onclick="obSelectNative('fr')" data-lang="fr" class="ob-native card card-pad text-center card-hover" style="cursor:pointer">
+        <div style="font-size:32px;margin-bottom:6px">🇫🇷</div><div style="font-weight:600">Французский</div>
+      </button>
+    </div>
+  </div>
+
+  <!-- Step 2: level -->
+  <div id="ob-step-2" class="hidden">
+    <div class="text-center mb-24">
+      <div style="font-size:48px;margin-bottom:8px">📊</div>
+      <h2 style="font-family:var(--font-display);font-size:22px;font-weight:800">Ваш уровень?</h2>
+    </div>
+    <div class="grid-2" style="gap:12px">
+      <button onclick="obSelectLevel('A1')" class="card card-pad lvl-A1 text-white card-hover" style="cursor:pointer;border:none;text-align:left">
+        <div style="font-size:11px;opacity:.75">Уровень</div><div style="font-size:28px;font-weight:800">A1</div>
+        <div style="font-size:12px;opacity:.75;margin-top:4px">С нуля</div>
+      </button>
+      <button onclick="obSelectLevel('A2')" class="card card-pad lvl-A2 text-white card-hover" style="cursor:pointer;border:none;text-align:left">
+        <div style="font-size:11px;opacity:.75">Уровень</div><div style="font-size:28px;font-weight:800">A2</div>
+        <div style="font-size:12px;opacity:.75;margin-top:4px">Базовые фразы</div>
+      </button>
+      <button onclick="obSelectLevel('B1')" class="card card-pad lvl-B1 text-white card-hover" style="cursor:pointer;border:none;text-align:left">
+        <div style="font-size:11px;opacity:.75">Уровень</div><div style="font-size:28px;font-weight:800">B1</div>
+        <div style="font-size:12px;opacity:.75;margin-top:4px">Средний</div>
+      </button>
+      <button onclick="obSelectLevel('B2')" class="card card-pad lvl-B2 text-white card-hover" style="cursor:pointer;border:none;text-align:left">
+        <div style="font-size:11px;opacity:.75">Уровень</div><div style="font-size:28px;font-weight:800">B2</div>
+        <div style="font-size:12px;opacity:.75;margin-top:4px">Выше среднего</div>
+      </button>
+      <button onclick="obSelectLevel('C1')" class="card card-pad lvl-C1 text-white card-hover" style="cursor:pointer;border:none;text-align:left">
+        <div style="font-size:11px;opacity:.75">Уровень</div><div style="font-size:28px;font-weight:800">C1</div>
+        <div style="font-size:12px;opacity:.75;margin-top:4px">Продвинутый</div>
+      </button>
+      <button onclick="obSelectLevel('C2')" class="card card-pad lvl-C2 text-white card-hover" style="cursor:pointer;border:none;text-align:left">
+        <div style="font-size:11px;opacity:.75">Уровень</div><div style="font-size:28px;font-weight:800">C2</div>
+        <div style="font-size:12px;opacity:.75;margin-top:4px">Мастер</div>
+      </button>
+    </div>
+  </div>
+
+  <!-- Step 3: ready -->
+  <div id="ob-step-3" class="hidden text-center" style="padding:48px 0">
+    <div style="font-size:56px;margin-bottom:16px">🚀</div>
+    <h2 style="font-family:var(--font-display);font-size:24px;font-weight:800;margin-bottom:8px">Всё готово!</h2>
+    <p id="ob-ready-msg" class="text-muted mb-24"></p>
+    <button onclick="finishOnboarding()" class="btn btn-accent btn-lg">Начать учиться →</button>
+  </div>
+
+</div>
