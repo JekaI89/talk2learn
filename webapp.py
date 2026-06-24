@@ -1060,9 +1060,9 @@ def _verify_telegram_hash(data: TelegramAuthData) -> bool:
 
     Источник: https://core.telegram.org/widgets/login#checking-authorization
     """
-    bot_token = os.environ.get("TELEGRAM_BOT_TOKEN", "")
+    bot_token = os.environ.get("BOT_TOKEN", "") or os.environ.get("TELEGRAM_BOT_TOKEN", "")
     if not bot_token:
-        raise HTTPException(500, "TELEGRAM_BOT_TOKEN не задан на сервере")
+        raise HTTPException(500, "BOT_TOKEN не задан на сервере")
 
     # Шаг 1 — строим data-check-string из всех полей кроме hash
     fields = {
