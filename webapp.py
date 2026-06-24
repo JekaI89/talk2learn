@@ -9,6 +9,10 @@ import time
 import traceback
 import shutil
 import uuid
+import random
+import string
+import hashlib
+import hmac
 from pathlib import Path
 from contextlib import asynccontextmanager
 
@@ -929,6 +933,201 @@ async def category_stats(user_id: int):
         return {}
 
 
+# ====================== АВТОРИЗАЦИЯ: EMAIL (тестовый режим) ======================
+#
+# Коды хранятся в памяти процесса — после рестарта сервера сбрасываются.
+# В продакшене замените на Redis или таблицу в БД + реальную отправку писем.
+#
+# Структура: { "user@example.com": {"code": "123456", "expires_at": <unix_ts>} }
+
+_email_codes: dict[str, dict] = {}
+
+CODE_TTL_SECONDS = 600  # код живёт 10 минут
+
+
+class EmailCodeRequest(BaseModel):
+    email: str
+
+
+class EmailVerifyRequest(BaseModel):
+    email: str
+    code: str
+
+
+@app.post("/api/auth/email/request-code")
+async def email_request_code(data: EmailCodeRequest):
+    """
+    Генерирует 6-значный одноразовый код и печатает его в логи сервера.
+    В продакшене здесь нужно отправлять письмо через SMTP / SendGrid / etc.
+    """
+    email = data.email.strip().lower()
+    if not email or "@" not in email:
+        raise HTTPException(400, "Некорректный адрес электронной почты")
+
+    code = "".join(random.choices(string.digits, k=6))
+    _email_codes[email] = {
+        "code": code,
+        "expires_at": time.time() + CODE_TTL_SECONDS,
+    }
+
+    # --- ТЕСТОВЫЙ РЕЖИМ: код выводится в консоль сервера ---
+    print(f"[AUTH] Код подтверждения для {email}: {code}  (действителен {CODE_TTL_SECONDS // 60} мин)")
+
+    return {
+        "status": "ok",
+        "message": "Код отправлен. В тестовом режиме смотрите логи сервера.",
+        "debug_hint": "Проверьте stdout/логи Render → вкладка Logs",
+    }
+
+
+@app.post("/api/auth/email/verify")
+async def email_verify(data: EmailVerifyRequest):
+    """
+    Проверяет код. При успехе регистрирует пользователя (или возвращает
+    существующего) через register_or_get_user() и возвращает его данные.
+    """
+    email = data.email.strip().lower()
+    entry = _email_codes.get(email)
+
+    if not entry:
+        raise HTTPException(400, "Код не найден. Запросите новый.")
+
+    if time.time() > entry["expires_at"]:
+        del _email_codes[email]
+        raise HTTPException(400, "Код устарел. Запросите новый.")
+
+    if entry["code"] != data.code.strip():
+        raise HTTPException(400, "Неверный код.")
+
+    # Код верный — удаляем, чтобы нельзя было использовать повторно
+    del _email_codes[email]
+
+    # Синтетический числовой user_id из хэша email (без коллизий не гарантируем,
+    # но для тестов достаточно; в продакшене храните email в таблице users).
+    synthetic_user_id = int(hashlib.sha256(email.encode()).hexdigest(), 16) % (10 ** 12)
+
+    level = await register_or_get_user(
+        user_id=synthetic_user_id,
+        name=email.split("@")[0],
+        username=email,
+    )
+
+    return {
+        "status": "ok",
+        "user_id": synthetic_user_id,
+        "email": email,
+        "level": level,
+    }
+
+
+# ====================== АВТОРИЗАЦИЯ: TELEGRAM LOGIN WIDGET ======================
+#
+# Как это работает:
+# 1. Фронтенд подключает официальный виджет:
+#      <script async src="https://telegram.org/js/telegram-widget.js?22"
+#              data-telegram-login="ВАШ_БОТ_USERNAME"
+#              data-size="large"
+#              data-onauth="onTelegramAuth(user)"
+#              data-request-access="write">
+#      </script>
+# 2. После клика Telegram вызывает onTelegramAuth(user) с объектом:
+#      { id, first_name, last_name, username, photo_url, auth_date, hash }
+# 3. Фронтенд отправляет этот объект POST-запросом на /api/auth/telegram/verify
+# 4. Бэкенд проверяет подпись (hash) и авторизует пользователя.
+#
+# Переменная окружения: TELEGRAM_BOT_TOKEN  (получить у @BotFather → /newbot → /mytoken)
+
+
+class TelegramAuthData(BaseModel):
+    id: int
+    first_name: str
+    last_name: Optional[str] = None
+    username: Optional[str] = None
+    photo_url: Optional[str] = None
+    auth_date: int  # Unix-timestamp момента авторизации
+    hash: str       # HMAC-подпись от Telegram
+
+
+def _verify_telegram_hash(data: TelegramAuthData) -> bool:
+    """
+    Официальный алгоритм проверки подписи Telegram Login Widget:
+
+    1. Берём все поля объекта КРОМЕ hash, строим строки вида "key=value",
+       сортируем по алфавиту и объединяем через '\n'.
+    2. Секретный ключ = SHA-256 от токена бота (не сам токен!).
+    3. HMAC-SHA256(секретный_ключ, data_check_string) должен совпадать с hash.
+    4. Дополнительно проверяем, что auth_date не старше 24 часов.
+
+    Источник: https://core.telegram.org/widgets/login#checking-authorization
+    """
+    bot_token = os.environ.get("TELEGRAM_BOT_TOKEN", "")
+    if not bot_token:
+        raise HTTPException(500, "TELEGRAM_BOT_TOKEN не задан на сервере")
+
+    # Шаг 1 — строим data-check-string из всех полей кроме hash
+    fields = {
+        "id": str(data.id),
+        "first_name": data.first_name,
+        "auth_date": str(data.auth_date),
+    }
+    if data.last_name:
+        fields["last_name"] = data.last_name
+    if data.username:
+        fields["username"] = data.username
+    if data.photo_url:
+        fields["photo_url"] = data.photo_url
+
+    # Сортируем по имени ключа и склеиваем через \n
+    data_check_string = "\n".join(f"{k}={v}" for k, v in sorted(fields.items()))
+
+    # Шаг 2 — секретный ключ = SHA-256(bot_token)
+    secret_key = hashlib.sha256(bot_token.encode()).digest()
+
+    # Шаг 3 — вычисляем ожидаемый хэш
+    expected_hash = hmac.new(
+        key=secret_key,
+        msg=data_check_string.encode(),
+        digestmod=hashlib.sha256,
+    ).hexdigest()
+
+    # Шаг 4 — сравниваем безопасно (против timing-атак) и проверяем свежесть
+    hash_valid = hmac.compare_digest(expected_hash, data.hash)
+    time_valid = (time.time() - data.auth_date) < 86400  # не старше 24 часов
+
+    return hash_valid and time_valid
+
+
+@app.post("/api/auth/telegram/verify")
+async def telegram_verify(data: TelegramAuthData):
+    """
+    Принимает объект от Telegram Login Widget, проверяет подпись
+    и регистрирует / авторизует пользователя по его Telegram ID.
+
+    Возвращает: { status, user_id, level, name, username }
+    """
+    if not _verify_telegram_hash(data):
+        raise HTTPException(403, "Неверная подпись Telegram. Авторизация отклонена.")
+
+    full_name = data.first_name
+    if data.last_name:
+        full_name += f" {data.last_name}"
+
+    level = await register_or_get_user(
+        user_id=data.id,
+        name=full_name,
+        username=data.username or "",
+    )
+
+    return {
+        "status": "ok",
+        "user_id": data.id,
+        "name": full_name,
+        "username": data.username or "",
+        "photo_url": data.photo_url or "",
+        "level": level,
+    }
+
+
 # ====================== СТАТИКА ======================
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
@@ -948,24 +1147,13 @@ SITE_DIR = os.path.join(STATIC_DIR, "site")
 
 @app.get("/site")
 @app.get("/site/")
-async def serve_site():
-    return FileResponse(os.path.join(SITE_DIR, "index.html"))
-
+@app.get("/site/app")
 @app.get("/site/lessons")
-async def serve_site_lessons():
-    return FileResponse(os.path.join(SITE_DIR, "index.html"))
-
 @app.get("/site/dictionary")
-async def serve_site_dictionary():
-    return FileResponse(os.path.join(SITE_DIR, "dictionary.html"))
-
 @app.get("/site/word")
-async def serve_site_word():
-    return FileResponse(os.path.join(SITE_DIR, "word.html"))
-
 @app.get("/site/profile")
-async def serve_site_profile():
-    return FileResponse(os.path.join(SITE_DIR, "profile.html"))
+async def serve_site():
+    return FileResponse(os.path.join(SITE_DIR, "app.html"))
 
 
 if __name__ == "__main__":
